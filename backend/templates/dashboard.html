@@ -1,0 +1,12 @@
+{% extends "main.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block moreCSS %}<link href="/static/css/dashboard.css" rel="stylesheet">{% endblock %}
+{% block moreJS %}<script src="/static/js/dashboard.js"></script>{% endblock %}
+
+{% block content %}
+
+<h2>Welcome {{ user.name }}...</h2>
+
+<div id="status" class="status"></div>
+
+{% endblock %}

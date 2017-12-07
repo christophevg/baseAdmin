@@ -1,0 +1,12 @@
+{
+  "name": "baseAdmin",
+  "description": "Demo app for the baseAdmin framework.",
+  "website": "https://github.com/christophevg/baseAdmin",
+
+  "addons" : [
+    "mongolab"
+  ],
+
+  "success_url": "/"
+
+}

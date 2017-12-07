@@ -1,0 +1,9 @@
+/* Move down content because we have a fixed navbar */
+body {
+  padding-top: 25px;
+}
+
+img.logo {
+  margin-top: -4px;
+}
+
