@@ -7,7 +7,9 @@ from jinja2 import TemplateNotFound
 from backend import app, authenticate, mongo
 
 def render(template, without_sections=False):
-  user = mongo.db.users.find_one({ "_id": request.authorization.username })
+  user = None
+  if request.authorization:
+    user = mongo.db.users.find_one({ "_id": request.authorization.username })
   app  = mongo.db.app.find_one({})
   try:
     return render_template(
