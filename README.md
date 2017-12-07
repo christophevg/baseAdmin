@@ -27,7 +27,7 @@ baseAdmin uses the following technology:
 2. (optional, but likely) Rename your repository
 3. Deploy your fork to Heroku  
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)  
-(You now have your very own working baseAdmin installation, running the demo application.)
+You now have your very own working baseAdmin installation, running the demo application. The latest version of this repository is continuously deployed to [https://baseadmin-demo.herokuapp.com](https://baseadmin-demo.herokuapp.com).
 4. Clone your fork and start implementing your own application on top of baseAdmin.
 5. (optional, but advised) Add the initial baseAdmin repository as an upstream remote:  
 `git remote add upstream https://github.com/christophevg/baseAdmin`
