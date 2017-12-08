@@ -1,9 +1,10 @@
-/* Move down content because we have a fixed navbar */
 body {
-  padding-top: 25px;
+  margin:  0px;
+  padding: 0px;
+  height: 100%;
+  overflow: hidden;
 }
 
-img.logo {
-  margin-top: -4px;
+.content-wrapper {
+  padding: 10px;
 }
-

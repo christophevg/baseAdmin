@@ -1,8 +1,9 @@
 (function() {
+
   $( document ).ready(function() {
     $.get( "/api/status", function( value ) {
       $("#status").html( syntaxHighlight(JSON.stringify(value, null, 2)) );
-    });  
+    });
   });
 
   function syntaxHighlight(json) {
@@ -24,5 +25,5 @@
     });
     return "<pre>" + html + "</pre>";
   }
-
+  
 })();
