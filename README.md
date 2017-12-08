@@ -2,6 +2,10 @@
 
 A framework for administrative applications, consisting of a web-based UI and REST backend interface.
 
+## Work in Progress Warning ;-)
+
+I've only just started working on this, so until this warning is removed, I wouldn't trust myself using this ;-) Do play with it, but things can still change overnight.
+
 ## Rationale
 
 Having developed several solutions that included an administrative backend, common patterns emerged. With baseAdmin I'm extracting the common parts into a framework that can be forked and extended for specific applications. The main goal is a have a working solution out of the box that can be extended with minimal (redundant) effort.
@@ -18,8 +22,8 @@ baseAdmin uses the following technology:
   * Python with Flask and Flask_Restful
   * Mongo DB
 * Frontend
-  * Bootstrap
   * Vue.js
+  * Vuetify
 
 ## How to Use baseAdmin
 
@@ -35,8 +39,7 @@ You now have your very own working baseAdmin installation, running the demo appl
 `git fetch upstream; git checkout master; git merge upstream/master`  
 (Hint: The top-level `Makefile` contains a target to do this: `make update`)
 
-> The `backend` folder is part of the baseAdmin repository, but act as placeholders for implementing your own application. Most files will never be part of commits to baseAdmin and can be edited and committed to just for your application. Future changes to baseAdmin will be mergeable onto your repository and will reuse your changes. Exception to this rule of thumb is: `__init__.py`, which sets up the environment and provides the following objects to work with: `app`, `mongo` and `api`, as well as an `authenticate` decorator.
-They initially contain the demo applicationm, which you can use to start your own application from.
+> The `backend` folder contains the baseAdmin server implementation, that also serves the actual baseAdmin pages. The original baseAdmin repository contains a backend folder that contains a demo application, which you can use to bootstrap your own application. Parts of the backend folder will never again be touched by commits to the original baseAdmin repository. These include the `app` folder. This folder contains the actual application, built on top of baseAdmin. this initially contains the demo application, which will not be changed anymore.
 
 ## Running baseAdmin Locally
 

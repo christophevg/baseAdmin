@@ -1,3 +1,3 @@
-from backend import app
+from backend import server
 
-app.run(debug=True, host="0.0.0.0")
+server.run(debug=True, host="0.0.0.0")

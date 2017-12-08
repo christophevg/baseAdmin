@@ -2,7 +2,7 @@ import os
 import logging
 import bcrypt
 
-from backend import app, mongo
+from backend import server, mongo
 
 # provision initial users collection
 
@@ -48,6 +48,6 @@ def provision_app(force=False):
 # by default provisioning is only run once for each collection
 # setting a PROVISION environment variable forces re-provisioning
 force = not os.environ.get("PROVISION") is None
-with app.app_context():
+with server.app_context():
   provision_users(force)
   provision_app(force)

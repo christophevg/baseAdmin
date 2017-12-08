@@ -1,4 +1,3 @@
-from flask import request, abort
 from flask_restful import Resource
 
 from backend import app, api, mongo, authenticate

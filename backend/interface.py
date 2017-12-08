@@ -4,7 +4,7 @@ from flask import render_template
 from flask import request
 from jinja2 import TemplateNotFound
 
-from backend import app, authenticate, mongo
+from backend import mongo
 
 def render(template, without_sections=False):
   user = None
@@ -26,11 +26,4 @@ def render(template, without_sections=False):
       without_sections=True
     )
 
-@app.route("/")
-def render_home():
-  return render("home", without_sections=True)
-
-@app.route("/<string:section>")
-@authenticate(["admin"])
-def render_section(section):
-  return render(section)
+import backend.app.interface

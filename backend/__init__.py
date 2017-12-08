@@ -6,6 +6,7 @@ from flask import Flask, Response, request
 import flask_restful
 from flask_pymongo import PyMongo
 from flask import make_response
+import jinja2
 
 from bson.json_util import dumps
 
@@ -43,12 +44,18 @@ MONGO_URI = os.environ.get("MONGODB_URI")
 if not MONGO_URI:
   MONGO_URI = "mongodb://localhost:27017/" + APP_NAME;
 
-# setup the web-application
-app = Flask(__name__)
-app.config['MONGO_URI'] = MONGO_URI
+# setup the web-server
+server = Flask(__name__)
+
+my_loader = jinja2.ChoiceLoader([
+  jinja2.FileSystemLoader("backend/app/templates/"),
+  server.jinja_loader,
+])
+server.jinja_loader = my_loader
 
 # setup the mongo-instance and provision initial data if needed
-mongo = PyMongo(app)
+server.config['MONGO_URI'] = MONGO_URI
+mongo = PyMongo(server)
 
 import backend.provision
 
@@ -58,7 +65,7 @@ def output_json(obj, code, headers=None):
   resp.headers.extend(headers or {})
   return resp
 
-api = flask_restful.Api(app)
+api = flask_restful.Api(server)
 api.representations = { 'application/json': output_json }
 
 def valid_credentials(users, auth):
