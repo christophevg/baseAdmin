@@ -1,10 +1,10 @@
 import os
 
-from flask import render_template
+from flask import render_template, send_from_directory
 from flask import request
 from jinja2 import TemplateNotFound
 
-from backend import mongo
+from backend import server, mongo
 
 def render(template, without_sections=False):
   user = None
@@ -25,5 +25,10 @@ def render(template, without_sections=False):
       user=user,
       without_sections=True
     )
+
+@server.route("/app/<path:filename>")
+def send_app_static(filename):
+  return send_from_directory("app/static", filename)
+
 
 import backend.app.interface
