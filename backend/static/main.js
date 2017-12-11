@@ -1,7 +1,50 @@
+var store = new Vuex.Store({
+  state: {
+    properties : {
+      prop1: {
+        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+        data: [ 40, 39, 10, 40, 39, 80, 40 ],
+        color: "#0567BA",
+        label: 'Property 1',
+        title: 'Property 1',
+        flex: 6,
+        height: 200
+      },
+      prop2: {
+        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+        data: [ 40, 39, 10, 40, 39, 80, 40 ],
+        color: "#0567BA",
+        label: 'Property 2',
+        title: 'Property 2',
+        flex: 6,
+        height: 200
+      }
+    }
+  },
+  mutations: {
+    updateProperty: function(state, update) {
+      state.properties[update.id].labels = update.labels;
+      state.properties[update.id].data   = update.data;
+    },
+  },
+  getters: {
+    propertyData: function(state) {
+      return function(id) {
+        return state.properties[id].data;
+      }
+    },
+    propertyLabels: function(state) {
+      return function(id) {
+        return state.properties[id].labels;
+      }
+    }
+  }
+});
+
 Vue.component('line-chart', {
   extends:  VueChartJs.Line,
-  mixins: [ VueChartJs.mixins.reactiveProp],
-  props:  [ 'chartData' ],
+  mixins: [ VueChartJs.mixins.reactiveProp ],
+  props:  [ "options" ],
   mounted: function() {
     this.renderChart(
       this.chartData,
@@ -16,6 +59,15 @@ Vue.component('line-chart', {
   }
 });
 
+function create_chart(prop) {
+  var data = store.state.properties[prop]; 
+  return {
+    title: data.title,
+    flex: data.flex,
+    height: data.height
+  };
+}
+
 var app = new Vue({
   el: "#app",
   delimiters: ['${', '}'],
@@ -26,57 +78,43 @@ var app = new Vue({
       { icon: 'home',    text: 'Home',      path: "/"          },
       { icon: 'history', text: 'Dashboard', path: "/dashboard" },
     ],
-    cards: [
-      {
-        datacollection : {
-          labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-          datasets: [
-            {
-              label: 'Set 1',
-              backgroundColor: "#0567BA",
-              data: [ 40, 39, 10, 40, 39, 80, 40 ]
-            }
-          ]
-        },
-        title: "Property 1",
-        flex: 6
-      },
-      {
-        datacollection : {
-          labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-          datasets: [
-            {
-              label: 'Set 2',
-              backgroundColor: "#0567BA",
-              data: [ 40, 39, 10, 40, 39, 80, 40 ]
-            }
-          ]
-        },
-        title: "Property 2",
-        flex: 6
-      }
-    ]
-  },
-  props: {
-    source: String
+    charts: {
+      prop1 : create_chart("prop1"),
+      prop2 : create_chart("prop2")
+    }
   },
   methods: {
-    updateChart: function(card) {
-      var labels = card.datacollection.labels,
-          data   = card.datacollection.datasets[0].data;
-      labels.push(labels.shift());
-      data.push(data.shift());
-      // don't update datacollection directly, create a new object !
-      card.datacollection = {
-        labels: labels,
-        datasets: [
+    propertyChartData: function(id) {
+      return {
+        labels: this.propertyLabels(id),
+        datasets : [
           {
-            label: card.datacollection.datasets[0].label,
-            backgroundColor: card.datacollection.datasets[0].backgroundColor,
-            data: data
+            label: "label",
+            backgroundcolor: "#0567BA",
+            data: this.propertyData(id)
           }
         ]
       }
+    },
+    propertyData: function(id) {
+      return store.getters.propertyData(id);
+    },
+    propertyLabels: function(id) {
+      return store.getters.propertyLabels(id);
+    },
+    updateProperty: function(id) {
+      var data   = this.propertyData(id);
+          labels = this.propertyLabels(id);
+      data.push(data.shift());
+      labels.push(labels.shift());
+      store.commit("updateProperty", {
+        id: id,
+        data: data,
+        labels: labels
+      })
     }
+  },
+  props: {
+    source: String
   }
 });

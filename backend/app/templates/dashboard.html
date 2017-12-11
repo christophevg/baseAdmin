@@ -16,21 +16,21 @@ ${ message }
     <v-flex xs12>
       <v-container fluid grid-list-md class="grey lighten-4">
         <v-layout row wrap>
-          <v-flex v-bind="{ [`xs${card.flex}`]: true }" v-for="card in cards" :key="card.title">
+          <v-flex v-bind="{ [`xs${chart.flex}`]: true }" v-for="(chart, id) in charts" :key="chart.title">
             <v-card>
               <v-card-title>
                 <div>
-                  <h3 class="headline mb-0">${ card.title }</h3>
+                  <h3 class="headline mb-0">${ chart.title }</h3>
                 </div>
               </v-card-title>
               <v-card-text>
                 <div style="width: 100%;">
-                  <line-chart :chart-data="card.datacollection" height="200px"></line-chart>
+                  <line-chart :property="id" :chart-data="propertyChartData(id)" :height="chart.height"></line-chart>
                 </div>
               </v-card-text>
               <v-card-actions class="white">
                 <v-spacer></v-spacer>
-                <v-btn icon @click="updateChart(card)">
+                <v-btn icon @click="updateProperty(id)">
                   <v-icon>refresh</v-icon>
                 </v-btn>
               </v-card-actions>
