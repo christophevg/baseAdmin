@@ -5,7 +5,6 @@ var store = new Vuex.Store({
         labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
         data: [ 40, 39, 10, 40, 39, 80, 40 ],
         color: "#0567BA",
-        label: 'Property 1',
         title: 'Property 1',
         flex: 6,
         height: 200
@@ -13,8 +12,7 @@ var store = new Vuex.Store({
       prop2: {
         labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
         data: [ 40, 39, 10, 40, 39, 80, 40 ],
-        color: "#0567BA",
-        label: 'Property 2',
+        color: "#ff0000",
         title: 'Property 2',
         flex: 6,
         height: 200
@@ -62,9 +60,10 @@ Vue.component('line-chart', {
 function create_chart(prop) {
   var data = store.state.properties[prop]; 
   return {
-    title: data.title,
-    flex: data.flex,
-    height: data.height
+    title:  data.title,
+    height: data.height,
+    color:  data.color,
+    flex:   data.flex
   };
 }
 
@@ -89,8 +88,8 @@ var app = new Vue({
         labels: this.propertyLabels(id),
         datasets : [
           {
-            label: "label",
-            backgroundcolor: "#0567BA",
+            label: this.charts[id].title,
+            backgroundColor: this.charts[id].color,
             data: this.propertyData(id)
           }
         ]
@@ -113,8 +112,5 @@ var app = new Vue({
         labels: labels
       })
     }
-  },
-  props: {
-    source: String
   }
 });
