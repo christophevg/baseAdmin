@@ -16,14 +16,18 @@ The main goal of baseAdmin is out of the box functionality that is extendable wi
 
 ## Technology Stack
 
-baseAdmin uses the following technology:
+This project stands on the shoulders of these wonderful high-power projects:
 
 * Backend
-  * Python with Flask and Flask_Restful
+  * Python
+  * [Flask](http://flask.pocoo.org)
+  * [Flask_Restful](http://flask-restful.readthedocs.io/en/latest/)
   * Mongo DB
 * Frontend
-  * Vue.js
-  * Vuetify
+  * [Vue.js](https://vuejs.org)
+  * [Vuex](https://vuex.vuejs.org)
+  * [Vuetify](https://vuetifyjs.com)
+  * [Vue ChartJS](http://vue-chartjs.org)
 
 ## How to Use baseAdmin
 
