@@ -47,6 +47,15 @@ You now have your very own working baseAdmin installation, running the demo appl
 
 ## Running baseAdmin Locally
 
+Install dependencies: MongoDB and Mosquitto. Make sure Mosquitto is compiled with websockets support and enable a listener for it in the configuration file:
+
+```
+listener 1883
+
+listener 9001 127.0.0.1
+protocol websockets
+```
+
 The first time only: create a virtual Python environment:
 
 ```bash
@@ -60,3 +69,34 @@ $ . venv/bin/activate
 (venv) $ pip install -r requirements.txt
 (venv) $ python run.py
 ```
+(Hint: The top-level `Makefile` contains a target to do this: `make run`)
+
+### Provisioning of data
+
+When run for the first time, the Mongo database will be populated with collections with data. When a collection already exists, it will not be touched.
+
+### Environment
+
+To set environment variables, a `env.local` file can be created alongside `run.py`. (Hint: it's already in the `.gitignore` file)
+
+The defaults for local development are:
+
+```
+APP_NAME=baseAdmin
+MONGODB_URI=mongodb://localhost:27017/baseAdmin
+CLOUDMQTT_URL=ws://localhost:9001/
+```
+
+When the environment contains a variable `PROVISION`, the mongo database will be reinitialised; collections are dropped and recreated. This is a useful thing while developing baseAdmin or your own application.
+
+(Hint: The top-level `Makefile` contains a target to do this: `make devel`)
+
+### Testing
+
+Visit `http://localhost:5000/dashboard`. From a command prompt issue:
+
+```bash
+$  mosquitto_pub -h localhost -t "prop1" -m "updateProperty"
+```
+
+and watch the left/blue graph.
