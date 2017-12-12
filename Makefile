@@ -3,8 +3,11 @@ update:
 	git checkout master
 	git merge upstream/master
 
-run:
-	. venv/bin/activate;	python run.py
+requirements: requirements.txt
+	. venv/bin/activate; pip install -r $< > /dev/null
 
-devel:
+run: requirements
+	. venv/bin/activate; python run.py
+
+devel: requirements
 	. venv/bin/activate; PROVISION=force python run.py
