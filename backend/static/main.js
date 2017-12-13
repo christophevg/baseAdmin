@@ -17,6 +17,9 @@ var store = new Vuex.Store({
         flex: 6,
         height: 200
       }
+    },
+    mqtt : {
+      clients: []
     }
   },
   mutations: {
@@ -24,8 +27,25 @@ var store = new Vuex.Store({
       state.properties[update.id].labels = update.labels;
       state.properties[update.id].data   = update.data;
     },
+    removeClient: function(state, client) {
+      state.mqtt.clients = state.mqtt.clients.filter(function (el) {
+        return el.name != client;
+      });
+    },
+    addClient: function(state, client) {
+      var clients = state.mqtt.clients.filter(function (el) {
+        return el.name != client;
+      });
+      clients.push({"name" : client});
+      state.mqtt.clients = clients;
+    }
   },
   getters: {
+    clients: function(state) {
+      return function() {
+        return state.mqtt.clients;
+      }
+    },
     propertyData: function(state) {
       return function(id) {
         return state.properties[id].data;
@@ -80,9 +100,15 @@ var app = new Vue({
     charts: {
       prop1 : create_chart("prop1"),
       prop2 : create_chart("prop2")
-    }
+    },
+    headers: [
+      { text: 'Client', align: 'left', sortable: true, value: 'name' }
+    ]
   },
   methods: {
+    clients: function() {
+      return store.getters.clients();
+    },
     propertyChartData: function(id) {
       return {
         labels: this.propertyLabels(id),
@@ -111,6 +137,12 @@ var app = new Vue({
         data: data,
         labels: labels
       })
+    },
+    addClient: function(client) {
+      store.commit("addClient", client);
+    },
+    removeClient: function(client) {
+      store.commit("removeClient", client);
     }
   }
 });

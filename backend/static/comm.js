@@ -12,7 +12,7 @@
 
   function onConnect() {
     client.subscribe("#");
-    send("client/status", clientId + ":connect");
+    send("client/status", clientId + ":online");
   }
 
   function onConnectionLost(responseObject) {
@@ -31,6 +31,16 @@
     if(message.payloadString == "updateProperty") {
       app.updateProperty(message.destinationName)
     }
+    if(message.destinationName == "client/status") {
+      var parts  = message.payloadString.split(":"),
+          client = parts[0],
+          online = parts[1] == "online";
+      if(online) {
+        app.addClient(client);
+      } else {
+        app.removeClient(client);
+      }
+    }
   }
 
   function connect(mqtt) {
@@ -40,7 +50,7 @@
     client.onConnectionLost = onConnectionLost;
     client.onMessageArrived = onMessageArrived;
 
-    var lwt = new Paho.MQTT.Message( clientId + ":disconnect");
+    var lwt = new Paho.MQTT.Message( clientId + ":offline");
     lwt.destinationName = "client/status";
     lwt.qos = 1;
     lwt.retained = false;
@@ -62,6 +72,14 @@
 
   $.get("/api/mq/connection", function(data) {
     connect(data);
+  });
+
+  // initialize with clients known at server-side
+  $.get("/api/mq/clients", function(clients) {
+    console.log(clients);
+    for(var i in clients) {
+      app.addClient(clients[i]);
+    }
   });
 
 })();

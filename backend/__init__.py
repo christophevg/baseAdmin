@@ -8,6 +8,8 @@ import backend.logging
 
 import backend.data
 
+import backend.mq
+
 import backend.web
 import backend.rest
 

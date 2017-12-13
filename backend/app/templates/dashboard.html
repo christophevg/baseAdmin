@@ -42,6 +42,15 @@ ${ message }
   </v-layout>
 </template>
 
+<h3>Current MQTT Clients</h3>
 
+<v-data-table v-bind:headers="headers"
+              :items="clients()"
+              hide-actions
+              class="elevation-1">
+  <template slot="items" slot-scope="props">
+    <td>${ props.item.name }</td>
+  </template>
+</v-data-table>
 
 {% endblock %}
