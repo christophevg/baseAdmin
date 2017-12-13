@@ -1,9 +1,18 @@
 (function() {
 
   var client = null;
+  var clientId = "ws" + Math.random();
+
+  function send(topic, msg) {
+    var message = new Paho.MQTT.Message(msg);
+    message.destinationName = topic;
+    message.qos = 1;
+    client.send(message);
+  }
 
   function onConnect() {
     client.subscribe("#");
+    send("client/status", clientId + ":connect");
   }
 
   function onConnectionLost(responseObject) {
@@ -26,16 +35,21 @@
 
   function connect(mqtt) {
     if(! mqtt ) { return; }
-    var clientId = "ws" + Math.random();
     client = new Paho.MQTT.Client(mqtt.hostname, mqtt.port, clientId);
 
     client.onConnectionLost = onConnectionLost;
     client.onMessageArrived = onMessageArrived;
 
+    var lwt = new Paho.MQTT.Message( clientId + ":disconnect");
+    lwt.destinationName = "client/status";
+    lwt.qos = 1;
+    lwt.retained = false;
+
     var options = {
-      useSSL   : mqtt.ssl,
-      onSuccess: onConnect,
-      onFailure: onFailure
+      useSSL     : mqtt.ssl,
+      onSuccess  : onConnect,
+      onFailure  : onFailure,
+      willMessage: lwt
     }
 
     if(mqtt.username) {
