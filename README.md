@@ -23,11 +23,13 @@ This project stands on the shoulders of these wonderful high-power projects:
   * [Flask](http://flask.pocoo.org)
   * [Flask_Restful](http://flask-restful.readthedocs.io/en/latest/)
   * Mongo DB
+  * MQTT
 * Frontend
   * [Vue.js](https://vuejs.org)
   * [Vuex](https://vuex.vuejs.org)
   * [Vuetify](https://vuetifyjs.com)
   * [Vue ChartJS](http://vue-chartjs.org)
+  * [Paho Javascript Client](https://eclipse.org/paho/clients/js/)
 
 ## How to Use baseAdmin
 
