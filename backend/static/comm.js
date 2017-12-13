@@ -24,23 +24,29 @@
     }
   }
 
-  function connect(mqtt_uri) {
+  function connect(mqtt) {
+    if(! mqtt ) { return; }
     var clientId = "ws" + Math.random();
-    client = new Paho.MQTT.Client(
-      mqtt_uri.replace("mqtt", "wss").replace("19044", "39044"),
-      clientId
-    );
+    client = new Paho.MQTT.Client(mqtt.hostname, mqtt.port, clientId);
 
     client.onConnectionLost = onConnectionLost;
     client.onMessageArrived = onMessageArrived;
 
-    client.connect({
+    var options = {
+      useSSL   : mqtt.ssl,
       onSuccess: onConnect,
       onFailure: onFailure
-    });
+    }
+
+    if(mqtt.username) {
+      options["userName"] = mqtt.username;
+      options["password"] = mqtt.password;
+    }
+
+    client.connect(options);
   }
 
-  $.get("/api/env/CLOUDMQTT_URL", function(data) {
+  $.get("/api/mqtt/connection", function(data) {
     connect(data);
   });
 
