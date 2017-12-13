@@ -60,7 +60,7 @@
     client.connect(options);
   }
 
-  $.get("/api/mqtt/connection", function(data) {
+  $.get("/api/mq/connection", function(data) {
     connect(data);
   });
 
