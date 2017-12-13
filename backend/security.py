@@ -2,9 +2,9 @@ from functools import wraps
 
 import bcrypt
 
-from flask import request
+from flask import request, Response
 
-
+from backend      import APP_NAME
 from backend.data import store
 
 def valid_credentials(users, auth):
