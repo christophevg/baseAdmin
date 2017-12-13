@@ -26,7 +26,10 @@
 
   function connect(mqtt_uri) {
     var clientId = "ws" + Math.random();
-    client = new Paho.MQTT.Client(mqtt_uri, clientId);
+    client = new Paho.MQTT.Client(
+      mqtt_uri.replace("mqtt", "wss").replace("19044", "39044"),
+      clientId
+    );
 
     client.onConnectionLost = onConnectionLost;
     client.onMessageArrived = onMessageArrived;
