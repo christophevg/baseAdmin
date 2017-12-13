@@ -1,4 +1,5 @@
-from backend import server, authenticate
+from backend.web import server
+from backend.security import authenticate
 from backend.interface import render
 
 @server.route("/")

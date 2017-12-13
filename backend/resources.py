@@ -5,14 +5,17 @@ from urllib.parse import urlparse
 
 from flask_restful import Resource
 
-from backend import app, api, mongo, authenticate
+from backend import app
+from backend.data import store
+from backend.security import authenticate
+from backend.rest import api
 
 class Connection(Resource):
   @authenticate(["admin"])
   def get(self):
     return {
       'status': 'OK',
-      'mongo': str(mongo.db),
+      'store': str(store.db),
     }
 
 api.add_resource(Connection, "/api/status")
