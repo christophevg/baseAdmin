@@ -13,9 +13,9 @@ class Client():
       description = self.name + ": a baseAdmin client."
 
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("--backend",  type=str, help="backend url.",      default=None)
-    parser.add_argument("--username", type=str, help="backend user.",     default=None)
-    parser.add_argument("--password", type=str, help="backend password.", default=None)
+    parser.add_argument("--backend",  type=str, help="backend url.")
+    parser.add_argument("--username", type=str, help="backend user.")
+    parser.add_argument("--password", type=str, help="backend password.")
 
     args = parser.parse_args()
 
