@@ -72,8 +72,8 @@ def connect(clientId=CLIENT_ID, mq=None):
     client.username_pw_set(mq["username"], mq["password"])
   client.on_connect = on_connect
   client.on_message = on_message
-  client.will_set("client/status", clientId + ":offline", 0, False)
+  client.will_set("client/status", clientId + ":offline", 1, False)
   logging.debug("connecting to MQ " + mq["hostname"] + ":" + str(mq["port"]))
   client.connect(mq["hostname"], mq["port"])
   client.loop_start()
-  client.publish("client/status",  clientId + ":online",  0, False)
+  client.publish("client/status",  clientId + ":online",  1, False)
