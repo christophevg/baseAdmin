@@ -1,8 +1,4 @@
-from os.path import join, dirname
-from dotenv import load_dotenv
-
-dotenv_path = join(dirname(__file__), "env.local")
-load_dotenv(dotenv_path)
+import backend.config
 
 from backend.web import server
 
