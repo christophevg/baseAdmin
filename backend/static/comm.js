@@ -1,7 +1,7 @@
 (function() {
 
   var client = null;
-  var clientId = "ws" + Math.random();
+  var clientId = "backend-ui" + Math.random();
 
   function send(topic, msg) {
     var message = new Paho.MQTT.Message(msg);
@@ -76,7 +76,6 @@
 
   // initialize with clients known at server-side
   $.get("/api/mq/clients", function(clients) {
-    console.log(clients);
     for(var i in clients) {
       app.addClient(clients[i]);
     }
