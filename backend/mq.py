@@ -17,17 +17,20 @@ if not CLOUDMQTT_URL:
 MQ_URI = CLOUDMQTT_URL
 
 p = urlparse(MQ_URI)
-MQ_SSL      = p.scheme
-MQ_HOSTNAME = p.hostname
-MQ_PORT     = p.port
-MQ_USERNAME = p.username
-MQ_PASSWORD = p.password
+MQ = {
+  "hostname" : p.hostname,
+  "port"     : p.port,
+  "username" : p.username,
+  "password" : p.password
+}
 
-MQ_WS_SSL      = p.scheme == "wss" or p.port == 19044
-MQ_WS_HOSTNAME = p.hostname
-MQ_WS_PORT     = 39044 if p.port == 19044 else 9001
-MQ_WS_USERNAME = p.username
-MQ_WS_PASSWORD = p.password
+MQ_WS = {
+  "ssl"      : p.scheme == "wss" or p.port == 19044,
+  "hostname" : p.hostname,
+  "port"     : 39044 if p.port == 19044 else 9001,
+  "username" : p.username,
+  "password" : p.password  
+}
 
 subscriptions = {}
 
@@ -58,16 +61,19 @@ def track_clients():
   logging.debug("following client/status")
   follow("client/status", track_client_status)
 
-mq = None
+client = None
 CLIENT_ID = HOSTNAME + "@" + IP
 
-def connect(clientId=CLIENT_ID):
+def connect(clientId=CLIENT_ID, mq=None):
+  if mq is None: mq = MQ
   clientId = clientId + "@" + HOSTNAME + "(" + IP + ")"
-  mq = mqtt.Client()
-  mq.on_connect = on_connect
-  mq.on_message = on_message
-  mq.will_set("client/status", clientId + ":offline", 0, False)
-  logging.debug("connecting to MQ " + MQ_HOSTNAME + ":" + str(MQ_PORT))
-  mq.connect(MQ_HOSTNAME, MQ_PORT)
-  mq.loop_start()
-  mq.publish("client/status",  clientId + ":online",  0, False)
+  client = mqtt.Client()
+  if mq["username"] and mq["password"]:
+    client.username_pw_set(mq["username"], mq["password"])
+  client.on_connect = on_connect
+  client.on_message = on_message
+  client.will_set("client/status", clientId + ":offline", 0, False)
+  logging.debug("connecting to MQ " + mq["hostname"] + ":" + str(mq["port"]))
+  client.connect(mq["hostname"], mq["port"])
+  client.loop_start()
+  client.publish("client/status",  clientId + ":online",  0, False)
