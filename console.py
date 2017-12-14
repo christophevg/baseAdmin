@@ -5,6 +5,7 @@ import backend.logging
 import backend.config
 
 from backend.client import Client
+from backend.mq     import follow
 
 def event_loop():
   logging.info("starting console event loop, interrupt with Ctrl+c")
@@ -14,5 +15,10 @@ def event_loop():
   except KeyboardInterrupt:
     pass
 
+def print_msg(msg):
+  print(msg)
+
 console = Client("console")
-if console.run(): event_loop()
+if console.run():
+  follow("#", print_msg)
+  event_loop()
