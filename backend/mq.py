@@ -39,14 +39,15 @@ def follow(topic, callback):
     subscriptions[topic] = set()
   subscriptions[topic].add(callback)
 
-def on_connect(client, userdata, flags, rc):
+def on_connect(client, clientId, flags, rc):
   logging.debug("mq: connected with result code " + str(rc))
   client.subscribe("#")
+  client.publish("client/status",  clientId + ":online",  1, False)
 
-def on_message(client, userdata, msg):
   if not msg.topic in subscriptions: return
   for callback in subscriptions[msg.topic]:
     callback(str(msg.payload.decode("utf-8")))
+def on_message(client, clientId, msg):
 
 def track_client_status(msg):
   (client, status) = str(msg).split(":")
@@ -67,7 +68,7 @@ CLIENT_ID = HOSTNAME + "@" + IP
 def connect(clientId=CLIENT_ID, mq=None):
   if mq is None: mq = MQ
   clientId = clientId + "@" + HOSTNAME + "(" + IP + ")"
-  client = mqtt.Client()
+  client = mqtt.Client(userdata=clientId)
   if mq["username"] and mq["password"]:
     client.username_pw_set(mq["username"], mq["password"])
   client.on_connect = on_connect
@@ -76,4 +77,3 @@ def connect(clientId=CLIENT_ID, mq=None):
   logging.debug("connecting to MQ " + mq["hostname"] + ":" + str(mq["port"]))
   client.connect(mq["hostname"], mq["port"])
   client.loop_start()
-  client.publish("client/status",  clientId + ":online",  1, False)
