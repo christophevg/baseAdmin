@@ -1,15 +1,18 @@
 import logging
-import backend.logging
+import time
 
+import backend.logging
 import backend.config
 
 from backend.client import Client
 
-console = Client("console")
-if console.run():
+def event_loop():
+  logging.info("starting console event loop, interrupt with Ctrl+c")
   try:
-    logging.info("starting console event loop, interrupt with Ctrl+c")
     while True:
-      pass
+      time.sleep(10)
   except KeyboardInterrupt:
     pass
+
+console = Client("console")
+if console.run(): event_loop()
