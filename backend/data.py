@@ -2,6 +2,7 @@ import os
 
 from flask_pymongo import PyMongo
 
+from backend import APP_NAME
 from backend.web import server
 
 MONGO_URI = os.environ.get("MONGODB_URI")
