@@ -44,10 +44,15 @@ def on_connect(client, clientId, flags, rc):
   client.subscribe("#")
   client.publish("client/status",  clientId + ":online",  1, False)
 
-  if not msg.topic in subscriptions: return
-  for callback in subscriptions[msg.topic]:
-    callback(str(msg.payload.decode("utf-8")))
 def on_message(client, clientId, msg):
+  topic = msg.topic
+  msg   = str(msg.payload.decode("utf-8"))
+  if "#"   in subscriptions: dispatch_message("#",   msg)
+  if topic in subscriptions: dispatch_message(topic, msg)
+
+def dispatch_message(topic, msg):
+  for callback in subscriptions[topic]:
+    callback(msg)
 
 def track_client_status(msg):
   (client, status) = str(msg).split(":")
