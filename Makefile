@@ -11,3 +11,6 @@ run: requirements
 
 devel: requirements
 	. venv/bin/activate; PROVISION=force python run.py
+
+console: requirements
+	. venv/bin/activate; python console.py
