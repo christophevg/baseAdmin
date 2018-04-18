@@ -12,7 +12,7 @@ s.connect(("8.8.8.8", 80))
 IP = s.getsockname()[0]
 s.close()
 
-import backend.logging
+import common.logging
 
 import backend.data
 

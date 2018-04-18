@@ -1,24 +1,75 @@
 import logging
 import time
 
-import backend.logging
-import backend.config
+import curses
+import curses.textpad
 
-from backend.client import Client
-from backend.mq     import follow
+import local.config
+import local.logging
 
-def event_loop():
-  logging.info("starting console event loop, interrupt with Ctrl+c")
-  try:
-    while True:
-      time.sleep(10)
-  except KeyboardInterrupt:
-    pass
+import remote.client
 
-def print_msg(msg):
-  print(msg)
+class Console(remote.client.Base):
+  def __init__(self, stdscr):
+    super(self.__class__, self).__init__(name="console")
+    self.stdscr = stdscr
+    self.command = ""
+    self.setup_windows()
+    self.run()
+    self.follow("#")
+    self.event_loop() 
+    
+  def setup_windows(self):
+    curses.use_default_colors()
+    # curses.curs_set(0)
+    self.stdscr.nodelay(1)
+    self.detect_dimensions()
+    self.log = curses.newwin(self.height-2, self.width, 0, 0)
+    self.log.refresh()
+    self.log.scrollok(True)
+    self.log.idlok(True)
+    self.log.leaveok(True)
+    self.bar = curses.newwin(1, self.width, self.height-2, 0)
+    self.bar.addstr(0, 0, "console" + " " * (self.width-7-1), curses.A_REVERSE)
+    self.bar.refresh()
+    self.cli = curses.newwin(1, self.width, self.height-1, 0)
+    self.prompt = curses.textpad.Textbox(self.cli, insert_mode=True)
 
-console = Client("console")
-if console.run():
-  follow("#", print_msg)
-  event_loop()
+  def detect_dimensions(self):
+    self.height, self.width = self.stdscr.getmaxyx()
+
+  def event_loop(self):
+    logging.info("starting console event loop, interrupt with Ctrl+c")
+    try:
+      while True:
+        self.command = text = self.prompt.edit(self.validate_input)
+        self.execute_command()
+    except KeyboardInterrupt:
+      pass
+
+  def validate_input(self, ch):
+    # remap backspace to "backspace" ;-)
+    if ch == 127: return curses.KEY_BACKSPACE
+    # TODO curses.RESIZE event
+    # TODO add history
+    return ch
+
+  def execute_command(self):
+    if len(self.command) < 1: return
+    logging.debug("executing command: " + self.command)
+    self.publish("console/command", self.command)
+    self.command = ""
+    self.cli.clear()
+
+  def handle_mqtt_message(self, topic, msg):
+    y, x = curses.getsyx()
+
+    # TODO add timestamp?
+    self.log.addstr(topic + ": " + msg+"\n")
+    self.log.refresh()
+
+    curses.setsyx(y, x)
+    self.cli.refresh()
+
+if __name__ == "__main__":
+  curses.wrapper(Console)

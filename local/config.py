@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 
-import backend.logging
+import logging
 
 from os.path import join, dirname, isfile
 from dotenv import load_dotenv
