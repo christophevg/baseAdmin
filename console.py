@@ -14,6 +14,7 @@ class Console(remote.client.Base):
     super(self.__class__, self).__init__(name="console")
     self.stdscr = stdscr
     self.command = ""
+    self.command_lines = 1;
     self.setup_windows()
     self.run()
     self.follow("#")
@@ -21,19 +22,27 @@ class Console(remote.client.Base):
     
   def setup_windows(self):
     curses.use_default_colors()
-    # curses.curs_set(0)
     self.stdscr.nodelay(1)
-    self.detect_dimensions()
-    self.log = curses.newwin(self.height-2, self.width, 0, 0)
-    self.log.refresh()
+    self.log = curses.newwin(0, 0, 0, 0)
     self.log.scrollok(True)
     self.log.idlok(True)
     self.log.leaveok(True)
-    self.bar = curses.newwin(1, self.width, self.height-2, 0)
+    self.bar = curses.newwin(0, 0, 0, 0)
+    self.cli = curses.newwin(0, 0, 0, 0)
+    self.prompt = curses.textpad.Textbox(self.cli, insert_mode=True)
+    self.on_resize()
+
+  def on_resize(self):
+    self.detect_dimensions()
+    self.log.resize(self.height-1-self.command_lines, self.width)
+    self.log.refresh()
+    self.bar.resize(1, self.width)
+    self.bar.mvwin(self.height-1-self.command_lines, 0)
     self.bar.addstr(0, 0, "console" + " " * (self.width-7-1), curses.A_REVERSE)
     self.bar.refresh()
-    self.cli = curses.newwin(1, self.width, self.height-1, 0)
-    self.prompt = curses.textpad.Textbox(self.cli, insert_mode=True)
+    self.cli.resize(self.command_lines, self.width)
+    self.cli.mvwin(self.height-self.command_lines, 0)
+    self.cli.refresh()
 
   def detect_dimensions(self):
     self.height, self.width = self.stdscr.getmaxyx()
@@ -42,7 +51,7 @@ class Console(remote.client.Base):
     logging.info("starting console event loop, interrupt with Ctrl+c")
     try:
       while True:
-        self.command = text = self.prompt.edit(self.validate_input)
+        self.command = self.prompt.edit(self.validate_input)
         self.execute_command()
     except KeyboardInterrupt:
       pass
@@ -50,7 +59,7 @@ class Console(remote.client.Base):
   def validate_input(self, ch):
     # remap backspace to "backspace" ;-)
     if ch == 127: return curses.KEY_BACKSPACE
-    # TODO curses.RESIZE event
+    if ch == curses.KEY_RESIZE: self.on_resize()
     # TODO add history
     return ch
 
