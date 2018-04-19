@@ -11,7 +11,7 @@ from local import HOSTNAME, IP
 
 import logging
 
-class Base():
+class base():
   def __init__(self, name="client", description=None):
     self.name = name
     if description is None:
@@ -37,6 +37,7 @@ class Base():
     if self.mqtt is None: self.get_mqtt_connection_details()
 
     self.mqtt_client = None
+    self.connect_mqtt()
 
   def get_mqtt_connection_details(self):
     if not self.backend: return
@@ -52,11 +53,6 @@ class Base():
       return
 
     self.mq = response.json()
-
-  def run(self):
-    logging.info("starting client run")
-    self.connect_mqtt()
-    return True
 
   def connect_mqtt(self):
     if self.mqtt is None:
@@ -90,6 +86,7 @@ class Base():
     if self.mqtt_client is None: return
     logging.debug("following MQTT: " + topic)
     self.mqtt_client.subscribe(topic)
+    return self
 
   def publish(self, topic, message):
     self.mqtt_client.publish(topic, message,  1, False)

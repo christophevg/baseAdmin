@@ -14,3 +14,6 @@ devel: requirements
 
 console: requirements
 	. venv/bin/activate; python console.py ${ARGS}
+
+client: requirements
+	. venv/bin/activate; python client.py ${ARGS}

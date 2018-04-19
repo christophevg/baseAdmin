@@ -9,14 +9,13 @@ import local.logging
 
 import remote.client
 
-class Console(remote.client.Base):
+class Console(remote.client.base):
   def __init__(self, stdscr):
     super(self.__class__, self).__init__(name="console")
     self.stdscr = stdscr
     self.command = ""
-    self.command_lines = 1;
+    self.command_lines = 2;
     self.setup_windows()
-    self.run()
     self.follow("#")
     self.event_loop() 
     
