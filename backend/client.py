@@ -3,13 +3,17 @@ import sys
 import argparse
 import requests
 import logging
+import time
 from urllib.parse import urlparse
 
 import paho.mqtt.client as mqtt
 
+from servicefactory import Service
+
 from local import HOSTNAME, IP
 
-import logging
+import local.config
+import local.logging
 
 class base():
   def __init__(self, name="client", description=None):
@@ -90,3 +94,22 @@ class base():
 
   def publish(self, topic, message):
     self.mqtt_client.publish(topic, message,  1, False)
+
+
+@Service.API.endpoint(port=1234)
+class ClientService(Service.base, base):
+
+  def handle_mqtt_message(self, topic, msg):
+    logging.info(topic + " : " + msg)
+
+  def loop(self):
+    logging.info("looping...")
+    time.sleep(5)
+
+  def finalize(self):
+    logging.info("finalising...")
+
+  @Service.API.handle("action")
+  def handle_action(self, data):
+    logging.info("handling action...")
+    logging.info(data)

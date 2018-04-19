@@ -5,7 +5,7 @@ import paho.mqtt.client as mqtt
 
 from urllib.parse import urlparse
 
-from backend      import HOSTNAME, IP
+from local        import HOSTNAME, IP
 from backend.web  import server
 from backend.data import store
 
