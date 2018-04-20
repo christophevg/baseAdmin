@@ -39,7 +39,7 @@ class Storable(object):
     self.config["checksum"] = self.hash(self.config)
     # generate temp file
     fp = NamedTemporaryFile(mode="w+", delete=False)
-    json.dump(self.config, fp)
+    json.dump(self.config, fp, indent=2)
     fp.close()
     # check temp file
     if self.check(fp.name):
