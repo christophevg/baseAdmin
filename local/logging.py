@@ -10,14 +10,16 @@ formatter = logging.Formatter(
 )
 logger = logging.getLogger()
 
-lhStdout = logger.handlers[0]  # stdout is the only handler initially
+lhStdout = None
+if len(logger.handlers) > 0:
+  lhStdout = logger.handlers[0]  # stdout is the only handler initially
 
 logger.setLevel(logging.DEBUG)
 
 # TODO make this configurable, e.g. not for curses clients
-# consoleHandler = logging.StreamHandler()
-# consoleHandler.setFormatter(formatter)
-# logger.addHandler(consoleHandler)
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(formatter)
+logger.addHandler(consoleHandler)
 
 LOGFILE = os.environ.get("LOGFILE")
 if LOGFILE:
@@ -25,8 +27,9 @@ if LOGFILE:
   fileHandler = logging.FileHandler(LOGFILE)
   fileHandler.setFormatter(formatter)
   logger.addHandler(fileHandler)
-  # remove default stdout handler
-  logger.removeHandler(lhStdout)
+  if lhStdout:
+    # remove default stdout handler
+    logger.removeHandler(lhStdout)
 
 # silence loggers of some libs
 logging.getLogger("requests").setLevel(logging.WARNING)

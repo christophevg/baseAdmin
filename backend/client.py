@@ -77,6 +77,10 @@ class base():
   def on_connect(self, client, clientId, flags, rc):
     logging.debug("connected with result code " + str(rc))
     self.mqtt_client.publish("client/" + self.name + "/status", "online",  1, False)
+    self.subscribe()
+  
+  def subscribe(self):
+    pass
 
   def on_message(self, client, clientId, msg):
     topic = msg.topic
@@ -88,7 +92,7 @@ class base():
 
   def follow(self, topic):
     if self.mqtt_client is None: return
-    logging.debug("following MQTT: " + topic)
+    logging.debug("following " + topic)
     self.mqtt_client.subscribe(topic)
     return self
 
@@ -96,11 +100,29 @@ class base():
     self.mqtt_client.publish(topic, message,  1, False)
 
 
-@Service.API.endpoint(port=1234)
+import json
+
+@Service.API.endpoint(port=17171)
 class ClientService(Service.base, base):
 
+  def subscribe(self):
+    self.follow("client/" + self.name + "/config")
+
   def handle_mqtt_message(self, topic, msg):
-    logging.info(topic + " : " + msg)
+    logging.info("received message: " + topic + " : " + msg)
+    try:
+      {
+        "client/" + self.name + "/config": self.handle_config_update
+      }[topic](msg)
+    except KeyError:
+      pass
+
+  def handle_config_update(self, update):
+    try:
+      config = json.loads(update)
+      local.config.store.update(config)
+    except Exception as e:
+      self.publish("client/" + self.name + "/error", "invalid config update: " + str(e))
 
   def loop(self):
     logging.info("looping...")
