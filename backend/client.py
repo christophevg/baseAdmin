@@ -119,8 +119,7 @@ class ClientService(Service.base, base):
 
   def handle_config_update(self, update):
     try:
-      config = json.loads(update)
-      local.config.store.update(config)
+      local.config.store.update(json.loads(update))
     except Exception as e:
       self.publish("client/" + self.name + "/error", "invalid config update: " + str(e))
 
