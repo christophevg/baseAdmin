@@ -52,9 +52,8 @@ class Storable(object):
   def save(self):
     if not "ts" in self.config: self.config["ts"] = time.time()
     self.config["checksum"] = self.hash(self.config)
-    fp = NamedTemporaryFile(mode="w+", delete=False)
-    json.dump(self.config, fp, indent=2, sort_keys=True)
-    fp.close()
+    with NamedTemporaryFile(mode="w+", delete=False) as fp:
+      json.dump(self.config, fp, indent=2, sort_keys=True)
     try:
       self.check(fp.name)
       path = os.path.dirname(self.location)
