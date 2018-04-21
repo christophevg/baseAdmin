@@ -15,7 +15,7 @@ from local import HOSTNAME, IP
 import local.config
 import local.logging
 
-class base():
+class base(object):
   def __init__(self, name="client", description=None):
     self.name = name
     if description is None:
