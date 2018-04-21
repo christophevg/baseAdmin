@@ -3,6 +3,9 @@ import os.path
 import sys
 import logging
 from functools import reduce
+import time
+import copy
+import hashlib
 
 from os.path import join, dirname, isfile
 from dotenv import load_dotenv
@@ -23,62 +26,68 @@ class Storable(object):
     self.location = location
     self.config   = {}
     if not os.path.exists(self.location):
-      self.save()
+      try:
+        self.save()
+        logging.info("initialised persisted configuration")
+      except Exception as e:
+        logging.error("could not persist initial configuration: " + str(e))
     else:
-      self.load()
+      try:
+        self.load()
+        logging.info("loaded persisted configuration: " + str(self.config))
+      except Exception as e:
+        logging.error("could not load persisted configuration: " + str(e))
 
   def update(self, config):
-    logging.debug("persisting config update")
     self.config = config
-    self.save()
+    try:
+      self.save()
+      logging.info("persisted new configuration: " + str(self.config))
+    except Exception as e:
+      logging.error("could not persist new configuration: " + str(e))
 
   def current(self):
     return self.config
 
   def save(self):
+    if not "ts" in self.config: self.config["ts"] = time.time()
     self.config["checksum"] = self.hash(self.config)
-    # generate temp file
     fp = NamedTemporaryFile(mode="w+", delete=False)
-    json.dump(self.config, fp, indent=2)
+    json.dump(self.config, fp, indent=2, sort_keys=True)
     fp.close()
-    # check temp file
-    if self.check(fp.name):
-      # ensure parent path exists
+    try:
+      self.check(fp.name)
       path = os.path.dirname(self.location)
-      if not os.path.exists(path):
-        os.makedirs(path)
+      if not os.path.exists(path): os.makedirs(path)
       os.rename(fp.name, self.location)
-    else:
-      logging.error("failed to store configuration as " + fp.name)
-      raise IOError("failed to store configuration")
+    except Exception as e:
+      raise Exception("generated config file is invalid: " + fp.name + ", due to: " + str(e))
 
   def load(self):
     with open(self.location) as fp:
       config = json.load(fp)
-      if self.isValid(config):
+      try:
+        self.validate(config)
         self.config = config
-      else:
-        logging.error("failed to load configuration from " + self.location)
+      except Exception as e:
+        raise Exception("config is not valid: " + self.location + ", due to: " + str(e))
 
   def check(self, f):
     with open(f) as fp:
       config = json.load(fp)
-      return self.isValid(config)
+      self.validate(config)
 
-  def isValid(self, config):
-    try:
-      expected = config["checksum"]
-      config.pop("checksum")
-      computed = self.hash(config)
-      assert expected == computed
-    except Exception as e:
-      logging.error(str(e))
-      return False
+  def validate(self, config):
+    expected = config["checksum"]
+    config.pop("checksum")
+    computed = self.hash(config)
+    assert expected == computed, "checksums don't match: expected {}, got {}".format(expected, computed)
     return True
 
   def hash(self, config):
-    if len(config) < 1: return 0
-    return reduce(lambda x,y : x^y, [hash(item) for item in config.items()])
+    js = json.dumps(config, sort_keys=True)
+    h  = hashlib.md5(js.encode()).hexdigest()
+    return h
 
 # Create global Store object
 
