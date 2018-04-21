@@ -5,6 +5,7 @@ import requests
 import logging
 import time
 from urllib.parse import urlparse
+import json
 
 import paho.mqtt.client as mqtt
 
@@ -100,7 +101,6 @@ class base(object):
     self.mqtt_client.publish(topic, message,  1, False)
 
 
-import json
 
 @Service.API.endpoint(port=17171)
 class ClientService(Service.base, base):
