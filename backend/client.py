@@ -101,6 +101,37 @@ class base(object):
     self.mqtt_client.publish(topic, message,  1, False)
 
 
+class EventHandler(object):
+  def handle(self, event):
+    pass
+
+class EventHandlerFactory(object):
+  def __init__(self):
+    self.handlers = {}
+
+  def register(self, handler):
+    for handling in handler.handles:
+      self.handlers[handling] = handler()
+
+  def handler_for(self, event):
+    try:
+      return self.handlers[event["type"]]
+    except:
+      raise UnknownEventException(event["type"])
+
+handlers = EventHandlerFactory()
+
+class ConfigUpdateHandler(EventHandler):
+  handles = [ "config update" ]
+  def handle(self, event):
+    try:
+      config = event["data"]
+      local.config.store.update(config)
+    except Exception as e:
+      logging.error("invalid config update: " + str(e))
+      self.publish("client/" + self.name + "/error", "invalid config update: " + str(e))
+
+handlers.register(ConfigUpdateHandler)
 
 @Service.API.endpoint(port=17171)
 class Service(Service.base, base):
@@ -111,18 +142,10 @@ class Service(Service.base, base):
   def handle_mqtt_message(self, topic, msg):
     logging.info("received message: " + topic + " : " + msg)
     try:
-      {
-        "client/" + self.name + "/config": self.handle_config_update
-      }[topic](msg)
-    except KeyError:
-      pass
-
-  def handle_config_update(self, update):
-    try:
-      local.config.store.update(json.loads(update))
+      event = json.loads(msg)
+      handlers.handler_for(event).handle(event)
     except Exception as e:
-      logging.error("invalid config update: " + str(e))
-      self.publish("client/" + self.name + "/error", "invalid config update: " + str(e))
+      logging.error("event handling failed: " + str(e))
 
   def loop(self):
     logging.info("looping...")
