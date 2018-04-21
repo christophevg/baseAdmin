@@ -1,4 +1,4 @@
-from backend.client import ClientService
+import backend.client
 
 if __name__ == "__main__":
-  ClientService("DemoClient").run()
+  backend.client.Service("DemoClient").run()

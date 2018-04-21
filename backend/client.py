@@ -103,7 +103,7 @@ class base(object):
 
 
 @Service.API.endpoint(port=17171)
-class ClientService(Service.base, base):
+class Service(Service.base, base):
 
   def subscribe(self):
     self.follow("client/" + self.name + "/config")
