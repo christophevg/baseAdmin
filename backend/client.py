@@ -105,6 +105,9 @@ class EventHandler(object):
   def handle(self, event):
     pass
 
+class UnknownEventException(Exception):
+  pass
+
 class EventHandlerFactory(object):
   def __init__(self):
     self.handlers = {}
@@ -145,7 +148,7 @@ class Service(Service.base, base):
       event = json.loads(msg)
       handlers.handler_for(event).handle(event)
     except Exception as e:
-      logging.error("event handling failed: " + str(e))
+      logging.error("event handling failed: " + repr(e))
 
   def loop(self):
     logging.info("looping...")
