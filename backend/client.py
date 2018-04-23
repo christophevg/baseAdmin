@@ -100,64 +100,40 @@ class base(object):
   def publish(self, topic, message):
     self.mqtt_client.publish(topic, message,  1, False)
 
-
-class EventHandler(object):
-  def handle(self, event):
-    pass
-
-class UnknownEventException(Exception):
-  pass
-
-class EventHandlerFactory(object):
-  def __init__(self):
-    self.handlers = {}
-
-  def register(self, handler):
-    for handling in handler.handles:
-      self.handlers[handling] = handler()
-
-  def handler_for(self, event):
-    try:
-      return self.handlers[event["type"]]
-    except:
-      raise UnknownEventException(event["type"])
-
-handlers = EventHandlerFactory()
-
-class ConfigUpdateHandler(EventHandler):
-  handles = [ "config update" ]
-  def handle(self, event):
-    try:
-      config = event["data"]
-      local.config.store.update(config)
-    except Exception as e:
-      logging.error("invalid config update: " + str(e))
-      self.publish("client/" + self.name + "/error", "invalid config update: " + str(e))
-
-handlers.register(ConfigUpdateHandler)
-
 @Service.API.endpoint(port=17171)
 class Service(Service.base, base):
-
+  
   def subscribe(self):
     self.follow("client/" + self.name + "/config")
+    # TODO refactor this
+    self.handlers = {}
 
   def handle_mqtt_message(self, topic, msg):
     logging.info("received message: " + topic + " : " + msg)
     try:
       event = json.loads(msg)
-      handlers.handler_for(event).handle(event)
+      for handler in self.handlers[event["type"]]:
+        logging.info("dispatching to " + handler)
+        self.post(handler, event)
     except Exception as e:
       logging.error("event handling failed: " + repr(e))
 
   def loop(self):
-    logging.info("looping...")
     time.sleep(5)
 
-  def finalize(self):
-    logging.info("finalising...")
+  @Service.API.handle("register_message_handler")
+  def handle_register_message_handler(self, data):
+    args = json.loads(data)
+    event       = args["event"]
+    handler_url = args["handler"]
+    logging.info("registering handler for " + event + " : " + handler_url)
+    try:
+      self.handlers[event].add(handler_url)
+    except KeyError:
+      self.handlers[event] = [ handler_url ]
 
-  @Service.API.handle("action")
-  def handle_action(self, data):
-    logging.info("handling action...")
-    logging.info(data)
+# TODO
+# [ ] implement config changes as events with partial updates
+# [ ] notify online + config version
+# [ ] config poll loop for events if mqtt not available
+# [ ] implement group concept
