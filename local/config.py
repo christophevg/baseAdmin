@@ -7,15 +7,6 @@ import time
 import copy
 import hashlib
 
-from os.path import join, dirname, isfile
-from dotenv import load_dotenv
-
-script_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-dotenv_path = join(script_path, "env.local")
-if isfile(dotenv_path):
-  logging.info("loading local environment configuration from " + dotenv_path)
-  load_dotenv(dotenv_path)
-
 import local.logging
 
 from tempfile import NamedTemporaryFile
@@ -88,10 +79,4 @@ class Storable(object):
     h  = hashlib.md5(js.encode()).hexdigest()
     return h
 
-# Create global Store object
 
-CONFIG_STORE = os.environ.get("CONFIG_STORE")
-if not CONFIG_STORE:
-  CONFIG_STORE = "/opt/baseAdmin/config.json"
-
-store = Storable(CONFIG_STORE)

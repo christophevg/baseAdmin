@@ -31,6 +31,10 @@ class base(object):
       "--mqtt", type=str, help="mqtt url",
       default=os.environ.get("MQTT_URL")
     )
+    parser.add_argument(
+      "--config", type=str, help="configuration",
+      default=os.environ.get("CONFIG_STORE")
+    )
 
     args = parser.parse_args()
 
@@ -43,6 +47,10 @@ class base(object):
 
     self.mqtt_client = None
     self.connect_mqtt()
+
+    self.config  = local.config.Storable(
+      "/opt/baseAdmin/config.json" if args.config  is None else args.config
+    )
 
   def get_mqtt_connection_details(self):
     if not self.backend: return
@@ -128,7 +136,7 @@ class Service(Service.base, base):
     handler_url = args["handler"]
     logging.info("registering handler for " + event + " : " + handler_url)
     try:
-      self.handlers[event].add(handler_url)
+      self.handlers[event].append(handler_url)
     except KeyError:
       self.handlers[event] = [ handler_url ]
 
