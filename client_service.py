@@ -1,6 +1,9 @@
 if __name__ == "__main__":
   import time
+  import logging
+
   from servicefactory import Service
+
   import backend.client
 
   @Service.API.endpoint(port=21212)
@@ -16,8 +19,8 @@ if __name__ == "__main__":
       
     @Service.API.handle("action")
     def handle_action(self, data):
-      print("received message through backend client")
-      print(str(data))
+      logging.info("received message through backend client")
+      logging.info(str(data))
     
     def loop(self):
       time.sleep(1000)

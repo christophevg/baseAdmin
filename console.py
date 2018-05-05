@@ -4,14 +4,13 @@ import time
 import curses
 import curses.textpad
 
-import local.config
-import local.logging
+import backend.client
+from local import disable_console_logging
 
-import remote.client
-
-class Console(remote.client.base):
+class Console(backend.client.base):
   def __init__(self, stdscr):
     super(self.__class__, self).__init__(name="console")
+    disable_console_logging()
     self.stdscr = stdscr
     self.command = ""
     self.command_lines = 2;

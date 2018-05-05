@@ -11,10 +11,7 @@ import paho.mqtt.client as mqtt
 
 from servicefactory import Service
 
-from local import HOSTNAME, IP
-
-import local.config
-import local.logging
+import local
 
 class base(object):
   def __init__(self, name="client", description=None):
@@ -31,10 +28,6 @@ class base(object):
       "--mqtt", type=str, help="mqtt url",
       default=os.environ.get("MQTT_URL")
     )
-    parser.add_argument(
-      "--config", type=str, help="configuration",
-      default=os.environ.get("CONFIG_STORE")
-    )
 
     args = parser.parse_args()
 
@@ -47,10 +40,6 @@ class base(object):
 
     self.mqtt_client = None
     self.connect_mqtt()
-
-    self.config  = local.config.Storable(
-      "/opt/baseAdmin/config.json" if args.config  is None else args.config
-    )
 
   def get_mqtt_connection_details(self):
     if not self.backend: return
@@ -72,7 +61,7 @@ class base(object):
       logging.warning("no MQTT configuration available!")
       return
 
-    clientId = self.name + "@" + HOSTNAME + "(" + IP + ")"
+    clientId = self.name + "@" + local.HOSTNAME + "(" + local.IP + ")"
     self.mqtt_client = mqtt.Client(userdata=clientId)
     if self.mqtt.username and self.mqtt.password:
       self.mqtt_client.username_pw_set(self.mqtt.username, self.mqtt.password)
@@ -139,9 +128,3 @@ class Service(Service.base, base):
       self.handlers[event].append(handler_url)
     except KeyError:
       self.handlers[event] = [ handler_url ]
-
-# TODO
-# [ ] implement config changes as events with partial updates
-# [ ] notify online + config version
-# [ ] config poll loop for events if mqtt not available
-# [ ] implement group concept
