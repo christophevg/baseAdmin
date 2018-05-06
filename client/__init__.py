@@ -65,38 +65,86 @@ class Service(Service.base, backend.client.base):
       default=os.environ.get("CONFIG_STORE")
     )
 
+  def process_arguments(self):
+    super(self.__class__, self).process_arguments()
+    self.config  = client.config.Storable(
+      "./config.json" if self.args.config is None else self.args.config
+    )
+    # TODO push current config to all services (just to make sure ;-))
+
   def start(self):
     super(self.__class__, self).start()
-    self.config  = client.config.Storable(
-      "/opt/baseAdmin/config.json" if self.args.config is None else self.args.config
-    )
+    # also start this service
     self.run()
   
   def subscribe(self):
-    self.follow("client/" + self.name + "/config")
-    # TODO refactor this
-    self.handlers = {}
+    self.follow("client/" + self.name + "/services")
+    current = self.config.current()
+    if "services" in current:
+      for service_name in current["services"]:
+        self.follow("client/" + self.name + "/service/" + service_name)
 
   def handle_mqtt_message(self, topic, msg):
     logging.info("received message: " + topic + " : " + msg)
     try:
-      event = json.loads(msg)
-      for handler in self.handlers[event["type"]]:
-        logging.info("dispatching to " + handler)
-        self.post(handler, event)
+      parts  = topic.split("/")
+      scope  = parts[2]
+      update = json.loads(msg)
+      if len(parts) > 3:
+        service = parts[3]
+        self.handle_service_update(service, update)
+      else:
+        self.handle_services_update(update)
     except Exception as e:
-      logging.error("event handling failed: " + repr(e))
+      logging.error("message handling failed: " + repr(e))
+  
+  def handle_services_update(self, update):
+    current = self.config.current()
+    if not "services" in current:
+      current["services"] = {}
+    try:
+      current["ts"] = update["ts"]
+    except KeyError:
+      current["ts"] = time.time()
+
+    if "location" in update:
+      current["services"][update["service"]] = {
+        "location" : update["location"]
+      }
+    else:
+      current["services"].pop(update["service"], None)
+    self.config.update(current)
+    self.subscribe()
+  
+  def handle_service_update(self, service, update):
+    current = self.config.current()
+    try:
+      current["ts"] = update["ts"]
+    except KeyError:
+      current["ts"] = time.time()
+    if not "config" in current["services"][service]:
+      current["services"][service]["config"] = {}
+    for k in update["config"]:
+      current["services"][service]["config"][k] = update["config"][k]
+    self.config.update(current)
+    # push config to service
+    self.post(
+      current["services"][service]["location"],
+      current["services"][service]["config"]      
+    )
 
   def loop(self):
     time.sleep(5)
+    # TODO handle scheduled updates
 
-  @Service.API.handle("register_message_handler")
-  def handle_register_message_handler(self, data):
-    args = json.loads(data)
-    event       = args["event"]
-    handler_url = args["handler"]
-    logging.info("registering handler for " + event + " : " + handler_url)
+  @Service.API.handle("get_config")
+  def get_config(self, data=None):
     try:
-      self.handlers[event].append(handler_url)
-    except KeyError:
-      self.handlers[event] = [ handler_url ]
+      args    = json.loads(data)
+      service = args["service"]
+      config  = self.config.current()["services"][service]["config"]
+      logging.debug("providing config for " + service + " : " + str(config))
+      return json.dumps(config)
+    except Exception as e:
+      logging.error("failed to provide configuration : " + str(e))
+      return json.dumps(None)

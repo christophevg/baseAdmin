@@ -28,16 +28,17 @@ class base(object):
 
   def start(self):
     self.args = self.parser.parse_args()
+    self.process_arguments()
+    self.mqtt_client = None
+    self.connect_mqtt()
 
+  def process_arguments(self):
     # configure Client from envionment variables or command line arguments
     self.backend = None if self.args.backend is None else urlparse(self.args.backend)
     self.mqtt    = None if self.args.mqtt    is None else urlparse(self.args.mqtt)
 
     # if no MQ configuration provided, try to fetch it from the backend
     if self.mqtt is None: self.get_mqtt_connection_details()
-
-    self.mqtt_client = None
-    self.connect_mqtt()
 
   def get_mqtt_connection_details(self):
     if not self.backend: return

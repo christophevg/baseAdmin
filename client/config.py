@@ -17,8 +17,8 @@ class Storable(object):
     self.config   = {}
     if not os.path.exists(self.location):
       try:
+        logging.info("persisting initial configuration to " + self.location)
         self.save()
-        logging.info("initialised persisted configuration")
       except Exception as e:
         logging.error("could not persist initial configuration: " + str(e))
     else:
@@ -32,9 +32,10 @@ class Storable(object):
     self.config = config
     try:
       self.save()
-      logging.info("persisted new configuration: " + str(self.config))
+      logging.info("persisted updated configuration")
+      logging.debug(str(self.config))
     except Exception as e:
-      logging.error("could not persist new configuration: " + str(e))
+      logging.error("could not persist updated configuration: " + str(e))
 
   def current(self):
     return self.config

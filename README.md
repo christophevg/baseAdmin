@@ -112,3 +112,171 @@ $  mosquitto_pub -h localhost -t "prop1" -m "updateProperty"
 ```
 
 and watch the left/blue graph.
+
+## Configuration and its Protocol
+
+Clients handle MQTT messages containing events representing configuration updates. Updates can be at the level of the client itself, or at the level of the services that are configured on the client. The following JSON example shows a complete client configuration of a client with two services configured, each with a configuration of their own:
+
+```json
+{
+	"ts" : 1524325889.518891,
+	"services" : {
+		"service-1" : {
+			"location": "http://localhost:21212/config",
+			"config" : {
+				"variable-1" : "value 1",
+				"variable-2" : 123
+			}
+		},
+		"service-2" : {
+			"location": "http://localhost:31313/parameters",
+			"config" : {
+				"x" : 3.14,
+				"y" : "hello world",
+				"z" : [ 1, 2, 3 ]
+			}			
+		}
+	}
+}
+```
+
+A configuration is uniquely identified by a timestamp (`ts`) and provides information about the `services` for which the client is handling configuration updates coming through the MQTT network. The information consists of an object with a key/value pair for each service. The key represents the name of the services while the value contains a `location` and a `config`. `Location` is an URL to which the client will post configuration updates that target the service. `Config` contains an object that represents the configuration for that service.
+
+Two events/messages can be sent to the client. One to manage the services themselves and one to manage the services' configuration.
+
+### Configuring Services
+
+Given a client called "node-123", with a existing configuration as show above, the following example JSON message can be sent to `client/node-123/services`:
+
+```json
+{
+	"ts": 1524327486.548392,
+	"service": "another-service",
+	"location": "http://localhost:41414/arguments"
+}
+```
+
+This message would add a third service, called `another-service` and accessible at `http://localhost:41414/arguments` to the configuration of the client. The configuration's `ts` would also be updated to the new unique identifying `ts` provided in this message.
+
+> Service messages targeting the same service name, will update that service. When no `location` is provided, the service is removed.
+
+### Service Configuration
+
+The following example JSON message can be sent to `client/node-123/service/service-1`:
+
+```json
+{
+	"ts": 1524329384.138594,
+	"config" : {
+		"variable-2" : 456
+	}
+}
+```
+
+This would update the value of `variable-2` in the configuration of `service-1`.
+
+After these two messages, the entire configuration would look like this:
+
+```json
+{
+	"ts" : 1524329384.138594,
+	"services" : {
+		"service-1" : {
+			"location": "http://localhost:21212/config",
+			"config" : {
+				"variable-1" : "value 1",
+				"variable-2" : 456
+			}
+		},
+		"service-2" : {
+			"location": "http://localhost:31313/parameters",
+			"config" : {
+				"x" : 3.14,
+				"y" : "hello world",
+				"z" : [ 1, 2, 3 ]
+			}			
+		},
+		"another-service" : {
+			"location" : "http://localhost:41414/arguments"
+		}
+	}
+}
+```
+
+`Service-1` would also have received an update of its configuration through a POST to `http://localhost:21212/config` with a message body containing its updated configuration :
+
+```json
+{
+	"variable-1" : "value 1",
+	"variable-2" : 456
+}
+```
+
+## Try it
+
+For a minimal demonstration, start the client:
+
+```bash
+$ . venv/bin/activate
+(venv) $ pip install -r requirements.txt
+...
+(venv) $ python client.py
+2018-05-06 21:10:03,623 [INFO ] loading local environment configuration from env.local
+2018-05-06 21:10:03,861 [INFO ] loaded persisted configuration: {'ts': 1525633128.008239}
+2018-05-06 21:10:03,861 [DEBUG] connecting to MQ localhost:1883
+2018-05-06 21:10:03,866 [DEBUG] connected with result code 0
+2018-05-06 21:10:03,866 [DEBUG] following client/client/services
+```
+
+(or use the Makefile: `make client`)
+
+Now start another service that we will manage through the `client`:
+
+```bash
+$ . venv/bin/activate
+(venv) $ pip install -r requirements.txt
+...
+(venv) $ python client_service.py
+2018-05-06 21:10:24,823 [INFO ] loading local environment configuration from env.local
+2018-05-06 21:10:24,842 [INFO ] loaded config on boot: None
+```
+
+The client now has also produced some new logging:
+
+```bash
+2018-05-06 21:10:24,840 [ERROR] failed to provide configuration : 'services'
+```
+
+The service isn't known to the client, in fact it doesn't know any services. Let's introduce it to the service:
+
+```bash
+$ mosquitto_pub -h localhost -t "client/client/services" -m '{ "service" : "SomeService", "location" : "http://localhost:21212/config"  }'
+```
+
+And the client responds with more logging:
+
+```bash
+2018-05-06 21:12:10,593 [INFO ] received message: client/client/services : { "service" : "SomeService", "location" : "http://localhost:21212/config"  }
+2018-05-06 21:12:10,598 [INFO ] persisted updated configuration
+2018-05-06 21:12:10,599 [DEBUG] {'ts': 1525633930.594219, 'services': {'SomeService': {'location': 'http://localhost:21212/config'}}, 'checksum': '4aef84e7e350a8633e5e8012711ac986'}
+2018-05-06 21:12:10,599 [DEBUG] following client/client/services
+2018-05-06 21:12:10,599 [DEBUG] following client/client/service/SomeService
+```
+
+So now, it knows about `SomeService` and it now also follows MQTT for configuration updates for `SomeService`. Let's give it such an update:
+
+```bash
+$ mosquitto_pub -h localhost -t "client/client/service/SomeService" -m '{ "config" : { "x" : 1 } }'
+```
+
+This message is received by the `client`:
+
+```bash
+2018-05-06 21:13:41,734 [INFO ] received message: client/client/service/SomeService : { "config" : { "x" : 1 } }
+```
+
+... and dispatched to `SomeService`:
+
+```bash
+2018-05-06 21:13:41,751 [INFO ] received config update : b'{"x": 1}'
+```

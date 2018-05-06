@@ -2,3 +2,5 @@ venv
 *.pyc
 env.local
 baseadmin.log
+
+config.json
