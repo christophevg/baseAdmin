@@ -6,11 +6,10 @@ from functools import reduce
 import time
 import copy
 import hashlib
-
-import local.logging
-
 from tempfile import NamedTemporaryFile
 import json
+
+import client
 
 class Storable(object):
   def __init__(self, location):

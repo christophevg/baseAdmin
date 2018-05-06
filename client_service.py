@@ -4,12 +4,12 @@ if __name__ == "__main__":
 
   from servicefactory import Service
 
-  import backend.client
+  import client
 
   @Service.API.endpoint(port=21212)
   class SomeService(Service.base):
     def __init__(self):
-      backend.client.Service.perform(
+      client.Service.perform(
         "register_message_handler",
         {
           "event"   : "event",

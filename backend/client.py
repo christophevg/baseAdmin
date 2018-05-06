@@ -6,12 +6,9 @@ import logging
 import time
 from urllib.parse import urlparse
 import json
+import socket
 
 import paho.mqtt.client as mqtt
-
-from servicefactory import Service
-
-import local
 
 class base(object):
   def __init__(self, name="client", description=None):
@@ -19,21 +16,22 @@ class base(object):
     if description is None:
       description = self.name + ": a baseAdmin client."
 
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument(
+    self.parser = argparse.ArgumentParser(description=description)
+    self.parser.add_argument(
       "--backend",  type=str, help="backend url.",
       default=os.environ.get("BACKEND_URL")
     )
-    parser.add_argument(
+    self.parser.add_argument(
       "--mqtt", type=str, help="mqtt url",
       default=os.environ.get("MQTT_URL")
     )
 
-    args = parser.parse_args()
+  def start(self):
+    self.args = self.parser.parse_args()
 
     # configure Client from envionment variables or command line arguments
-    self.backend = None if args.backend is None else urlparse(args.backend)
-    self.mqtt    = None if args.mqtt    is None else urlparse(args.mqtt)
+    self.backend = None if self.args.backend is None else urlparse(self.args.backend)
+    self.mqtt    = None if self.args.mqtt    is None else urlparse(self.args.mqtt)
 
     # if no MQ configuration provided, try to fetch it from the backend
     if self.mqtt is None: self.get_mqtt_connection_details()
@@ -61,7 +59,7 @@ class base(object):
       logging.warning("no MQTT configuration available!")
       return
 
-    clientId = self.name + "@" + local.HOSTNAME + "(" + local.IP + ")"
+    clientId = self.name + "@" + socket.gethostname()
     self.mqtt_client = mqtt.Client(userdata=clientId)
     if self.mqtt.username and self.mqtt.password:
       self.mqtt_client.username_pw_set(self.mqtt.username, self.mqtt.password)
@@ -96,35 +94,3 @@ class base(object):
 
   def publish(self, topic, message):
     self.mqtt_client.publish(topic, message,  1, False)
-
-@Service.API.endpoint(port=17171)
-class Service(Service.base, base):
-  
-  def subscribe(self):
-    self.follow("client/" + self.name + "/config")
-    # TODO refactor this
-    self.handlers = {}
-
-  def handle_mqtt_message(self, topic, msg):
-    logging.info("received message: " + topic + " : " + msg)
-    try:
-      event = json.loads(msg)
-      for handler in self.handlers[event["type"]]:
-        logging.info("dispatching to " + handler)
-        self.post(handler, event)
-    except Exception as e:
-      logging.error("event handling failed: " + repr(e))
-
-  def loop(self):
-    time.sleep(5)
-
-  @Service.API.handle("register_message_handler")
-  def handle_register_message_handler(self, data):
-    args = json.loads(data)
-    event       = args["event"]
-    handler_url = args["handler"]
-    logging.info("registering handler for " + event + " : " + handler_url)
-    try:
-      self.handlers[event].append(handler_url)
-    except KeyError:
-      self.handlers[event] = [ handler_url ]

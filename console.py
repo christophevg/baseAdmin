@@ -5,7 +5,7 @@ import curses
 import curses.textpad
 
 import backend.client
-from local import disable_console_logging
+from client import disable_console_logging
 
 class Console(backend.client.base):
   def __init__(self, stdscr):
@@ -14,6 +14,10 @@ class Console(backend.client.base):
     self.stdscr = stdscr
     self.command = ""
     self.command_lines = 2;
+    self.start()
+
+  def start(self):
+    super(self.__class__, self).start()
     self.setup_windows()
     self.follow("#")
     self.event_loop() 
