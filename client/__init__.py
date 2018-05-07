@@ -98,7 +98,7 @@ class Service(Service.base, backend.client.base):
 
   def handle_service_update(self, service, update):
     ts = None if not "ts" in update else update["ts"]
-    self.config.update_service_configuration(service, update, ts=ts)
+    self.config.update_service_configuration(service, update["config"], ts=ts)
     # push config to service
     try:
       self.post(
