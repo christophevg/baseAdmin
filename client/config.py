@@ -8,13 +8,18 @@ import copy
 import hashlib
 from tempfile import NamedTemporaryFile
 import json
+import copy
+import time
 
 import client
 
 class Storable(object):
   def __init__(self, location):
     self.location = location
-    self.config   = {}
+    self.config   = {
+      "ts" : 0,
+      "services" : {}
+    }
     if not os.path.exists(self.location):
       try:
         logging.info("persisting initial configuration to " + self.location)
@@ -28,23 +33,49 @@ class Storable(object):
       except Exception as e:
         logging.error("could not load persisted configuration: " + str(e))
 
-  def update(self, config):
-    self.config = config
+  def add_service(self, service, location, ts=None):
+    self.config["services"][service] = {
+      "location" : location,
+      "config"   : {}
+    }
+    self.config["ts"] = ts if not ts is None else time.time()
+    self.persist()
+  
+  def remove_service(self, service, ts=None):
+    self.config["services"].pop(service, None)
+    self.config["ts"] = ts if not ts is None else time.time()
+    self.persist()
+
+  def update_service_configuration(self, service, update, ts=None):
     try:
-      self.save()
-      logging.info("persisted updated configuration")
-      logging.debug(str(self.config))
-    except Exception as e:
-      logging.error("could not persist updated configuration: " + str(e))
+      # for now we do 1-level k/v updates
+      for k in update:
+        self.config["services"][service]["config"][k] = update[k]
+      self.config["ts"] = ts if not ts is None else time.time()
+      self.persist()
+    except KeyError:
+      raise Exception("unknown service: " + service)
 
-  def current(self):
-    return self.config
+  def list_services(self):
+    return list(self.config["services"].keys())
 
-  def save(self):
-    if not "ts" in self.config: self.config["ts"] = time.time()
-    self.config["checksum"] = self.hash(self.config)
+  def get_service_location(self, service):
+    try:
+      return self.config["services"][service]["location"]
+    except KeyError:
+      raise Exception("unknown service: " + service)    
+
+  def get_service_configuration(self, service):
+    try:
+      return self.config["services"][service]["config"]
+    except KeyError:
+      raise Exception("unknown service: " + service)
+  
+  def persist(self):
+    config = copy.deepcopy(self.config)
+    config["checksum"] = self.hash(config)
     with NamedTemporaryFile(mode="w+", delete=False) as fp:
-      json.dump(self.config, fp, indent=2, sort_keys=True)
+      json.dump(config, fp, indent=2, sort_keys=True)
     try:
       self.check(fp.name)
       path = os.path.dirname(self.location)
@@ -52,6 +83,7 @@ class Storable(object):
       os.rename(fp.name, self.location)
     except Exception as e:
       raise Exception("generated config file is invalid: " + fp.name + ", due to: " + str(e))
+    logging.debug("persisted configuration")
 
   def load(self):
     with open(self.location) as fp:
@@ -69,7 +101,7 @@ class Storable(object):
 
   def validate(self, config):
     expected = config["checksum"]
-    config.pop("checksum")
+    config.pop("checksum", None)
     computed = self.hash(config)
     assert expected == computed, "checksums don't match: expected {}, got {}".format(expected, computed)
     return True
@@ -78,5 +110,3 @@ class Storable(object):
     js = json.dumps(config, sort_keys=True)
     h  = hashlib.md5(js.encode()).hexdigest()
     return h
-
-

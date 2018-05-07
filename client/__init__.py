@@ -79,10 +79,8 @@ class Service(Service.base, backend.client.base):
   
   def subscribe(self):
     self.follow("client/" + self.name + "/services")
-    current = self.config.current()
-    if "services" in current:
-      for service_name in current["services"]:
-        self.follow("client/" + self.name + "/service/" + service_name)
+    for service in self.config.list_services():
+      self.follow("client/" + self.name + "/service/" + service)
 
   def handle_mqtt_message(self, topic, msg):
     logging.info("received message: " + topic + " : " + msg)
@@ -97,41 +95,26 @@ class Service(Service.base, backend.client.base):
         self.handle_services_update(update)
     except Exception as e:
       logging.error("message handling failed: " + repr(e))
-  
-  def handle_services_update(self, update):
-    current = self.config.current()
-    if not "services" in current:
-      current["services"] = {}
-    try:
-      current["ts"] = update["ts"]
-    except KeyError:
-      current["ts"] = time.time()
 
-    if "location" in update:
-      current["services"][update["service"]] = {
-        "location" : update["location"]
-      }
-    else:
-      current["services"].pop(update["service"], None)
-    self.config.update(current)
-    self.subscribe()
-  
   def handle_service_update(self, service, update):
-    current = self.config.current()
-    try:
-      current["ts"] = update["ts"]
-    except KeyError:
-      current["ts"] = time.time()
-    if not "config" in current["services"][service]:
-      current["services"][service]["config"] = {}
-    for k in update["config"]:
-      current["services"][service]["config"][k] = update["config"][k]
-    self.config.update(current)
+    ts = None if not "ts" in update else update["ts"]
+    self.config.update_service_configuration(service, update, ts=ts)
     # push config to service
-    self.post(
-      current["services"][service]["location"],
-      current["services"][service]["config"]      
-    )
+    try:
+      self.post(
+        self.config.get_service_location(service),
+        self.config.get_service_configuration(service)      
+      )
+    except Exception as e:
+      logging.warn("could not post update to " + service + " " + repr(e))
+
+  def handle_services_update(self, update):
+    ts = None if not "ts" in update else update["ts"]
+    if "location" in update:
+      self.config.add_service(update["service"], update["location"], ts=ts)
+    else:
+      self.config.remove_service(update["service"], ts=update["ts"])
+    self.subscribe()
 
   def loop(self):
     time.sleep(5)
@@ -142,7 +125,7 @@ class Service(Service.base, backend.client.base):
     try:
       args    = json.loads(data)
       service = args["service"]
-      config  = self.config.current()["services"][service]["config"]
+      config  = self.config.get_service_configuration(service)
       logging.debug("providing config for " + service + " : " + str(config))
       return json.dumps(config)
     except Exception as e:
