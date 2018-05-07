@@ -9,11 +9,7 @@ if __name__ == "__main__":
   @Service.API.endpoint(port=21212)
   class SomeService(Service.base):
     def __init__(self):
-      r = client.Service.perform(
-        "get_config",
-        { "service" : "SomeService" }
-      )
-      self.config = r.json()
+      self.config = client.Service.get_config("SomeService")
       logging.info("loaded config on boot: " + str(self.config))
 
     @Service.API.handle("config")

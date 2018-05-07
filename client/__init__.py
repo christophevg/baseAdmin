@@ -138,7 +138,7 @@ class Service(Service.base, backend.client.base):
     # TODO handle scheduled updates
 
   @Service.API.handle("get_config")
-  def get_config(self, data=None):
+  def handle_get_config(self, data=None):
     try:
       args    = json.loads(data)
       service = args["service"]
@@ -148,3 +148,11 @@ class Service(Service.base, backend.client.base):
     except Exception as e:
       logging.error("failed to provide configuration : " + str(e))
       return json.dumps(None)
+
+  @classmethod
+  def get_config(cls, service):
+    try:
+      return cls.perform( "get_config", { "service" : service } ).json()
+    except Exception as e:
+      logging.error("failed to retrieve config for " + service + " : " + str(e))
+      return None
