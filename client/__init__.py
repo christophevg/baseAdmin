@@ -64,6 +64,8 @@ class Service(Service.base, backend.client.base):
       "--config", type=str, help="configuration",
       default=os.environ.get("CONFIG_STORE")
     )
+    self.current_subscriptions = []
+    self.first_subscription = True
 
   def process_arguments(self):
     super(self.__class__, self).process_arguments()
@@ -78,9 +80,17 @@ class Service(Service.base, backend.client.base):
     self.run()
   
   def subscribe(self):
-    self.follow("client/" + self.name + "/services")
-    for service in self.config.list_services():
+    if self.first_subscription:
+      self.follow("client/" + self.name + "/services")
+      self.first_subscription = False
+    required   = self.config.list_services()
+    deprecated = list(set(self.current_subscriptions) - set(required))
+    additional = list(set(required) - set(self.current_subscriptions))
+    for service in deprecated:
+      self.unfollow("client/" + self.name + "/service/" + service)
+    for service in additional:
       self.follow("client/" + self.name + "/service/" + service)
+    self.current_subscriptions = required
 
   def handle_mqtt_message(self, topic, msg):
     logging.info("received message: " + topic + " : " + msg)
