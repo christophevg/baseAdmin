@@ -93,5 +93,11 @@ class base(object):
     self.mqtt_client.subscribe(topic)
     return self
 
+  def unfollow(self, topic):
+    if self.mqtt_client is None: return
+    logging.debug("unfollowing " + topic)
+    self.mqtt_client.unsubscribe(topic)
+    return self
+
   def publish(self, topic, message):
     self.mqtt_client.publish(topic, message,  1, False)
