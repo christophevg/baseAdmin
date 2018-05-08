@@ -108,15 +108,18 @@ class Service(Service.base, backend.client.base):
 
   def handle_service_update(self, service, update):
     ts = None if not "ts" in update else update["ts"]
-    self.config.update_service_configuration(service, update["config"], ts=ts)
-    # push config to service
-    try:
-      self.post(
-        self.config.get_service_location(service),
-        self.config.get_service_configuration(service)      
-      )
-    except Exception as e:
-      logging.warn("could not post update to " + service + " " + repr(e))
+    if self.config.update_service_configuration(service, update, ts=ts):
+      self.push_configuration_update(service)
+
+  def push_configuration_update(self, service):
+      # push config to service
+      try:
+        self.post(
+          self.config.get_service_location(service),
+          self.config.get_service_configuration(service)
+        )
+      except Exception as e:
+        logging.warn("could not post update to " + service + " " + repr(e))
 
   def handle_services_update(self, update):
     ts = None if not "ts" in update else update["ts"]
@@ -127,8 +130,9 @@ class Service(Service.base, backend.client.base):
     self.subscribe()
 
   def loop(self):
-    time.sleep(5)
-    # TODO handle scheduled updates
+    for service in self.config.handle_scheduled():
+      self.push_configuration_update(service)
+    time.sleep(0.05)
 
   @Service.API.handle("get_config")
   def handle_get_config(self, data=None):

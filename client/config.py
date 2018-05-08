@@ -10,6 +10,7 @@ from tempfile import NamedTemporaryFile
 import json
 import copy
 import time
+import operator
 
 import client
 
@@ -18,7 +19,8 @@ class Storable(object):
     self.location = location
     self.config   = {
       "ts" : 0,
-      "services" : {}
+      "services" : {},
+      "scheduled"  : []
     }
     if not os.path.exists(self.location):
       try:
@@ -50,14 +52,45 @@ class Storable(object):
     self.persist()
 
   def update_service_configuration(self, service, update, ts=None):
+    return self.schedule(
+      service, update["config"], ts=ts, schedule=update["valid-from"]
+    ) if "valid-from" in update else self.update(service, update["config"], ts=ts)
+
+  def schedule(self, service, update, schedule, ts=None):
+    self.config["scheduled"].append({
+      "schedule" : schedule,
+      "service"  : service,
+      "update"   : update
+    })
+    self.config["scheduled"].sort(key=operator.itemgetter("schedule"))
+    self.config["ts"] = ts if not ts is None else time.time()
+    self.persist()
+    logging.info("scheduled update for " + service + " in " + str(schedule - time.time()) + "s")
+    return False
+
+  def handle_scheduled(self):
+    changed = set()
+    now     = time.time()
+    while len(self.config["scheduled"]) > 0 and self.config["scheduled"][0]["schedule"] <= now:
+      s = self.config["scheduled"][0]
+      logging.info("performing scheduled update for " + s["service"])
+      self.update(s["service"], s["update"], ts=self.config["ts"])
+      changed.add(s["service"])
+      del self.config["scheduled"][0]
+      self.persist()
+    return changed
+
+  def update(self, service, update, ts=None):
     try:
       # for now we do 1-level k/v updates
       for k in update:
         self.config["services"][service]["config"][k] = update[k]
       self.config["ts"] = ts if not ts is None else time.time()
       self.persist()
+      return True
     except KeyError:
-      raise Exception("unknown service: " + service)
+      logging.warn("can't update unknown service: " + service)
+      return False
 
   def list_services(self):
     return list(self.config["services"].keys())
