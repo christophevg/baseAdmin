@@ -42,6 +42,9 @@ class Storable(object):
     self.persist()
   
   def remove_service(self, service, ts=None):
+    if not service in self.config["services"]:
+      logging.warn("not removing unconfigured service " + service)
+      return
     self.config["services"].pop(service, None)
     self.config["ts"] = ts if not ts is None else time.time()
     self.persist()
