@@ -113,7 +113,7 @@ class Service(Service.base, backend.client.base):
     if "location" in update:
       self.config.add_service(update["service"], update["location"], ts=ts)
     else:
-      self.config.remove_service(update["service"], ts=update["ts"])
+      self.config.remove_service(update["service"], ts=ts)
     self.subscribe()
 
   def loop(self):
