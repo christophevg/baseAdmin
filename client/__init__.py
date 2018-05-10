@@ -72,7 +72,7 @@ class Service(Service.base, backend.client.base):
   def process_arguments(self):
     super(self.__class__, self).process_arguments()
     self.config  = client.config.Storable(
-      "./config.json" if self.args.config is None else self.args.config
+      "./config.pkl" if self.args.config is None else self.args.config
     )
     # TODO push current config to all services (just to make sure ;-))
 

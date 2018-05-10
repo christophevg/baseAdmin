@@ -235,7 +235,7 @@ When sending the following example JSON message to `client/node-123/service/serv
 	"last-message" : "e273f6eb-5428-11e8-bd5e-c82a14062914",
 	"scheduled": [
 		{
-       	"schedule": 1526033572.0,
+       	"schedule": "Fri May 11 10:12:52 2018",
       		"service": "service-1",
       		"update": {
         		"variable-2": 789
@@ -264,8 +264,6 @@ When sending the following example JSON message to `client/node-123/service/serv
 	}
 }
 ```
-
-> Internally, the date is stored as an epoch timestamp - the number of seconds since January 1, 1970.
 
 `Client` will check its scheduled tasks regularly (currently with 0.05s intervals) and apply any scheduled updates when their time has come.
 

@@ -7,12 +7,12 @@ import time
 import copy
 import hashlib
 from tempfile import NamedTemporaryFile
-import json
 import copy
 import time
 import operator
 import dateutil.parser
 import datetime
+import pickle
 
 import client
 
@@ -64,18 +64,12 @@ class Storable(object):
   def update_service(self, service, update):
     changed = False
     if "valid-from" in update:
-      schedule = update["valid-from"]
-      try:
-        schedule = int(schedule) # epoch seconds
-      except ValueError:
-        schedule = dateutil.parser.parse(schedule) # parse datetime
-        schedule = (schedule - datetime.datetime(1970,1,1)).total_seconds()
+      schedule = dateutil.parser.parse(update["valid-from"]) # parse datetime
       changed = self.schedule(service, schedule, update["config"])
     else:
       changed = self.apply(service, update["config"])
     self.config["last-message"] = update["uuid"]
     self.persist()
-    logging.debug("changed=" + str(changed))
     return changed
 
   def schedule(self, service, schedule, update):
@@ -85,12 +79,12 @@ class Storable(object):
       "update"   : update
     })
     self.config["scheduled"].sort(key=operator.itemgetter("schedule"))
-    logging.info("scheduled update for " + service + " in " + str(schedule - time.time()) + "s")
+    logging.info("scheduled update for " + service + " in " + str((schedule - datetime.datetime.now()).total_seconds()) + "s")
     return False
 
   def handle_scheduled(self):
     changed = set()
-    now     = time.time()
+    now     = datetime.datetime.now()
     while len(self.config["scheduled"]) > 0 and self.config["scheduled"][0]["schedule"] <= now:
       s = self.config["scheduled"][0]
       logging.info("performing scheduled update for " + s["service"])
@@ -128,8 +122,8 @@ class Storable(object):
   def persist(self):
     config = copy.deepcopy(self.config)
     config["checksum"] = self.hash(config)
-    with NamedTemporaryFile(mode="w+", delete=False) as fp:
-      json.dump(config, fp, indent=2, sort_keys=True)
+    with NamedTemporaryFile(mode="wb+", delete=False) as fp:
+      pickle.dump(config, fp, protocol=2)
     try:
       self.check(fp.name)
       path = os.path.dirname(self.location)
@@ -140,8 +134,8 @@ class Storable(object):
     logging.debug("persisted configuration")
 
   def load(self):
-    with open(self.location) as fp:
-      config = json.load(fp)
+    with open(self.location, "rb") as fp:
+      config = pickle.load(fp)
       try:
         self.validate(config)
         self.config = config
@@ -149,8 +143,8 @@ class Storable(object):
         raise Exception("config is not valid: " + self.location + ", due to: " + str(e))
 
   def check(self, f):
-    with open(f) as fp:
-      config = json.load(fp)
+    with open(f, "rb") as fp:
+      config = pickle.load(fp)
       self.validate(config)
 
   def validate(self, config):
@@ -161,6 +155,6 @@ class Storable(object):
     return True
 
   def hash(self, config):
-    js = json.dumps(config, sort_keys=True)
-    h  = hashlib.md5(js.encode()).hexdigest()
+    bs = pickle.dumps(config)
+    h  = hashlib.md5(bs).hexdigest()
     return h
