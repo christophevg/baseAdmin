@@ -267,6 +267,22 @@ When sending the following example JSON message to `client/node-123/service/serv
 
 `Client` will check its scheduled tasks regularly (currently with 0.05s intervals) and apply any scheduled updates when their time has come.
 
+> To check the current configuration of `Client`, you can dump its persisted copy using `bin/show_config.py`:
+>
+```bash
+$ ./bin/show_config.py 
+{u'checksum': u'7a5dcc8464d9fd34a08efad97853d55f',
+ u'last-message': u'5',
+ u'scheduled': [{u'schedule': datetime.datetime(2018, 5, 11, 10, 12, 52),
+                 u'service': u'SomeService',
+                 u'update': {u'x': 1}},
+                {u'schedule': datetime.datetime(2018, 5, 11, 12, 15),
+                 u'service': u'SomeService',
+                 u'update': {u'x': 1}}],
+ u'services': {u'SomeService': {u'config': {u'x': 1},
+                                u'location': u'http://localhost:21212/config'}}}
+```
+
 
 ## Try it
 
