@@ -119,7 +119,7 @@ Clients handle MQTT messages containing events representing configuration update
 
 ```json
 {
-	"ts" : 1524325889.518891,
+	"last-message" : "f50ec0b7-f960-400d-91f0-c42a6d44e3d0",
 	"services" : {
 		"service-1" : {
 			"location": "http://localhost:21212/config",
@@ -140,9 +140,11 @@ Clients handle MQTT messages containing events representing configuration update
 }
 ```
 
-A configuration is uniquely identified by a timestamp (`ts`) and provides information about the `services` for which the client is handling configuration updates coming through the MQTT network. The information consists of an object with a key/value pair for each service. The key represents the name of the services while the value contains a `location` and a `config`. `Location` is an URL to which the client will post configuration updates that target the service. `Config` contains an object that represents the configuration for that service.
+A client configuration is uniquely identified by the unique identification of the last message that has been received and merged into the configuration (`last-message`). The configuration provides information about `services` for which the client is handling messages coming through the MQTT network. This services information consists of an object with a key/value pair for each service. The key represents the name of a service while the value contains a `location` and a `config`. `Location` is an URL to which the client will post configuration updates that target the service. `Config` contains an object that represents the consolidated configuration for that service.
 
-Two events/messages can be sent to the client. One to manage the services themselves and one to manage the services' configuration.
+> Technical side note: the unique identification of a message and client configuration is generated using python's `uuid.uuid1()`, which incorporates '_a host ID, sequence number, and the current time_'.
+
+Two types of messages can be sent to the client. One to manage the services themselves and one to manage the services' configuration.
 
 ### Configuring Services
 
@@ -150,13 +152,13 @@ Given a client called "node-123", with a existing configuration as show above, t
 
 ```json
 {
-	"ts": 1524327486.548392,
+	"uuid": "3a0749de-5421-11e8-9660-c82a14062914",
 	"service": "another-service",
 	"location": "http://localhost:41414/arguments"
 }
 ```
 
-This message would add a third service, called `another-service` and accessible at `http://localhost:41414/arguments` to the configuration of the client. The configuration's `ts` would also be updated to the new unique identifying `ts` provided in this message.
+This message would add a third service, called `another-service` and accessible at `http://localhost:41414/arguments` to the configuration of the client. The configuration's `last-message` would also be updated to the new unique identification `uuid` provided in this message.
 
 > Service messages targeting the same service name, will update that service. When no `location` is provided, the service is removed.
 
@@ -166,7 +168,7 @@ The following example JSON message can be sent to `client/node-123/service/servi
 
 ```json
 {
-	"ts": 1524329384.138594,
+	"uuid": "5f8949ab-5421-11e8-90eb-c82a14062914",
 	"config" : {
 		"variable-2" : 456
 	}
@@ -175,11 +177,11 @@ The following example JSON message can be sent to `client/node-123/service/servi
 
 This would update the value of `variable-2` in the configuration of `service-1`.
 
-After these two messages, the entire configuration would look like this:
+After these two messages, the entire configuration would look like this...
 
 ```json
 {
-	"ts" : 1524329384.138594,
+	"last-message" : "5f8949ab-5421-11e8-90eb-c82a14062914",
 	"services" : {
 		"service-1" : {
 			"location": "http://localhost:21212/config",
@@ -203,7 +205,7 @@ After these two messages, the entire configuration would look like this:
 }
 ```
 
-`Service-1` would also have received an update of its configuration through a POST to `http://localhost:21212/config` with a message body containing its updated configuration :
+... and `Service-1` would also have received an update of its configuration through a POST to `http://localhost:21212/config` with a message body containing its updated configuration :
 
 ```json
 {
@@ -211,6 +213,62 @@ After these two messages, the entire configuration would look like this:
 	"variable-2" : 456
 }
 ```
+
+### Delayed Service Configuration Updates
+
+When sending the following example JSON message to `client/node-123/service/service-1`:
+
+```json
+{
+	"uuid": "e273f6eb-5428-11e8-bd5e-c82a14062914",
+	"valid-from": "Fri May 11 10:12:52 2018", 
+	"config" : {
+		"variable-2" : 789
+	}
+}
+```
+
+`Service-1`'s configuration will not be updated immediately. In stead, the `client` saves this update to its `scheduled` tasks. The configuration will now look like this:
+
+```json
+{
+	"last-message" : "e273f6eb-5428-11e8-bd5e-c82a14062914",
+	"scheduled": [
+		{
+       	"schedule": 1526033572.0,
+      		"service": "service-1",
+      		"update": {
+        		"variable-2": 789
+      		}
+    	}
+  	],
+  	"services" : {
+		"service-1" : {
+			"location": "http://localhost:21212/config",
+			"config" : {
+				"variable-1" : "value 1",
+				"variable-2" : 456
+			}
+		},
+		"service-2" : {
+			"location": "http://localhost:31313/parameters",
+			"config" : {
+				"x" : 3.14,
+				"y" : "hello world",
+				"z" : [ 1, 2, 3 ]
+			}			
+		},
+		"another-service" : {
+			"location" : "http://localhost:41414/arguments"
+		}
+	}
+}
+```
+
+> Internally, the date is stored as an epoch timestamp - the number of seconds since January 1, 1970.
+
+`Client` will check its scheduled tasks regularly (currently with 0.05s intervals) and apply any scheduled updates when their time has come.
+
 
 ## Try it
 

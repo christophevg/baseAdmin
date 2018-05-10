@@ -11,6 +11,8 @@ import json
 import copy
 import time
 import operator
+import dateutil.parser
+import datetime
 
 import client
 
@@ -18,14 +20,14 @@ class Storable(object):
   def __init__(self, location):
     self.location = location
     self.config   = {
-      "ts" : 0,
+      "last-message" : None,
       "services" : {},
       "scheduled"  : []
     }
     if not os.path.exists(self.location):
       try:
         logging.info("persisting initial configuration to " + self.location)
-        self.save()
+        self.persist()
       except Exception as e:
         logging.error("could not persist initial configuration: " + str(e))
     else:
@@ -35,36 +37,54 @@ class Storable(object):
       except Exception as e:
         logging.error("could not load persisted configuration: " + str(e))
 
-  def add_service(self, service, location, ts=None):
+  def update(self, update):
+    changed = False
+    if "location" in update:
+      changed = self.add_service(update["service"], update["location"])
+    else:
+      changed = self.remove_service(update["service"])
+    self.config["last-message"] = update["uuid"]
+    self.persist()
+    return changed
+
+  def add_service(self, service, location):
     self.config["services"][service] = {
       "location" : location,
       "config"   : {}
     }
-    self.config["ts"] = ts if not ts is None else time.time()
-    self.persist()
+    return True
   
-  def remove_service(self, service, ts=None):
+  def remove_service(self, service):
     if not service in self.config["services"]:
       logging.warn("not removing unconfigured service " + service)
-      return
+      return False
     self.config["services"].pop(service, None)
-    self.config["ts"] = ts if not ts is None else time.time()
+    return True
+
+  def update_service(self, service, update):
+    changed = False
+    if "valid-from" in update:
+      schedule = update["valid-from"]
+      try:
+        schedule = int(schedule) # epoch seconds
+      except ValueError:
+        schedule = dateutil.parser.parse(schedule) # parse datetime
+        schedule = (schedule - datetime.datetime(1970,1,1)).total_seconds()
+      changed = self.schedule(service, schedule, update["config"])
+    else:
+      changed = self.apply(service, update["config"])
+    self.config["last-message"] = update["uuid"]
     self.persist()
+    logging.debug("changed=" + str(changed))
+    return changed
 
-  def update_service_configuration(self, service, update, ts=None):
-    return self.schedule(
-      service, update["config"], ts=ts, schedule=update["valid-from"]
-    ) if "valid-from" in update else self.update(service, update["config"], ts=ts)
-
-  def schedule(self, service, update, schedule, ts=None):
+  def schedule(self, service, schedule, update):
     self.config["scheduled"].append({
-      "schedule" : schedule,
       "service"  : service,
+      "schedule" : schedule,
       "update"   : update
     })
     self.config["scheduled"].sort(key=operator.itemgetter("schedule"))
-    self.config["ts"] = ts if not ts is None else time.time()
-    self.persist()
     logging.info("scheduled update for " + service + " in " + str(schedule - time.time()) + "s")
     return False
 
@@ -74,19 +94,17 @@ class Storable(object):
     while len(self.config["scheduled"]) > 0 and self.config["scheduled"][0]["schedule"] <= now:
       s = self.config["scheduled"][0]
       logging.info("performing scheduled update for " + s["service"])
-      self.update(s["service"], s["update"], ts=self.config["ts"])
+      self.apply(s["service"], s["update"])
       changed.add(s["service"])
       del self.config["scheduled"][0]
       self.persist()
     return changed
 
-  def update(self, service, update, ts=None):
+  def apply(self, service, update):
     try:
       # for now we do 1-level k/v updates
       for k in update:
         self.config["services"][service]["config"][k] = update[k]
-      self.config["ts"] = ts if not ts is None else time.time()
-      self.persist()
       return True
     except KeyError:
       logging.warn("can't update unknown service: " + service)

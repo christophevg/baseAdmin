@@ -47,8 +47,10 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 # to the corresponding services. A local cache of the configuration is
 # maintained to allow for disconnected operation.
 
+import traceback
 import time
 import json
+import requests
 
 from servicefactory import Service
 
@@ -100,34 +102,26 @@ class Service(Service.base, backend.client.base):
       update = json.loads(msg)
       if len(parts) > 3:
         service = parts[3]
-        self.handle_service_update(service, update)
+        if self.config.update_service(service, update):
+          self.push_configuration_update(service)
       else:
-        self.handle_services_update(update)
+        if self.config.update(update):
+          self.subscribe()
+    except KeyError as e:
+      logging.error("invalid message, missing property: " + str(e))
     except Exception as e:
       logging.error("message handling failed: " + repr(e))
 
-  def handle_service_update(self, service, update):
-    ts = None if not "ts" in update else update["ts"]
-    if self.config.update_service_configuration(service, update, ts=ts):
-      self.push_configuration_update(service)
-
   def push_configuration_update(self, service):
-      # push config to service
       try:
         self.post(
           self.config.get_service_location(service),
           self.config.get_service_configuration(service)
         )
+      except requests.exceptions.ConnectionError as e:
+        logging.warn("could not connect and post update to " + service)
       except Exception as e:
         logging.warn("could not post update to " + service + " " + repr(e))
-
-  def handle_services_update(self, update):
-    ts = None if not "ts" in update else update["ts"]
-    if "location" in update:
-      self.config.add_service(update["service"], update["location"], ts=ts)
-    else:
-      self.config.remove_service(update["service"], ts=ts)
-    self.subscribe()
 
   def loop(self):
     for service in self.config.handle_scheduled():
