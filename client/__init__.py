@@ -78,7 +78,8 @@ class Service(Service.base, backend.client.base):
       on_service_update = self.push_configuration_update,
       on_service_action = self.perform_action
     )
-    # TODO push current config to all services (just to make sure ;-))
+    for service in self.config.list_services():
+      self.push_configuration_update(service)
 
   def start(self):
     super(self.__class__, self).start()
