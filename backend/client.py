@@ -98,3 +98,7 @@ class base(object):
   def publish(self, topic, message):
     self.mqtt_client.publish(topic, message,  1, False)
     logging.info("sent message: " + topic + " : " + message)
+
+  def fail(self, message):
+    logging.error(message)
+    self.publish("client/" + self.name + "/errors", message)
