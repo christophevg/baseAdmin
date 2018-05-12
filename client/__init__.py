@@ -66,6 +66,7 @@ class Service(Service.base, backend.client.base):
       "--config", type=str, help="configuration",
       default=os.environ.get("CONFIG_STORE")
     )
+    self.last_service_check = time.time()
 
   def process_arguments(self):
     super(self.__class__, self).process_arguments()
@@ -88,6 +89,7 @@ class Service(Service.base, backend.client.base):
 
   def loop(self):
     self.config.handle_scheduled()
+    self.check_services()
     time.sleep(0.05)
   
   def on_connect(self, client, clientId, flags, rc):
@@ -165,6 +167,19 @@ class Service(Service.base, backend.client.base):
     
   def publish(self, topic, message):
     super(self.__class__, self).publish(topic, json.dumps(message))
+
+  def check_services(self):
+    now = time.time()
+    if now - self.last_service_check > 60:
+      self.last_service_check = now
+      for service in self.config.list_services():
+        try:
+          self.post(
+            self.config.get_service_location(service) + "/__heartbeat",
+            None
+          )
+        except Exception as e:
+          self.fail("service is unavailable: " + service, e)
 
   @Service.API.handle("get_config")
   def handle_get_config(self, data=None):

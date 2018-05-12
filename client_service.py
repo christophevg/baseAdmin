@@ -19,6 +19,10 @@ if __name__ == "__main__":
     @Service.API.handle("action")
     def handle_action(self, data):
       logging.info("received action command : " + str(data))
+
+    @Service.API.handle("__heartbeat")
+    def handle_heartbeat(self, data):
+      pass
     
     def loop(self):
       time.sleep(1000)
