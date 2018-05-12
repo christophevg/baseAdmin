@@ -87,13 +87,11 @@ class Storable(object):
     return False
 
   def handle_scheduled(self):
-    changed = set()
     now     = datetime.datetime.now()
     while len(self.config["scheduled"]) > 0 and self.config["scheduled"][0]["schedule"] <= now:
       s = self.config["scheduled"][0]
       logging.info("performing scheduled update for " + s["service"])
       self.apply(s["service"], s["update"])
-      changed.add(s["service"])
       del self.config["scheduled"][0]
       self.persist()
 
