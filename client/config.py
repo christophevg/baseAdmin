@@ -17,16 +17,23 @@ import pickle
 import client
 
 class Storable(object):
-  def __init__(self, location, on_update, on_service_update, on_service_action):
+  def __init__(self, location,
+               on_group_join=None, on_group_leave=None,
+               on_service_add=None, on_service_remove=None,
+               on_service_update=None, on_service_action=None):
     self.location = location
-    self.config   = {
-      "last-message" : None,
-      "services" : {},
-      "scheduled"  : []
-    }
-    self.on_update         = on_update
+    self.on_group_join     = on_group_join
+    self.on_group_leave    = on_group_leave
+    self.on_service_add    = on_service_add
+    self.on_service_remove = on_service_remove
     self.on_service_update = on_service_update
     self.on_service_action = on_service_action
+    self.config   = {
+      "last-message" : None,
+      "groups"       : [],
+      "services"     : {},
+      "scheduled"    : []
+    }
 
     if not os.path.exists(self.location):
       try:
@@ -42,30 +49,45 @@ class Storable(object):
         logging.error("could not load persisted configuration: " + str(e))
 
   def update(self, update):
-    changed = False
-    if "location" in update:
-      changed = self.add_service(update["service"], update["location"])
+    service = update["service"]
+    if not "location" in update and not "groups" in update:
+      self.remove_service(service)
     else:
-      changed = self.remove_service(update["service"])
+      if "location" in update:
+        self.add_service(service, update["location"])
+      if "groups" in update:
+        self.update_groups(service, update["groups"])
     self.config["last-message"] = update["uuid"]
     self.persist()
-    if changed: self.on_update()
 
   def add_service(self, service, location):
     if service in self.config["services"]:
-      logging.warn("service already in services. reinitialising " + service)
+      logging.warn("not readding already configured service " + service)
+      return
     self.config["services"][service] = {
       "location" : location,
       "config"   : {}
     }
-    return True
+    if self.on_service_add: self.on_service_add(service)
   
   def remove_service(self, service):
     if not service in self.config["services"]:
       logging.warn("not removing unconfigured service " + service)
-      return False
+      return
     self.config["services"].pop(service, None)
-    return True
+    if self.on_service_remove: self.on_service_remove(service)
+
+  def update_groups(self, services, groups):
+    required = set(groups)
+    if self.on_group_leave:
+      deprecated = list(set(self.config["groups"]) - set(required))
+      for group in deprecated:
+        self.on_group_leave(group)
+    if self.on_group_join:
+      additional = list(set(required) - set(self.config["groups"]))
+      for group in additional:
+        self.on_group_join(group)
+    self.config["groups"] = list(required)
 
   def update_service(self, service, update):
     if "valid-from" in update:
@@ -111,6 +133,9 @@ class Storable(object):
 
   def get_last_message_id(self):
     return self.config["last-message"]
+
+  def list_groups(self):
+    return self.config["groups"]
 
   def list_services(self):
     return list(self.config["services"].keys())

@@ -66,13 +66,15 @@ class Service(Service.base, backend.client.base):
       "--config", type=str, help="configuration",
       default=os.environ.get("CONFIG_STORE")
     )
-    self.current_subscriptions = []
 
   def process_arguments(self):
     super(self.__class__, self).process_arguments()
     self.config  = client.config.Storable(
       "./config.pkl" if self.args.config is None else self.args.config,
-      on_update         = self.manage_subscriptions,
+      on_group_join     = self.join_group,
+      on_group_leave    = self.leave_group,
+      on_service_add    = self.add_service,
+      on_service_remove = self.remove_service,
       on_service_update = self.push_configuration_update,
       on_service_action = self.perform_action
     )
@@ -90,19 +92,40 @@ class Service(Service.base, backend.client.base):
   def on_connect(self, client, clientId, flags, rc):
     super(self.__class__, self).on_connect(client, clientId, flags, rc)
     self.follow("client/" + self.name + "/services")
+    self.follow("client/all/services")
     self.publish("client/" + self.name + "/status", {
       "last-message" : self.config.get_last_message_id()
     })
-
-  def manage_subscriptions(self):
-    required   = self.config.list_services()
-    deprecated = list(set(self.current_subscriptions) - set(required))
-    additional = list(set(required) - set(self.current_subscriptions))
-    for service in deprecated:
-      self.unfollow("client/" + self.name + "/service/" + service)
-    for service in additional:
+    groups = self.config.list_groups()
+    for group in groups:
+      self.follow("client/" + group + "/services")
+    for service in self.config.list_services():
       self.follow("client/" + self.name + "/service/" + service)
-    self.current_subscriptions = required
+      self.follow("group/all/service/" + service)
+      for group in groups:
+        self.follow("group/" + group + "/service/" + service)
+
+  def join_group(self, group):
+    self.follow("group/" + group + "/services")
+    for service in self.config.list_services():
+      self.follow("group/" + group + "/service/" + service)
+  
+  def leave_group(self, group):
+    self.unfollow("group/" + group + "/services")
+    for service in self.config.list_services():
+      self.unfollow("group/" + group + "/service/" + service)
+
+  def add_service(self, service):
+    self.follow("client/" + self.name + "/service/" + service)
+    self.follow("group/all/service/" + service)
+    for group in self.config.list_groups():
+      self.follow("group/" + group + "/service/" + service)
+  
+  def remove_service(self, service):
+    self.unfollow("client/" + self.name + "/service/" + service)
+    self.unfollow("group/all/service/" + service)
+    for group in self.config.list_groups():
+      self.unfollow("group/" + group + "/service/" + service)
 
   def handle_mqtt_message(self, topic, msg):
     try:
