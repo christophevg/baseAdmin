@@ -7,6 +7,7 @@ import time
 from urllib.parse import urlparse
 import json
 import socket
+import traceback
 
 import paho.mqtt.client as mqtt
 
@@ -77,7 +78,7 @@ class base(object):
   def on_message(self, client, clientId, msg):
     topic = msg.topic
     msg   = str(msg.payload.decode("utf-8"))
-    logging.info("received message: " + topic + " : " + msg)
+    logging.debug("received message: " + topic + " : " + msg)
     self.handle_mqtt_message(topic, msg)
 
   def handle_mqtt_message(self, topic, msg):
@@ -85,20 +86,26 @@ class base(object):
 
   def follow(self, topic):
     if self.mqtt_client is None: return
-    logging.debug("following " + topic)
+    logging.info("following " + topic)
     self.mqtt_client.subscribe(topic)
     return self
 
   def unfollow(self, topic):
     if self.mqtt_client is None: return
-    logging.debug("unfollowing " + topic)
+    logging.info("unfollowing " + topic)
     self.mqtt_client.unsubscribe(topic)
     return self
 
   def publish(self, topic, message):
     self.mqtt_client.publish(topic, message,  1, False)
-    logging.info("sent message: " + topic + " : " + message)
+    logging.debug("sent message: " + topic + " : " + message)
 
-  def fail(self, message):
-    logging.error(message)
-    self.publish("client/" + self.name + "/errors", message)
+  def fail(self, message, e=None):
+    logging.error(message + " : " + str(e))
+    self.publish(
+      "client/" + self.name + "/errors",
+      {
+        "message" : message,
+        "exception" : ''.join(traceback.format_exception(type(e), e, e.__traceback__))
+      }
+    )

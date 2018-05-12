@@ -139,9 +139,9 @@ class Service(Service.base, backend.client.base):
       else:
         self.config.update(update)
     except KeyError as e:
-      self.fail("invalid message, missing property: " + str(e))
+      self.fail("invalid message, missing property", e)
     except Exception as e:
-      self.fail("message handling failed: " + repr(e))
+      self.fail("message handling failed", e)
 
   def push_configuration_update(self, service):
     self.perform_action(
@@ -159,9 +159,9 @@ class Service(Service.base, backend.client.base):
         action["payload"]
       )
     except requests.exceptions.ConnectionError as e:
-      self.fail("could not connect to " + service)
+      self.fail("could not connect to " + service, e)
     except Exception as e:
-      self.fail("could not post to " + service + "/" + action + " : " + repr(e))
+      self.fail("could not post to " + service + "/" + action, e)
     
   def publish(self, topic, message):
     super(self.__class__, self).publish(topic, json.dumps(message))
@@ -175,7 +175,7 @@ class Service(Service.base, backend.client.base):
       logging.debug("providing config for " + service + " : " + str(config))
       return json.dumps(config)
     except Exception as e:
-      self.fail("failed to provide configuration : " + str(e))
+      self.fail("failed to provide configuration", e)
       return json.dumps(None)
 
   @classmethod
