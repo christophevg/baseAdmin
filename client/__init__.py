@@ -149,7 +149,7 @@ class Service(Service.base, backend.client.base):
     self.perform_action(
       service,
       {
-        "command" : "config",
+        "command" : "__config",
         "payload" : self.config.get_service_configuration(service)
       }
     )

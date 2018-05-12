@@ -16,7 +16,7 @@ console: requirements
 	. venv/bin/activate; python console.py ${ARGS}
 
 client: requirements
-	. venv/bin/activate; python client.py ${ARGS}
+	. venv/bin/activate; python -m client ${ARGS}
 
-client-service: requirements
-	. venv/bin/activate; python client_service.py ${ARGS}
+demo-service: requirements
+	. venv/bin/activate; python demo_service.py ${ARGS}
