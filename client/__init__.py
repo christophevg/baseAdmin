@@ -67,7 +67,6 @@ class Service(Service.base, backend.client.base):
       default=os.environ.get("CONFIG_STORE")
     )
     self.current_subscriptions = []
-    self.first_subscription = True
 
   def process_arguments(self):
     super(self.__class__, self).process_arguments()
@@ -81,10 +80,14 @@ class Service(Service.base, backend.client.base):
     # also start this service
     self.run()
   
-  def subscribe(self):
-    if self.first_subscription:
-      self.follow("client/" + self.name + "/services")
-      self.first_subscription = False
+  def on_connect(self, client, clientId, flags, rc):
+    super(self.__class__, self).on_connect(client, clientId, flags, rc)
+    self.follow("client/" + self.name + "/services")
+    self.publish("client/" + self.name + "/status", {
+      "last-message" : self.config.get_last_message_id()
+    })
+
+  def manage_subscriptions(self):
     required   = self.config.list_services()
     deprecated = list(set(self.current_subscriptions) - set(required))
     additional = list(set(required) - set(self.current_subscriptions))
@@ -94,8 +97,10 @@ class Service(Service.base, backend.client.base):
       self.follow("client/" + self.name + "/service/" + service)
     self.current_subscriptions = required
 
+  def publish(self, topic, message):
+    super(self.__class__, self).publish(topic, json.dumps(message))
+
   def handle_mqtt_message(self, topic, msg):
-    logging.info("received message: " + topic + " : " + msg)
     try:
       parts  = topic.split("/")
       scope  = parts[2]
@@ -106,7 +111,7 @@ class Service(Service.base, backend.client.base):
           self.push_configuration_update(service)
       else:
         if self.config.update(update):
-          self.subscribe()
+          self.manage_subscriptions()
     except KeyError as e:
       logging.error("invalid message, missing property: " + str(e))
     except Exception as e:

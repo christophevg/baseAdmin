@@ -104,6 +104,9 @@ class Storable(object):
       logging.warn("can't update unknown service: " + service)
       return False
 
+  def get_last_message_id(self):
+    return self.config["last-message"]
+
   def list_services(self):
     return list(self.config["services"].keys())
 

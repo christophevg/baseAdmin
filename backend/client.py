@@ -73,15 +73,11 @@ class base(object):
 
   def on_connect(self, client, clientId, flags, rc):
     logging.debug("connected with result code " + str(rc))
-    self.mqtt_client.publish("client/" + self.name + "/status", "online",  1, False)
-    self.subscribe()
   
-  def subscribe(self):
-    pass
-
   def on_message(self, client, clientId, msg):
     topic = msg.topic
     msg   = str(msg.payload.decode("utf-8"))
+    logging.info("received message: " + topic + " : " + msg)
     self.handle_mqtt_message(topic, msg)
 
   def handle_mqtt_message(self, topic, msg):
@@ -101,3 +97,4 @@ class base(object):
 
   def publish(self, topic, message):
     self.mqtt_client.publish(topic, message,  1, False)
+    logging.info("sent message: " + topic + " : " + message)
