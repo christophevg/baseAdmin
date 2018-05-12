@@ -5,7 +5,7 @@ import client.service
 from client.service import API
 
 @API.endpoint(port=21212)
-class SomeService(client.service.base):
+class DemoService(client.service.base):
 
   @API.handle("action")
   def handle_action(self, data):
@@ -14,4 +14,4 @@ class SomeService(client.service.base):
     self.publish("info", data)
 
 if __name__ == "__main__":
-  SomeService().run()
+  DemoService().run()

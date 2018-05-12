@@ -54,8 +54,9 @@ class Runner(Service.base, backend.client.base):
     super(self.__class__, self).on_connect(client, clientId, flags, rc)
     self.follow("client/" + self.name + "/services")
     self.follow("client/all/services")
-    self.publish( {
-      "last-message" : self.config.get_last_message_id()
+    self.publish_service_message(
+      {
+        "last-message" : self.config.get_last_message_id()
       },
       scope="status"
     )
@@ -125,13 +126,13 @@ class Runner(Service.base, backend.client.base):
     except Exception as e:
       self.fail("could not post to " + service + "/" + action, e)
     
-  def publish(self, message, service=None, scope=None):
+  def publish_service_message(self, message, service=None, scope=None):
     topic = "client/" + self.name
     if not service is None:
       topic = topic + "/service/" + service
     if not scope is None:
       topic = topic + "/" + scope
-    super(self.__class__, self).publish(topic, json.dumps(message))
+    self.publish(topic, json.dumps(message))
 
   def check_services(self):
     now = time.time()
@@ -170,7 +171,10 @@ class Runner(Service.base, backend.client.base):
   def handle_publish(self, data=None):
     try:
       event = json.loads(data)
-      self.publish( event["payload"], service=event["service"], scope=event["scope"])
+      self.publish_service_message(
+        event["payload"],
+        service=event["service"], scope=event["scope"]
+      )
     except Exception as e:
       self.fail("failed to publish service event", e)
 

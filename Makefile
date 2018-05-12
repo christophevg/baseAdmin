@@ -19,4 +19,7 @@ client: requirements
 	. venv/bin/activate; python -m client ${ARGS}
 
 demo-service: requirements
-	. venv/bin/activate; python demo_service.py ${ARGS}
+	. venv/bin/activate; PYTHONPATH=. python client/services/demo.py ${ARGS}
+
+system-service: requirements
+	. venv/bin/activate; PYTHONPATH=. python client/services/system.py ${ARGS}

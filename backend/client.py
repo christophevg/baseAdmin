@@ -104,8 +104,8 @@ class base(object):
     logging.error(message + " : " + str(e))
     self.publish(
       "client/" + self.name + "/errors",
-      {
+      json.dumps({
         "message" : message,
         "exception" : ''.join(traceback.format_exception(type(e), e, e.__traceback__))
-      }
+      })
     )

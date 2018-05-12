@@ -1,5 +1,6 @@
 import time
 import logging
+import json
 
 from servicefactory import Service
 
@@ -12,7 +13,8 @@ class base(Service.base):
 
   @Service.API.handle("__config")
   def __handle_config(self, data):
-    logging.info("received config update : " + str(data))
+    self.config = json.loads(data)
+    logging.info("received config update : " + str(self.config))
 
   @Service.API.handle("__heartbeat")
   def __handle_heartbeat(self, data):
