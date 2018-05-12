@@ -1,2 +1,2 @@
-import client
-client.Service().start()
+import client.endpoint
+client.endpoint.Runner().start()

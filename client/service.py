@@ -3,11 +3,11 @@ import logging
 
 from servicefactory import Service
 
-import client.service
+import client.endpoint
 
 class base(Service.base):
   def __init__(self):
-    self.config = client.Service.get_config(self.__class__.__name__)
+    self.config = client.endpoint.API.get_config(self.__class__.__name__)
     logging.info("loaded config on boot: " + str(self.config))
 
   @Service.API.handle("__config")
