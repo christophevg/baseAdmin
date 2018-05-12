@@ -17,13 +17,17 @@ import pickle
 import client
 
 class Storable(object):
-  def __init__(self, location):
+  def __init__(self, location, on_update, on_service_update, on_service_action):
     self.location = location
     self.config   = {
       "last-message" : None,
       "services" : {},
       "scheduled"  : []
     }
+    self.on_update         = on_update
+    self.on_service_update = on_service_update
+    self.on_service_action = on_service_action
+
     if not os.path.exists(self.location):
       try:
         logging.info("persisting initial configuration to " + self.location)
@@ -45,9 +49,11 @@ class Storable(object):
       changed = self.remove_service(update["service"])
     self.config["last-message"] = update["uuid"]
     self.persist()
-    return changed
+    if changed: self.on_update()
 
   def add_service(self, service, location):
+    if service in self.config["services"]:
+      logging.warn("service already in services. reinitialising " + service)
     self.config["services"][service] = {
       "location" : location,
       "config"   : {}
@@ -62,15 +68,13 @@ class Storable(object):
     return True
 
   def update_service(self, service, update):
-    changed = False
     if "valid-from" in update:
       schedule = dateutil.parser.parse(update["valid-from"]) # parse datetime
-      changed = self.schedule(service, schedule, update["config"])
+      self.schedule(service, schedule, update)
     else:
-      changed = self.apply(service, update["config"])
+      self.apply(service, update)
     self.config["last-message"] = update["uuid"]
     self.persist()
-    return changed
 
   def schedule(self, service, schedule, update):
     self.config["scheduled"].append({
@@ -92,17 +96,20 @@ class Storable(object):
       changed.add(s["service"])
       del self.config["scheduled"][0]
       self.persist()
-    return changed
 
   def apply(self, service, update):
     try:
-      # for now we do 1-level k/v updates
-      for k in update:
-        self.config["services"][service]["config"][k] = update[k]
-      return True
+      self.on_service_action(service, update["action"])
     except KeyError:
-      logging.warn("can't update unknown service: " + service)
-      return False
+      try:
+        # for now we do 1-level k/v updates
+        for k in update["config"]:
+          self.config["services"][service]["config"][k] = update["config"][k]
+        self.on_service_update(service)
+      except KeyError:
+        logging.warn("can't update unknown service: " + service)        
+    except:
+      logging.error("unknown update: " + str(update))
 
   def get_last_message_id(self):
     return self.config["last-message"]

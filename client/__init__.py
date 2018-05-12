@@ -71,7 +71,10 @@ class Service(Service.base, backend.client.base):
   def process_arguments(self):
     super(self.__class__, self).process_arguments()
     self.config  = client.config.Storable(
-      "./config.pkl" if self.args.config is None else self.args.config
+      "./config.pkl" if self.args.config is None else self.args.config,
+      on_update         = self.manage_subscriptions,
+      on_service_update = self.push_configuration_update,
+      on_service_action = self.perform_action
     )
     # TODO push current config to all services (just to make sure ;-))
 
@@ -79,6 +82,10 @@ class Service(Service.base, backend.client.base):
     super(self.__class__, self).start()
     # also start this service
     self.run()
+
+  def loop(self):
+    self.config.handle_scheduled()
+    time.sleep(0.05)
   
   def on_connect(self, client, clientId, flags, rc):
     super(self.__class__, self).on_connect(client, clientId, flags, rc)
@@ -97,9 +104,6 @@ class Service(Service.base, backend.client.base):
       self.follow("client/" + self.name + "/service/" + service)
     self.current_subscriptions = required
 
-  def publish(self, topic, message):
-    super(self.__class__, self).publish(topic, json.dumps(message))
-
   def handle_mqtt_message(self, topic, msg):
     try:
       parts  = topic.split("/")
@@ -107,31 +111,36 @@ class Service(Service.base, backend.client.base):
       update = json.loads(msg)
       if len(parts) > 3:
         service = parts[3]
-        if self.config.update_service(service, update):
-          self.push_configuration_update(service)
+        self.config.update_service(service, update)
       else:
-        if self.config.update(update):
-          self.manage_subscriptions()
+        self.config.update(update)
     except KeyError as e:
       logging.error("invalid message, missing property: " + str(e))
     except Exception as e:
       logging.error("message handling failed: " + repr(e))
 
   def push_configuration_update(self, service):
-      try:
-        self.post(
-          self.config.get_service_location(service),
-          self.config.get_service_configuration(service)
-        )
-      except requests.exceptions.ConnectionError as e:
-        logging.warn("could not connect and post update to " + service)
-      except Exception as e:
-        logging.warn("could not post update to " + service + " " + repr(e))
+    self.perform_action(
+      service,
+      {
+        "command" : "config",
+        "payload" : self.config.get_service_configuration(service)
+      }
+    )
 
-  def loop(self):
-    for service in self.config.handle_scheduled():
-      self.push_configuration_update(service)
-    time.sleep(0.05)
+  def perform_action(self, service, action):
+    try:
+      self.post(
+        self.config.get_service_location(service) + "/" + action["command"],
+        action["payload"]
+      )
+    except requests.exceptions.ConnectionError as e:
+      logging.warn("could not connect to " + service)
+    except Exception as e:
+      logging.warn("could not post to " + service + "/" + action + " : " + repr(e))
+    
+  def publish(self, topic, message):
+    super(self.__class__, self).publish(topic, json.dumps(message))
 
   @Service.API.handle("get_config")
   def handle_get_config(self, data=None):
