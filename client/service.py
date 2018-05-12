@@ -17,7 +17,10 @@ class base(Service.base):
   @Service.API.handle("__heartbeat")
   def __handle_heartbeat(self, data):
     pass
-    
+
+  def publish(self, message, data):
+    client.endpoint.API.publish_service_event(self.__class__.__name__, message, data)
+
   def loop(self):
     time.sleep(1000)
 

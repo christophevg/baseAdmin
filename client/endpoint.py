@@ -54,9 +54,11 @@ class Runner(Service.base, backend.client.base):
     super(self.__class__, self).on_connect(client, clientId, flags, rc)
     self.follow("client/" + self.name + "/services")
     self.follow("client/all/services")
-    self.publish("client/" + self.name + "/status", {
+    self.publish( {
       "last-message" : self.config.get_last_message_id()
-    })
+      },
+      scope="status"
+    )
     groups = self.config.list_groups()
     for group in groups:
       self.follow("client/" + group + "/services")
@@ -123,7 +125,12 @@ class Runner(Service.base, backend.client.base):
     except Exception as e:
       self.fail("could not post to " + service + "/" + action, e)
     
-  def publish(self, topic, message):
+  def publish(self, message, service=None, scope=None):
+    topic = "client/" + self.name
+    if not service is None:
+      topic = topic + "/service/" + service
+    if not scope is None:
+      topic = topic + "/" + scope
     super(self.__class__, self).publish(topic, json.dumps(message))
 
   def check_services(self):
@@ -157,6 +164,29 @@ class Runner(Service.base, backend.client.base):
       return cls.perform( "get_config", { "service" : service } ).json()
     except Exception as e:
       logging.error("failed to retrieve config for " + service + " : " + str(e))
+      return None
+
+  @Service.API.handle("publish")
+  def handle_publish(self, data=None):
+    try:
+      event = json.loads(data)
+      self.publish( event["payload"], service=event["service"], scope=event["scope"])
+    except Exception as e:
+      self.fail("failed to publish service event", e)
+
+  @classmethod
+  def publish_service_event(cls, service, scope, payload):
+    try:
+      cls.perform(
+        "publish",
+        {
+          "service" : service,
+          "scope"   : scope,
+          "payload" : payload
+        }
+      )
+    except Exception as e:
+      logging.error("failed to publish event " + scope + " : " + str(e))
       return None
 
 # passthrough Service API support (cosmetic)
