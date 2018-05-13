@@ -3,3 +3,5 @@ venv
 env.local
 baseadmin.log
 config.pkl
+
+.DS_Store
