@@ -67,13 +67,17 @@ class base(object):
       self.mqtt_client.username_pw_set(self.mqtt.username, self.mqtt.password)
     self.mqtt_client.on_connect = self.on_connect
     self.mqtt_client.on_message = self.on_message
-    self.mqtt_client.will_set("client/" + self.name + "/status", "offline", 1, False)
+    self.mqtt_client.will_set("client/" + self.name, json.dumps({ "status" : "offline" }), 1, False)
     logging.debug("connecting to MQ " + self.mqtt.netloc)
     self.mqtt_client.connect(self.mqtt.hostname, self.mqtt.port)
     self.mqtt_client.loop_start()
 
   def on_connect(self, client, clientId, flags, rc):
     logging.debug("connected with result code " + str(rc))
+    self.publish("client/" + self.name , json.dumps(self.on_connect_message()))
+
+  def on_connect_message(self):
+    return { "status" : "online" }
   
   def on_message(self, client, clientId, msg):
     topic = msg.topic
@@ -97,6 +101,9 @@ class base(object):
     return self
 
   def publish(self, topic, message):
+    if self.mqtt_client is None:
+      logging.error("tried to sent MQTT message before connected")
+      return
     self.mqtt_client.publish(topic, message,  1, False)
     logging.debug("sent message: " + topic + " : " + message)
 

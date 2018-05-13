@@ -4,14 +4,14 @@ from flask import render_template, send_from_directory
 from flask import request
 from jinja2 import TemplateNotFound
 
-from backend.web import server
-from backend.data import store
+from backend.web   import server
+from backend.store import store
 
 def render(template, without_sections=False):
   user = None
   if request.authorization:
-    user = store.db.users.find_one({ "_id": request.authorization.username })
-  app  = store.db.app.find_one({})
+    user = store.users.find_one({ "_id": request.authorization.username })
+  app  = store.app.find_one({})
   try:
     return render_template(
       template + ".html",

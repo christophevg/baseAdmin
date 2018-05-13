@@ -16,10 +16,13 @@ console: requirements
 	. venv/bin/activate; python console.py ${ARGS}
 
 client: requirements
-	. venv/bin/activate; python -m client ${ARGS}
+	. venv/bin/activate; PYTHONPATH=. python -m client ${ARGS}
 
 demo-service: requirements
 	. venv/bin/activate; PYTHONPATH=. python client/services/demo.py ${ARGS}
 
 system-service: requirements
 	. venv/bin/activate; PYTHONPATH=. python client/services/system.py ${ARGS}
+
+backend-store: requirements
+	. venv/bin/activate; python -m backend.store ${ARGS}

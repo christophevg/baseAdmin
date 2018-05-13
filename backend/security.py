@@ -4,13 +4,13 @@ import bcrypt
 
 from flask import request, Response
 
-from backend      import APP_NAME
-from backend.data import store
+from backend       import APP_NAME
+from backend.store import store
 
 def valid_credentials(users, auth):
   if not auth or not auth.username or not auth.password: return False
   if not auth.username in users: return False
-  user = store.db.users.find_one({ "_id" : auth.username })
+  user = store.users.find_one({ "_id" : auth.username })
   if not user: return False
   return bcrypt.checkpw(auth.password, user["password"])
 

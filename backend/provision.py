@@ -2,8 +2,8 @@ import os
 import logging
 import bcrypt
 
-from backend.web import server
-from backend.data import store
+from backend.web   import server
+from backend.store import store
 
 # provision initial users collection
 
@@ -12,12 +12,12 @@ if not ADMIN_PASSWORD:
   ADMIN_PASSWORD = "admin"
 
 def provision(collection, data, force=False):
-  if force or not collection in store.db.collection_names():
+  if force or not collection in store.collection_names():
     if force:
       logging.info("dropping existing collection: " + collection)
-      store.db[collection].drop();
+      store[collection].drop();
     logging.info("provisioning collection: " + collection)
-    store.db[collection].insert_one(data)
+    store[collection].insert_one(data)
 
 def provision_users(force=False):
   provision(

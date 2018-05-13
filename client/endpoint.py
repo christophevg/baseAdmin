@@ -54,12 +54,6 @@ class Runner(Service.base, backend.client.base):
     super(self.__class__, self).on_connect(client, clientId, flags, rc)
     self.follow("client/" + self.name + "/services")
     self.follow("client/all/services")
-    self.publish_service_message(
-      {
-        "last-message" : self.config.get_last_message_id()
-      },
-      scope="status"
-    )
     groups = self.config.list_groups()
     for group in groups:
       self.follow("client/" + group + "/services")
@@ -68,6 +62,11 @@ class Runner(Service.base, backend.client.base):
       self.follow("group/all/service/" + service)
       for group in groups:
         self.follow("group/" + group + "/service/" + service)
+
+  def on_connect_message(self):
+    message = super(self.__class__, self).on_connect_message()
+    message["config"] = self.config.get_last_message_id()
+    return message 
 
   def join_group(self, group):
     self.follow("group/" + group + "/services")

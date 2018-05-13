@@ -12,12 +12,12 @@
 
   function onConnect() {
     client.subscribe("#");
-    send("client/status", clientId + ":online");
+    // send("client/status", clientId + ":online");
   }
 
   function onConnectionLost(responseObject) {
     if (responseObject.errorCode !== 0) {
-      console.log("onConnectionLost:", responseObject.errorMessage);
+      console.log("onConnectionLost:", responseObject);
       setTimeout(function() { client.connect() }, 5000);
     }
   }
@@ -27,7 +27,7 @@
   }
 
   function onMessageArrived(message) {
-    console.log(message.destinationName, message.payloadString);
+    console.log(message.destinationName, JSON.parse(message.payloadString));
     if(message.payloadString == "updateProperty") {
       app.updateProperty(message.destinationName)
     }

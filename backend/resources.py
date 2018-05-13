@@ -1,18 +1,39 @@
 import os
 
+from urllib.parse import urlparse
+
 from flask_restful    import Resource, abort
 
-from backend.data     import store
+from backend.store    import store
 from backend.security import authenticate
 from backend.rest     import api
-from backend.mq       import MQ, MQ_WS
+
+MQTT_URL = os.environ.get("MQTT_URL")
+if not MQTT_URL:
+  MQTT_URL = "mqtt://localhost:1883"
+
+p = urlparse(MQTT_URL)
+MQ = {
+  "hostname" : p.hostname,
+  "port"     : p.port,
+  "username" : p.username,
+  "password" : p.password
+}
+
+MQ_WS = {
+  "ssl"      : p.scheme == "wss" or p.port == 19044,
+  "hostname" : p.hostname,
+  "port"     : 39044 if p.port == 19044 else 9001,
+  "username" : p.username,
+  "password" : p.password  
+}
 
 class Connection(Resource):
   @authenticate(["admin"])
   def get(self):
     return {
       'status': 'OK',
-      'store': str(store.db),
+      'store': str(store),
     }
 
 api.add_resource(Connection, "/api/status")
@@ -34,7 +55,7 @@ class MQInfo(Resource):
     return MQ
 
   def get_clients(self, arg=None):
-    return [ c for c in store.db.clients.distinct("_id", { "status": "online" }) ]
+    return [ c for c in store.status.distinct("_id", { "status": "online" }) ]
 
 api.add_resource(MQInfo,
   "/api/mq/<string:scope>",
