@@ -27,7 +27,12 @@
   }
 
   function onMessageArrived(message) {
-    console.log(message.destinationName, JSON.parse(message.payloadString));
+    try {
+      console.log(message.destinationName, JSON.parse(message.payloadString));
+    } catch(err) {
+      console.log(err);
+      return;
+    }
     if(message.payloadString == "updateProperty") {
       app.updateProperty(message.destinationName)
     }
