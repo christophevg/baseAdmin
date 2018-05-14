@@ -55,16 +55,16 @@
     client.onConnectionLost = onConnectionLost;
     client.onMessageArrived = onMessageArrived;
 
-    var lwt = new Paho.MQTT.Message( clientId + ":offline");
-    lwt.destinationName = "client/status";
-    lwt.qos = 1;
-    lwt.retained = false;
+    // var lwt = new Paho.MQTT.Message( clientId + ":offline");
+    // lwt.destinationName = "client/status";
+    // lwt.qos = 1;
+    // lwt.retained = false;
 
     var options = {
       useSSL     : mqtt.ssl,
       onSuccess  : onConnect,
       onFailure  : onFailure,
-      willMessage: lwt
+      // willMessage: lwt
     }
 
     if(mqtt.username) {
