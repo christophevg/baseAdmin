@@ -64,7 +64,10 @@ class Runner(backend.client.base):
     if "status" in status:
       store.status.update_one(
         { "_id": client },
-        { "$set" : { "status" : status["status"] } },
+        {
+          "$currentDate" : { "lastModified": True, },
+           "$set" : { "status" : status["status"] }
+         },
         upsert=True
       )
     # send latest version if reported config version is different
