@@ -2,26 +2,19 @@ import os
 import os.path
 import sys
 import logging
-from functools import reduce
-import time
 import copy
 import hashlib
 from tempfile import NamedTemporaryFile
-import copy
 import time
 import operator
 import dateutil.parser
 import datetime
 import pickle
 
-import client
-
 class Config(object):
-  def __init__(self, location,
-               on_group_join=None, on_group_leave=None,
+  def __init__(self, on_group_join=None, on_group_leave=None,
                on_service_add=None, on_service_remove=None,
                on_service_update=None, on_service_action=None):
-    self.location = location
     self.on_group_join     = on_group_join
     self.on_group_leave    = on_group_leave
     self.on_service_add    = on_service_add
@@ -35,109 +28,36 @@ class Config(object):
       "scheduled"    : []
     }
     self.initialize_persistence()
-  
-  def update(self, update):
-    service = update["service"]
-    if not "location" in update and not "groups" in update:
-      self.remove_service(service)
+
+  def handle_mqtt_update(self, topic, update):
+    parts  = topic.split("/")
+    if len(parts) > 3:
+      service = parts[3]
+      self.__update_service(service, update)
+    elif len(parts) > 2:
+      self.__update_services(update)
     else:
-      if "location" in update:
-        self.add_service(service, update["location"])
-      if "groups" in update:
-        self.update_groups(service, update["groups"])
-    self.config["last-message"] = update["uuid"]
-    self.persist()
-
-  def update(self, update):
-    service = update["service"]
-    if not "location" in update and not "groups" in update:
-      self.remove_service(service)
-    else:
-      if "location" in update:
-        self.add_service(service, update["location"])
-      if "groups" in update:
-        self.update_groups(service, update["groups"])
-    self.config["last-message"] = update["uuid"]
-    self.persist()
-
-  def add_service(self, service, location):
-    if service in self.config["services"]:
-      logging.warn("not readding already configured service " + service)
-      return
-    self.config["services"][service] = {
-      "location" : location,
-      "config"   : {}
-    }
-    if self.on_service_add: self.on_service_add(service)
-  
-  def remove_service(self, service):
-    if not service in self.config["services"]:
-      logging.warn("not removing unconfigured service " + service)
-      return
-    self.config["services"].pop(service, None)
-    if self.on_service_remove: self.on_service_remove(service)
-
-  def update_groups(self, services, groups):
-    required = set(groups)
-    if self.on_group_leave:
-      deprecated = list(set(self.config["groups"]) - set(required))
-      for group in deprecated:
-        self.on_group_leave(group)
-    if self.on_group_join:
-      additional = list(set(required) - set(self.config["groups"]))
-      for group in additional:
-        self.on_group_join(group)
-    self.config["groups"] = list(required)
-
-  def update_service(self, service, update):
-    if "valid-from" in update:
-      schedule = dateutil.parser.parse(update["valid-from"]) # parse datetime
-      self.schedule(service, schedule, update)
-    else:
-      self.apply(service, update)
-    self.config["last-message"] = update["uuid"]
-    self.persist()
-
-  def schedule(self, service, schedule, update):
-    self.config["scheduled"].append({
-      "service"  : service,
-      "schedule" : schedule,
-      "update"   : update
-    })
-    self.config["scheduled"].sort(key=operator.itemgetter("schedule"))
-    logging.info("scheduled update for " + service + " in " + str((schedule - datetime.datetime.now()).total_seconds()) + "s")
-    return False
+      self.__update(update)
 
   def handle_scheduled(self):
-    now     = datetime.datetime.now()
+    now = datetime.datetime.now()
     while len(self.config["scheduled"]) > 0 and self.config["scheduled"][0]["schedule"] <= now:
       s = self.config["scheduled"][0]
       logging.info("performing scheduled update for " + s["service"])
-      self.apply(s["service"], s["update"])
+      self.__apply(s["service"], s["update"])
       del self.config["scheduled"][0]
       self.persist()
 
-  def apply(self, service, update):
-    try:
-      self.on_service_action(service, update["action"])
-    except KeyError:
-      try:
-        # for now we do 1-level k/v updates
-        for k in update["config"]:
-          self.config["services"][service]["config"][k] = update["config"][k]
-        self.on_service_update(service)
-      except KeyError:
-        logging.warn("can't update unknown service: " + service)        
-    except:
-      logging.error("unknown update: " + str(update))
-
-  def get_last_message_id(self):
+  @property
+  def last_message_id(self):
     return self.config["last-message"]
 
-  def list_groups(self):
+  @property
+  def groups(self):
     return self.config["groups"]
 
-  def list_services(self):
+  @property
+  def services(self):
     return list(self.config["services"].keys())
 
   def get_service_location(self, service):
@@ -163,7 +83,111 @@ class Config(object):
   def load(self):
     pass
 
+  def __update(self, update):
+    self.config["last-message"] = update["last-message"]
+    self.__update_groups(update["groups"])
+    # remove deprecated services
+    deprecated = list(set(self.services) - set(update["services"].keys()))
+    for service in deprecated:
+      self.__remove_service(service)
+    # add new services
+    additional = list(set(update["services"].keys() - set(self.services)))
+    for service in additional:
+      self.__add_service(service, update["services"][service]["location"])
+    # update (remaining) existing (and new) services
+    for service in update["services"]:
+      self.config["services"][service]["config"] = update["services"][service]["config"]
+      if self.on_service_update:
+        self.on_service_update(service)
+    self.config["scheduled"] = update["scheduled"]
+    self.persist()
+
+  def __update_services(self, update):
+    service = update["service"]
+    if not "location" in update and not "groups" in update:
+      self.__remove_service(service)
+    else:
+      if "location" in update:
+        self.__add_service(service, update["location"])
+      if "groups" in update:
+        self.__update_groups(update["groups"])
+    self.config["last-message"] = update["uuid"]
+    self.persist()
+
+  def __update_service(self, service, update):
+    logging.debug("updating service config for " + service)
+    if "valid-from" in update:
+      schedule = dateutil.parser.parse(update["valid-from"]) # parse datetime
+      self.__schedule(service, schedule, update)
+    else:
+      self.__apply(service, update)
+    self.config["last-message"] = update["uuid"]
+    self.persist()
+
+  def __add_service(self, service, location):
+    if service in self.config["services"]:
+      logging.warn("not readding already configured service " + service)
+      return
+    self.config["services"][service] = {
+      "location" : location,
+      "config"   : {}
+    }
+    logging.debug("added service " + service)
+    if self.on_service_add: self.on_service_add(service)
+  
+  def __remove_service(self, service):
+    if not service in self.config["services"]:
+      logging.warn("not removing unconfigured service " + service)
+      return
+    self.config["services"].pop(service, None)
+    logging.debug("removed service " + service)
+    if self.on_service_remove: self.on_service_remove(service)
+
+  def __update_groups(self, groups):
+    required = set(groups)
+    if self.on_group_leave:
+      deprecated = list(set(self.config["groups"]) - set(required))
+      for group in deprecated:
+        self.on_group_leave(group)
+    if self.on_group_join:
+      additional = list(set(required) - set(self.config["groups"]))
+      for group in additional:
+        self.on_group_join(group)
+    self.config["groups"] = list(required)
+
+  def __schedule(self, service, schedule, update):
+    self.config["scheduled"].append({
+      "service"  : service,
+      "schedule" : schedule,
+      "update"   : update
+    })
+    self.config["scheduled"].sort(key=operator.itemgetter("schedule"))
+    logging.info("scheduled update for " + service + " in " + str((schedule - datetime.datetime.now()).total_seconds()) + "s")
+    return False
+
+  def __apply(self, service, update):
+    if "action" in update:
+      if self.on_service_action:
+        self.on_service_action(service, update["action"])
+      else:
+        logging.warn("no service action handler defined")
+    elif "config" in update:
+      try:
+        # for now we do 1-level k/v updates
+        for k in update["config"]:
+          self.config["services"][service]["config"][k] = update["config"][k]
+        if self.on_service_update:
+          self.on_service_update(service)
+      except KeyError:
+        logging.warn("can't update unknown service: " + service)        
+    else:
+      logging.error("unknown update: " + str(update))
+
 class FileBased(Config):
+  def __init__(self, location, *args, **kwargs):
+    self.location = location
+    super(self.__class__, self).__init__(*args, **kwargs)
+
   def initialize_persistence(self):
     if not os.path.exists(self.location):
       try:

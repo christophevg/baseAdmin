@@ -40,7 +40,8 @@ class Runner(Service.base, backend.client.base):
 
   def start(self):
     super(self.__class__, self).start()
-    for service in self.config.list_services():
+    logging.debug("pushing config to services")
+    for service in self.config.services:
       self.push_configuration_update(service)
     # also start this service
     self.run()
@@ -52,12 +53,13 @@ class Runner(Service.base, backend.client.base):
   
   def on_connect(self, client, clientId, flags, rc):
     super(self.__class__, self).on_connect(client, clientId, flags, rc)
+    self.follow("client/" + self.name)
     self.follow("client/" + self.name + "/services")
     self.follow("client/all/services")
-    groups = self.config.list_groups()
+    groups = self.config.groups
     for group in groups:
       self.follow("client/" + group + "/services")
-    for service in self.config.list_services():
+    for service in self.config.services:
       self.follow("client/" + self.name + "/service/" + service)
       self.follow("group/all/service/" + service)
       for group in groups:
@@ -65,41 +67,34 @@ class Runner(Service.base, backend.client.base):
 
   def on_connect_message(self):
     message = super(self.__class__, self).on_connect_message()
-    message["config"] = self.config.get_last_message_id()
+    message["config"] = self.config.last_message_id
     return message 
 
   def join_group(self, group):
     self.follow("group/" + group + "/services")
-    for service in self.config.list_services():
+    for service in self.config.services:
       self.follow("group/" + group + "/service/" + service)
   
   def leave_group(self, group):
     self.unfollow("group/" + group + "/services")
-    for service in self.config.list_services():
+    for service in self.config.services:
       self.unfollow("group/" + group + "/service/" + service)
 
   def add_service(self, service):
     self.follow("client/" + self.name + "/service/" + service)
     self.follow("group/all/service/" + service)
-    for group in self.config.list_groups():
+    for group in self.config.groups:
       self.follow("group/" + group + "/service/" + service)
   
   def remove_service(self, service):
     self.unfollow("client/" + self.name + "/service/" + service)
     self.unfollow("group/all/service/" + service)
-    for group in self.config.list_groups():
+    for group in self.config.groups:
       self.unfollow("group/" + group + "/service/" + service)
 
   def handle_mqtt_message(self, topic, msg):
     try:
-      parts  = topic.split("/")
-      scope  = parts[2]
-      update = json.loads(msg)
-      if len(parts) > 3:
-        service = parts[3]
-        self.config.update_service(service, update)
-      else:
-        self.config.update(update)
+      self.config.handle_mqtt_update(topic, json.loads(msg))
     except KeyError as e:
       self.fail("invalid message, missing property", e)
     except Exception as e:
@@ -137,7 +132,7 @@ class Runner(Service.base, backend.client.base):
     now = time.time()
     if now - self.last_service_check > 60:
       self.last_service_check = now
-      for service in self.config.list_services():
+      for service in self.config.services:
         try:
           self.post(
             self.config.get_service_location(service) + "/__heartbeat",
