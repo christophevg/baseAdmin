@@ -80,7 +80,7 @@
   });
 
   // initialize with clients known at server-side
-  $.get("/api/mq/clients", function(clients) {
+  $.get("/api/clients", function(clients) {
     for(var i in clients) {
       app.addClient(clients[i]);
     }

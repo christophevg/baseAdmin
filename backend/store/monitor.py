@@ -8,6 +8,7 @@ import logging
 import time
 import json
 import copy
+import datetime
 
 import backend.client
 from backend.store import store
@@ -85,7 +86,8 @@ class Runner(backend.client.base):
   def __handle_error(self, client, error):
     store.errors.insert_one({
       "client" : client,
-      "error"  : error
+      "error"  : error,
+      "ts"     : datetime.datetime.utcnow()
     })
 
   def __handle_stats(self, client, stats):
