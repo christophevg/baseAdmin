@@ -13,7 +13,7 @@ import requests
 from servicefactory import Service
 
 import backend.client
-import client.config
+from backend.config import FileBased as FileBasedConfig
 
 @Service.API.endpoint(port=17171)
 class Runner(Service.base, backend.client.base):
@@ -28,7 +28,7 @@ class Runner(Service.base, backend.client.base):
 
   def process_arguments(self):
     super(self.__class__, self).process_arguments()
-    self.config  = client.config.Storable(
+    self.config  = FileBasedConfig(
       "./config.pkl" if self.args.config is None else self.args.config,
       on_group_join     = self.join_group,
       on_group_leave    = self.leave_group,

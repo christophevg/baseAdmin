@@ -16,7 +16,7 @@ import pickle
 
 import client
 
-class Storable(object):
+class Config(object):
   def __init__(self, location,
                on_group_join=None, on_group_leave=None,
                on_service_add=None, on_service_remove=None,
@@ -34,19 +34,19 @@ class Storable(object):
       "services"     : {},
       "scheduled"    : []
     }
-
-    if not os.path.exists(self.location):
-      try:
-        logging.info("persisting initial configuration to " + self.location)
-        self.persist()
-      except Exception as e:
-        logging.error("could not persist initial configuration: " + str(e))
+    self.initialize_persistence()
+  
+  def update(self, update):
+    service = update["service"]
+    if not "location" in update and not "groups" in update:
+      self.remove_service(service)
     else:
-      try:
-        self.load()
-        logging.info("loaded persisted configuration: " + str(self.config))
-      except Exception as e:
-        logging.error("could not load persisted configuration: " + str(e))
+      if "location" in update:
+        self.add_service(service, update["location"])
+      if "groups" in update:
+        self.update_groups(service, update["groups"])
+    self.config["last-message"] = update["uuid"]
+    self.persist()
 
   def update(self, update):
     service = update["service"]
@@ -151,7 +151,33 @@ class Storable(object):
       return self.config["services"][service]["config"]
     except KeyError:
       raise Exception("unknown service: " + service)
+
+  # "abstract" methods to implement different ways to persist the config
+
+  def initialize_persistence(self):
+    pass
   
+  def persist(self):
+    pass
+
+  def load(self):
+    pass
+
+class FileBased(Config):
+  def initialize_persistence(self):
+    if not os.path.exists(self.location):
+      try:
+        logging.info("persisting initial configuration to " + self.location)
+        self.persist()
+      except Exception as e:
+        logging.error("could not persist initial configuration: " + str(e))
+    else:
+      try:
+        self.load()
+        logging.info("loaded persisted configuration: " + str(self.config))
+      except Exception as e:
+        logging.error("could not load persisted configuration: " + str(e))
+
   def persist(self):
     config = copy.deepcopy(self.config)
     config["checksum"] = self.hash(config)
