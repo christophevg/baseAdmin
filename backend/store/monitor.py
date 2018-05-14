@@ -45,9 +45,13 @@ class Runner(backend.client.base):
     self.follow("group/+/service/+")
 
   def handle_mqtt_message(self, topic, message):
-    message = json.loads(message)
+    try:
+      message = json.loads(message)
+    except Exception as e:
+      self.fail("couldn't parse JSON message", e)
+      return
     parts   = topic.split("/")
-    
+
     if len(parts) == 2:
       return self.__handle_status(parts[1], message)
 
