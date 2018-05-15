@@ -39,6 +39,7 @@ This project stands on the shoulders of these wonderful high-power projects:
   * [Vuex](https://vuex.vuejs.org)
   * [Vuetify](https://vuetifyjs.com)
   * [Vue ChartJS](http://vue-chartjs.org)
+  * [Vue Notifications](https://github.com/euvl/vue-notification)
   * [Paho Javascript Client](https://eclipse.org/paho/clients/js/)
 
 ## How to Use baseAdmin
