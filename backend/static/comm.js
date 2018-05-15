@@ -11,8 +11,8 @@
   }
 
   function onConnect() {
+    // TODO limit to current scope
     client.subscribe("#");
-    // send("client/status", clientId + ":online");
   }
 
   function onConnectionLost(responseObject) {
@@ -28,26 +28,39 @@
 
   function onMessageArrived(message) {
     try {
-      console.log(message.destinationName, JSON.parse(message.payloadString));
+      var topic = message.destinationName.split("/"),
+          event = JSON.parse(message.payloadString);
+
+      if( handle_status_change_events(topic, event) ) { return; }
+      console.log("unhandled message", topic, JSON.parse(message.payloadString));
+
     } catch(err) {
-      console.log(err);
+      console.log("Failed to parse JSON message: ", err);
       return;
     }
-    if(message.payloadString == "updateProperty") {
-      app.updateProperty(message.destinationName)
-    }
-    if(message.destinationName == "client/status") {
-      var parts  = message.payloadString.split(":"),
-          client = parts[0],
-          online = parts[1] == "online";
-      if(online) {
-        app.addClient(client);
-      } else {
-        app.removeClient(client);
+  }    
+    
+  function handle_status_change_events(topic, event) {
+    // handle status change events
+    if( topic.length == 2 && topic[0] == "client" ) {
+      var client = topic[1];
+      if( "status" in event ) {
+        if(event["status"] == "online") {
+          app.addClient(client);
+        } else {
+          app.removeClient(client);
+        }
+        return true;
       }
     }
+    return false;
   }
 
+  function handle_stats_update(topic, event) {
+    // TODO
+    // app.updateProperty()
+  }
+    
   function connect(mqtt) {
     if(! mqtt ) { return; }
     client = new Paho.MQTT.Client(mqtt.hostname, mqtt.port, clientId);
@@ -55,16 +68,10 @@
     client.onConnectionLost = onConnectionLost;
     client.onMessageArrived = onMessageArrived;
 
-    // var lwt = new Paho.MQTT.Message( clientId + ":offline");
-    // lwt.destinationName = "client/status";
-    // lwt.qos = 1;
-    // lwt.retained = false;
-
     var options = {
       useSSL     : mqtt.ssl,
       onSuccess  : onConnect,
       onFailure  : onFailure,
-      // willMessage: lwt
     }
 
     if(mqtt.username) {
