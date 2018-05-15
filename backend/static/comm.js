@@ -17,13 +17,12 @@
 
   function onConnectionLost(responseObject) {
     if (responseObject.errorCode !== 0) {
-      console.log("onConnectionLost:", responseObject);
-      setTimeout(function() { client.connect() }, 5000);
+      console.log("onConnectionLost", responseObject);
     }
   }
 
   function onFailure(invocationContext, errorCode, errorMessage) {
-    console.log(errorMessage);
+    console.log("onFailure", errorMessage);
   }
 
   function onMessageArrived(message) {
@@ -72,6 +71,7 @@
       useSSL     : mqtt.ssl,
       onSuccess  : onConnect,
       onFailure  : onFailure,
+      reconnect  : true,
     }
 
     if(mqtt.username) {
