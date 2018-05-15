@@ -8,3 +8,7 @@ body {
 .content-wrapper {
   padding: 10px;
 }
+
+DIV.notification.vue-notification {
+  font-size: 18px;
+}

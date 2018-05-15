@@ -142,6 +142,13 @@ var app = new Vue({
       store.commit("addClient", client);
     },
     removeClient: function(client) {
+      this.$notify({
+        group: "notifications",
+        title: "<b>" + client + "</b> Offline",
+        text:  "Client <b>" + client + "</b> just went offline.",
+        type:  "error",
+        duration: 10000
+      });
       store.commit("removeClient", client);
     }
   }
