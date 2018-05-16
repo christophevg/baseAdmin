@@ -38,7 +38,7 @@
       {% if not without_sections %}
       <v-navigation-drawer fixed clipped app v-model="drawer">
         <v-list dense>
-          <template v-for="(item, i) in items">
+          <template v-for="(item, i) in sections">
             <v-list-tile :href="item.path">
               <v-list-tile-action>
                 <v-icon>${ item.icon }</v-icon>
@@ -55,6 +55,8 @@
       <v-content>
         <div class="content-wrapper">
           {% block content %}{% endblock %}
+          <notifications group="notifications"
+                         position="bottom right"/>
         </div>
       </v-content>
     </v-app>

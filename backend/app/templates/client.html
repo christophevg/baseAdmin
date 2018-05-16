@@ -1,0 +1,41 @@
+{% extends "main.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block moreCSS %}<link href="/app/dashboard.css" rel="stylesheet">{% endblock %}
+{% block moreJS %}<script src="/app/dashboard.js"></script>{% endblock %}
+
+{% block content %}
+
+<h2>Welcome {{ user.name }}...</h2>
+
+<template>
+  <v-layout column>
+    <v-flex xs12>
+      <v-container fluid grid-list-md class="grey lighten-4">
+        <v-layout row wrap>
+          <v-flex v-bind="{ [`xs${chart.flex}`]: true }" v-for="(chart, id) in charts" :key="chart.title">
+            <v-card>
+              <v-card-title>
+                <div>
+                  <h3 class="headline mb-0">${ chart.title }</h3>
+                </div>
+              </v-card-title>
+              <v-card-text>
+                <div style="width: 100%;">
+                  <line-chart :property="id" :chart-data="propertyChartData(id)" :height="chart.height"></line-chart>
+                </div>
+              </v-card-text>
+              <v-card-actions class="white">
+                <v-spacer></v-spacer>
+                <v-btn icon @click="updateProperty(id)">
+                  <v-icon>refresh</v-icon>
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-flex>
+        </v-layout>
+      </v-container>
+    </v-flex>
+  </v-layout>
+</template>
+
+{% endblock %}

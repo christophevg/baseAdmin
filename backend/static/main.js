@@ -91,11 +91,11 @@ var app = new Vue({
   el: "#app",
   delimiters: ['${', '}'],
   data: {
-    message: "Dashboard message from Vue",
     drawer: null,
-    items: [
-      { icon: 'home',    text: 'Home',      path: "/"          },
-      { icon: 'history', text: 'Dashboard', path: "/dashboard" },
+    sections: [
+      { icon: 'home',      text: 'Home',      path: "/"          },
+      { icon: 'dashboard', text: 'Dashboard', path: "/dashboard" },
+      { icon: 'build',     text: 'Setup',     path: "/setup"     },
     ],
     charts: {
       prop1 : create_chart("prop1"),
@@ -103,7 +103,45 @@ var app = new Vue({
     },
     headers: [
       { text: 'Client', align: 'left', sortable: true, value: 'name' }
-    ]
+    ],
+    groups: [
+      {
+        color: 'green',
+        icon: 'check_circle',
+        name: 'Group 1',
+        total: 3,
+        excerpt: " ",
+        clients: [
+          { title: "client 1", color: "green" },
+          { title: "client 2", color: "green" },
+          { title: "client 3", color: "green" }
+        ]
+      },
+      {
+        color: 'red',
+        icon: 'remove_circle',
+        name: 'Group 2',
+        total: 4,
+        excerpt: "A group of clients near the middle of the pack.",
+        clients: [
+          { title: "client 4", color: "red" },
+          { title: "client 5", color: "green" },
+          { title: "client 6", color: "green" }
+        ]
+      },
+      {
+        color: 'green',
+        icon: 'check_circle',
+        name: 'Group 3',
+        total: 12,
+        excerpt: " ",
+        clients: [
+          { title: "client 7", color: "green" },
+          { title: "client 8", color: "green" },
+          { title: "client 9", color: "green" }
+        ]
+      },
+    ],
   },
   methods: {
     clients: function() {
@@ -150,6 +188,12 @@ var app = new Vue({
         duration: 10000
       });
       store.commit("removeClient", client);
+    },
+    selectedClient: function(client) {
+      console.log("selected client " + client);
+    },
+    editGroup : function(group) {
+      console.log("edit group " + group);
     }
   }
 });

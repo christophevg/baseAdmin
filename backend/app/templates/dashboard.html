@@ -5,55 +5,45 @@
 
 {% block content %}
 
-<h2>Welcome {{ user.name }}...</h2>
-
-<div id="status" class="status"></div>
-
-${ message }
-
 <template>
-  <v-layout column>
-    <v-flex xs12>
-      <v-container fluid grid-list-md class="grey lighten-4">
-        <v-layout row wrap>
-          <v-flex v-bind="{ [`xs${chart.flex}`]: true }" v-for="(chart, id) in charts" :key="chart.title">
-            <v-card>
-              <v-card-title>
-                <div>
-                  <h3 class="headline mb-0">${ chart.title }</h3>
-                </div>
-              </v-card-title>
-              <v-card-text>
-                <div style="width: 100%;">
-                  <line-chart :property="id" :chart-data="propertyChartData(id)" :height="chart.height"></line-chart>
-                </div>
-              </v-card-text>
-              <v-card-actions class="white">
-                <v-spacer></v-spacer>
-                <v-btn icon @click="updateProperty(id)">
-                  <v-icon>refresh</v-icon>
-                </v-btn>
-              </v-card-actions>
-            </v-card>
+  <v-layout justify-center column>
+    <v-subheader>Groups</v-subheader>
+    <v-expansion-panel popout>
+      <v-expansion-panel-content v-for="(group, i) in groups" :key="i" hide-actions>
+        <v-layout slot="header" align-center row spacer>
+          <v-flex xs4 sm2 md1>
+            <v-avatar slot="activator" size="36px">
+              <v-icon :color="group.color" large>${ group.icon }</v-icon>
+            </v-avatar>
+          </v-flex>
+          <v-flex sm5 md3 hidden-xs-only>
+            <strong v-html="group.name"></strong>
+            <span v-if="group.total" class="grey--text">&nbsp;(${ group.total })</span>
+          </v-flex>
+          <v-flex v-if="group.excerpt" class="grey--text" ellipsis hidden-sm-and-down>
+            &mdash;
+            ${ group.excerpt }
           </v-flex>
         </v-layout>
-      </v-container>
-    </v-flex>
+
+        <div style="float:left;margin-left:15px;">
+        <v-btn color="primary" fab small dark @click="editGroup(group)">
+          <v-icon>edit</v-icon>
+        </v-btn>
+      </div>
+
+        <div style="margin-left: 25px;margin-bottom:10px;margin-right: 25px;">
+          <v-layout wrap justify-space-around align-center>
+            <v-btn v-for="client in group.clients" :key="client.title" @click="selectedClient(client.title); return false;"
+                   :color="client.color" class="white--text" round>
+              ${ client.title }
+            </v-btn>
+          </v-layout>
+        </div>
+
+      </v-expansion-panel-content>
+    </v-expansion-panel>
   </v-layout>
 </template>
-
-<h3>Current MQTT Clients</h3>
-
-<v-data-table v-bind:headers="headers"
-              :items="clients()"
-              hide-actions
-              class="elevation-1">
-  <template slot="items" slot-scope="props">
-    <td>${ props.item.name }</td>
-  </template>
-</v-data-table>
-
-<notifications group="notifications"
-               position="bottom right"/>
 
 {% endblock %}
