@@ -18,32 +18,65 @@ var store = new Vuex.Store({
         height: 200
       }
     },
-    mqtt : {
-      clients: []
-    }
+    clients: []
   },
   mutations: {
     updateProperty: function(state, update) {
       state.properties[update.id].labels = update.labels;
       state.properties[update.id].data   = update.data;
     },
-    removeClient: function(state, client) {
-      state.mqtt.clients = state.mqtt.clients.filter(function (el) {
-        return el.name != client;
+    upsertClient: function(state, client) {
+      // find current (if any)
+      var current = state.clients.find(function(element) {
+        return element._id == client._id;
       });
-    },
-    addClient: function(state, client) {
-      var clients = state.mqtt.clients.filter(function (el) {
-        return el.name != client;
+      // update or create current
+      if(current) {
+        for(var k in client) {
+          current[k] = client[k];
+        }
+      } else {
+        current = client;
+      }
+      // replace current (if any)
+      state.clients = state.clients.filter(function(item) {
+        return item._id != client._id;
       });
-      clients.push({"name" : client});
-      state.mqtt.clients = clients;
+      // and add (new) current
+      state.clients.push(current);
     }
   },
   getters: {
-    clients: function(state) {
+    groups: function(state) {
       return function() {
-        return state.mqtt.clients;
+        var groups = {};
+        for(var c in state.clients) {
+          var client = state.clients[c];
+          var client_groups = client.groups;
+          for(var g in client_groups) {
+            var group = client_groups[g];
+            if(!(group in groups)) {
+              groups[group] = {
+                name: group,
+                excerpt: " ",
+                color: "green",
+                icon: "check_circle",
+                total: 0,
+                clients: []
+              }
+            }
+            groups[group].clients.push({
+              title: client._id,
+              color: client.status == "online" ? "green" : "red"
+            });
+            groups[group].total++;
+            if(client.status != "online") {
+              groups[group].color = "red";
+              groups[group].icon  = "remove_circle";
+            }
+          }
+        }
+        return groups;
       }
     },
     propertyData: function(state) {
@@ -103,50 +136,9 @@ var app = new Vue({
     },
     headers: [
       { text: 'Client', align: 'left', sortable: true, value: 'name' }
-    ],
-    groups: [
-      {
-        color: 'green',
-        icon: 'check_circle',
-        name: 'Group 1',
-        total: 3,
-        excerpt: " ",
-        clients: [
-          { title: "client 1", color: "green" },
-          { title: "client 2", color: "green" },
-          { title: "client 3", color: "green" }
-        ]
-      },
-      {
-        color: 'red',
-        icon: 'remove_circle',
-        name: 'Group 2',
-        total: 4,
-        excerpt: "A group of clients near the middle of the pack.",
-        clients: [
-          { title: "client 4", color: "red" },
-          { title: "client 5", color: "green" },
-          { title: "client 6", color: "green" }
-        ]
-      },
-      {
-        color: 'green',
-        icon: 'check_circle',
-        name: 'Group 3',
-        total: 12,
-        excerpt: " ",
-        clients: [
-          { title: "client 7", color: "green" },
-          { title: "client 8", color: "green" },
-          { title: "client 9", color: "green" }
-        ]
-      },
-    ],
+    ]
   },
   methods: {
-    clients: function() {
-      return store.getters.clients();
-    },
     propertyChartData: function(id) {
       return {
         labels: this.propertyLabels(id),
@@ -176,9 +168,6 @@ var app = new Vue({
         labels: labels
       })
     },
-    addClient: function(client) {
-      store.commit("addClient", client);
-    },
     removeClient: function(client) {
       this.$notify({
         group: "notifications",
@@ -194,6 +183,12 @@ var app = new Vue({
     },
     editGroup : function(group) {
       console.log("edit group " + group);
+    },
+    upsertClient: function(client) {
+      store.commit("upsertClient", client);
+    },
+    groups : function() {
+      return store.getters.groups();
     }
   }
 });

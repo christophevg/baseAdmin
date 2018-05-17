@@ -44,11 +44,10 @@
     if( topic.length == 2 && topic[0] == "client" ) {
       var client = topic[1];
       if( "status" in event ) {
-        if(event["status"] == "online") {
-          app.addClient(client);
-        } else {
-          app.removeClient(client);
-        }
+        app.upsertClient({
+          "_id" : client,
+          "status" : event["status"]
+        });
         return true;
       }
     }
@@ -89,7 +88,7 @@
   // initialize with clients known at server-side
   $.get("/api/clients", function(clients) {
     for(var i in clients) {
-      app.addClient(clients[i]);
+      app.upsertClient(clients[i]);
     }
   });
 

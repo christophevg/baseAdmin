@@ -57,7 +57,19 @@ api.add_resource(MQInfo,
 class Clients(Resource):
   @authenticate(["admin"])
   def get(self):
-    return [ c for c in store.status.distinct("_id", { "status": "online" }) ]
+    clients = {};
+    for client in store.status.find({}, { "lastModified": False }):
+      clients[client["_id"]] = client;
+    
+    for client in store.config.find():
+      if not client["_id"] in clients:
+        clients[client["_id"]] = {
+          "_id" : client["_id"],
+          "status": "offline"
+        }
+      clients[client["_id"]]["groups"] = client["groups"] + ["all"];
+    
+    return clients.values();
 
 api.add_resource(Clients, "/api/clients")
 
