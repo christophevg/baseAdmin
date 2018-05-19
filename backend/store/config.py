@@ -12,7 +12,6 @@ class StoreBased(backend.config.Config):
   def initialize_persistence(self):
     try:
       self.load()
-      logging.info("loaded client configuration for " + self.client)
     except KeyError:
       logging.info("persisting initial configuration for " + self.client)
       self.persist()
@@ -30,7 +29,7 @@ class StoreBased(backend.config.Config):
     if config is None:
       raise KeyError("unknown client " + self.client)
     self.config = config
-    logging.debug("persisted configuration loaded for " + self.client)
+    logging.debug("loaded client configuration for " + self.client)
 
 class Collection(object):
   def __init__(self):
@@ -42,7 +41,7 @@ class Collection(object):
 
   def __getitem__(self, client):
     if not client in self.configs:
-      logging.debug("instantiating config for " + client)
+      logging.debug("lazy-loading config for " + client)
       self.configs[client] = StoreBased(client)
     # FIXME: is this the best place to handle scheduled updates?
     #        rationale: StoreBased configs don't trigger on_* handlers
