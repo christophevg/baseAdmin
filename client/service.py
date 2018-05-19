@@ -15,6 +15,10 @@ class base(Service.base):
   def __handle_config(self, data):
     self.config = json.loads(data)
     logging.info("received config update : " + str(self.config))
+    self.on_config_update()
+
+  def on_config_update(self):
+    pass
 
   @Service.API.handle("__heartbeat")
   def __handle_heartbeat(self, data):
