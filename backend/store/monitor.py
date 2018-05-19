@@ -9,20 +9,28 @@ import time
 import json
 import copy
 import datetime
+import importlib
 
 import backend.client
-from backend.store import store
-from backend.store import config
+
+from backend.store         import store, config
+from backend.store.plugins import Monitor
+from backend.store.plugins import *
 
 class Runner(backend.client.base):
   
   def __init__(self, *args, **kwargs):
-    self.configs = config.Collection()
     super(self.__class__, self).__init__(*args, **kwargs)
+    self.monitors = []
+    self.load_monitors()
   
+  def load_monitors(self):
+    for monitor in Monitor.__subclasses__():
+      self.monitors.append(monitor(store))
+
   def start(self):
     super(self.__class__, self).start()
-    logging.info("starting loop")
+    logging.info("starting monitoring loop...")
     try:
       while(True):
         time.sleep(1)
@@ -33,17 +41,12 @@ class Runner(backend.client.base):
   def on_connect(self, client, clientId, flags, rc):
     logging.info("connected to MQTT")
     super(self.__class__, self).on_connect(client, clientId, flags, rc)
-    self.follow("client/+")           # status (online/offline)
-
-    self.follow("client/+/errors")    # errors
-
-    self.follow("client/+/service/ReportingService/stats") # stats
-
-    self.follow("client/+/services")  # services configuration
-    self.follow("group/+/services")
-
-    self.follow("client/+/service/+") # service configurations
-    self.follow("group/+/service/+")
+    following = set()
+    for monitor in self.monitors:
+      for topic in monitor.follows():
+        if not topic in following:
+          self.follow(topic)
+          following.add(topic)
 
   def handle_mqtt_message(self, topic, message):
     try:
@@ -51,23 +54,22 @@ class Runner(backend.client.base):
     except Exception as e:
       self.fail("couldn't parse JSON message", e)
       return
-    parts   = topic.split("/")
 
-    if len(parts) == 2:
-      return self.__handle_status(parts[1], message)
+    topic = topic.split("/")
+    for monitor in self.monitors:
+      monitor.handle(topic, message)
 
-    if len(parts) == 3 and parts[2] == "errors":
-      return self.__handle_error(parts[1], message)
+class StatusMonitor(Monitor):
+  def follows(self):
+    return [ "client/+" ]
 
-    if len(parts) == 5:
-      return self.__handle_stats(parts[1], message)
-    
-    self.configs.handle_mqtt_update(topic, message)
+  def handle(self, topic, status):
+    if len(topic) != 2: return
+    client = topic[1]
 
-  def __handle_status(self, client, status):
     # track status
     if "status" in status:
-      store.status.update_one(
+      self.store.status.update_one(
         { "_id": client },
         {
           "$currentDate" : { "lastModified": True, },
@@ -75,28 +77,46 @@ class Runner(backend.client.base):
          },
         upsert=True
       )
-    # send latest version if reported config version is different
-    if "config" in status:
-      if self.configs[client].last_message_id != status["config"]:
-        logging.info("sending latest config to outdated client: " + client)
-        config = copy.deepcopy(self.configs[client].config)
-        config.pop("_id", None)
-        self.publish("client/" + client, json.dumps(config))
 
-  def __handle_error(self, client, error):
-    store.errors.insert_one({
+class ErrorMonitor(Monitor):
+  def follows(self):
+    return [ "client/+/errors" ]
+    
+  def handle(self, topic, error):
+    if len(topic) != 3 or topic[2] != "errors": return
+    client = topic[1]
+
+    self.store.errors.insert_one({
       "client" : client,
       "error"  : error,
       "ts"     : datetime.datetime.utcnow()
     })
 
-  def __handle_stats(self, client, stats):
-    store.system.update_one(
-      { "_id": client },
-      { "$push"  : { "stats" : {
-        "$each"  : [ stats ],
-        "$sort"  : { "system_time" : -1 },
-        "$slice" : 12
-      }}},
-      upsert=True
-    )
+class ConfigMonitor(Monitor):
+  def __init__(self, *args, **kwargs):
+    super(self.__class__, self).__init__(*args, **kwargs)
+    self.configs = config.Collection()
+
+  def follows(self):
+    return [
+      "client/+",
+      "client/+/services",
+      "group/+/services",
+      "client/+/service/+",
+      "group/+/service/+"
+    ]
+
+  def handle(self, topic, message):
+    if len(topic) == 2:
+      client = topic[1]
+      # send latest version if reported config version is different
+      if "config" in message:
+        if self.configs[client].last_message_id != message["config"]:
+          logging.info("sending latest config to outdated client: " + client)
+          config = copy.deepcopy(self.configs[client].config)
+          config.pop("_id", None)
+          self.publish("client/" + client, json.dumps(config))
+      
+    if (len(topic) == 3 and topic[2] == "services") or\
+       (len(topic) == 4 and topic[2] == "service"):
+      self.configs.handle_mqtt_update("/".join(topic), message)
