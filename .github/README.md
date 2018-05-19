@@ -16,7 +16,7 @@ The main goal of baseAdmin is out of the box functionality that is extendable wi
 
 ## What's in the Box?
 
-![baseAdmin Overview](media/overview.jpeg)
+![baseAdmin Overview](../media/overview.jpeg)
 
 The minimal infrastructure you need is an `MQTT server`. Now you are ready to launch a `client` and have it join the MQTT network. Given some MQTT client, you can now publish configuration updates to the `client`.
 
