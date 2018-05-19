@@ -10,6 +10,7 @@ class base(Service.base):
   def __init__(self):
     self.config = client.endpoint.API.get_config(self.__class__.__name__)
     logging.info("loaded config on boot: " + str(self.config))
+    self.on_config_update()
 
   @Service.API.handle("__config")
   def __handle_config(self, data):
