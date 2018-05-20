@@ -19,6 +19,7 @@
     <link href="https://unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
+    <link href="https://unpkg.com/vue-form-generator@2.1.0/dist/vfg.css" rel="stylesheet">
     <link href="/static/main.css" rel="stylesheet">
 
     {% block moreCSS %}{% endblock %}
@@ -74,6 +75,10 @@
       Vue.use(vueNotification);
     </script>
 
+    <script src="https://unpkg.com/vue-form-generator@2.1.1"></script>
+    <script>
+      Vue.use(VueFormGenerator);
+    </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
     <script src="https://unpkg.com/vue-chartjs/dist/vue-chartjs.min.js"></script>

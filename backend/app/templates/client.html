@@ -38,4 +38,14 @@
   </v-layout>
 </template>
 
+<template>
+  <div class="panel panel-default">
+    <div class="panel-heading">Form</div>
+    <div class="panel-body">
+      <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
+    </div>
+  </div>
+</div>
+</template>
+
 {% endblock %}
