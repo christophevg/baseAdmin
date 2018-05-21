@@ -44,7 +44,7 @@ def list_services():
   services = [os.path.splitext(f)[0] for f in listdir(path) if isfile(join(path, f))]
   return services
 
-@server.route("/<string:section>")
+@server.route("/<path:section>")
 @authenticate(["admin"])
 def render_section(section):
   return render("main", services=list_services())

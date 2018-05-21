@@ -22,7 +22,8 @@ var store = new Vuex.Store({
     services: [ 'Client' ],
     setup: {
       status: null
-    }
+    },
+    users: []
   },
   mutations: {
     updateProperty: function(state, update) {
@@ -54,6 +55,25 @@ var store = new Vuex.Store({
     },
     updateStatus: function(state, status) {
       state.setup.status = status;
+    },
+    updateUsers: function(state, users) {
+      state.users = users;
+    },
+    upsertUser: function(state, user) {
+      var current = state.users.find(function(element) {
+        return element._id == user._id;
+      });
+      if(current) {
+        for(var k in user) {
+          current[k] = user[k];
+        }
+      } else {
+        current = user;
+      }
+      state.users = state.users.filter(function(item) {
+        return item._id != user._id;
+      });
+      state.users.push(current);
     }
   },
   getters: {
@@ -103,6 +123,18 @@ var store = new Vuex.Store({
       return function() {
         return state.setup.status;
       }
+    },
+    users: function(state) {
+      return function() {
+        return state.users;
+      }
+    },
+    user: function(state) {
+      return function(id) {
+        return state.users.find(function(user) {
+          return user._id == id;
+        })
+      }
     }
   }
 });
@@ -112,6 +144,8 @@ var store = new Vuex.Store({
 var routes = [
   { path: '/dashboard', component: Dashboard },
   { path: '/client',    component: Client    },
+  { path: "/user",      component: User      },
+  { path: "/user/:id",  component: User      },
   { path: "/setup",     component: Setup     }
 ];
 
@@ -122,19 +156,15 @@ var router = new VueRouter({
 
 var app = new Vue({
   el: "#app",
-  // template: "<App/>",
-  // components: { Dashboard },
-  router: router,
   delimiters: ['${', '}'],
+  router: router,
   data: {
     drawer: null,
     sections: [
       { icon: 'home',      text: 'Home',      path: "/"          },
       { icon: 'dashboard', text: 'Dashboard', path: "/dashboard" },
-      { icon: 'build',     text: 'Setup',     path: "/setup"     },
-    ],
-    headers: [
-      { text: 'Client', align: 'left', sortable: true, value: 'name' }
+      { icon: 'person',    text: 'Users',     path: "/user"      },
+      { icon: 'build',     text: 'Setup',     path: "/setup"     }
     ]
   },
   methods: {
@@ -160,6 +190,9 @@ var app = new Vue({
     },
     updateStatus: function(status) {
       store.commit("updateStatus", status);
+    },
+    updateUsers: function(users) {
+      store.commit("updateUsers", users);
     }
   }
 }).$mount('#app');

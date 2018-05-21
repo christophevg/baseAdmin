@@ -1,7 +1,11 @@
 import os
 import logging
 
+import bcrypt
+
 from urllib.parse import urlparse
+
+from bson import ObjectId
 
 from flask            import request
 from flask_restful    import Resource, abort
@@ -112,4 +116,44 @@ class Errors(Resource):
 
 api.add_resource(Errors,
   "/api/client/<string:client>/errors"
+)
+
+class Users(Resource):
+  @authenticate(["admin"])
+  def get(self):
+    return [ { "_id" : str(u["_id"]), "name": u["name"] } for u in store.users.find({}, { "password" : False })]
+
+api.add_resource(Users,
+  "/api/users",
+  "/api/user/<string:id>"
+)
+
+class User(Resource):
+  @authenticate(["admin"])
+  def post(self, id=None):
+    user = request.get_json()
+    user.pop("_id", None)
+    if "password" in user:
+      if user["password"] == "":
+        user.pop("password", None)
+      else:
+        user["password"] = bcrypt.hashpw(user["password"], bcrypt.gensalt())
+    if id is None:
+      result = store.users.insert_one(user)
+      return str(result.inserted_id)
+    else:
+      try:
+        id = ObjectId(id)
+      except:
+        pass
+      store.users.update_one(
+        { "_id": id },
+        { "$set" : user }
+      )
+      return id
+
+api.add_resource(User,
+  "/api/user",
+  "/api/user/",
+  "/api/user/<string:id>"
 )
