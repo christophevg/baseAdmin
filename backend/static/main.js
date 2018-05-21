@@ -19,7 +19,10 @@ var store = new Vuex.Store({
       }
     },
     clients: [],
-    services: [ 'Client' ]
+    services: [ 'Client' ],
+    setup: {
+      status: null
+    }
   },
   mutations: {
     updateProperty: function(state, update) {
@@ -48,6 +51,9 @@ var store = new Vuex.Store({
     },
     registerService: function(state, service) {
       state.services.push(service);
+    },
+    updateStatus: function(state, status) {
+      state.setup.status = status;
     }
   },
   getters: {
@@ -92,6 +98,11 @@ var store = new Vuex.Store({
       return function(id) {
         return state.properties[id].labels;
       }
+    },
+    setupStatus: function(state) {
+      return function() {
+        return state.setup.status;
+      }
     }
   }
 });
@@ -100,7 +111,8 @@ var store = new Vuex.Store({
 
 var routes = [
   { path: '/dashboard', component: Dashboard },
-  { path: '/client',    component: Client    }
+  { path: '/client',    component: Client    },
+  { path: "/setup",     component: Setup     }
 ];
 
 var router = new VueRouter({
@@ -145,6 +157,9 @@ var app = new Vue({
     },
     registerService: function(service) {
       store.commit("registerService", service);
+    },
+    updateStatus: function(status) {
+      store.commit("updateStatus", status);
     }
   }
 }).$mount('#app');
