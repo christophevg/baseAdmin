@@ -92,36 +92,23 @@ var store = new Vuex.Store({
   }
 });
 
-Vue.component('line-chart', {
-  extends:  VueChartJs.Line,
-  mixins: [ VueChartJs.mixins.reactiveProp ],
-  props:  [ "options" ],
-  mounted: function() {
-    this.renderChart(
-      this.chartData,
-      {
-        responsive: true,
-        maintainAspectRatio: false,
-        legend: {
-          display: false
-        }
-      }
-    );
-  }
-});
+// Routes
 
-function create_chart(prop) {
-  var data = store.state.properties[prop]; 
-  return {
-    title:  data.title,
-    height: data.height,
-    color:  data.color,
-    flex:   data.flex
-  };
-}
+var routes = [
+  { path: '/dashboard', component: Dashboard },
+  { path: '/client',    component: Client    }
+];
+
+var router = new VueRouter({
+  routes: routes,
+  mode  : 'history'
+});
 
 var app = new Vue({
   el: "#app",
+  // template: "<App/>",
+  // components: { Dashboard },
+  router: router,
   delimiters: ['${', '}'],
   data: {
     drawer: null,
@@ -130,125 +117,14 @@ var app = new Vue({
       { icon: 'dashboard', text: 'Dashboard', path: "/dashboard" },
       { icon: 'build',     text: 'Setup',     path: "/setup"     },
     ],
-    charts: {
-      prop1 : create_chart("prop1"),
-      prop2 : create_chart("prop2")
-    },
     headers: [
       { text: 'Client', align: 'left', sortable: true, value: 'name' }
-    ],
-    model: {
-                id: 1,
-                name: "John Doe",
-                password: "J0hnD03!x4",
-    						age: 35,
-                skills: ["Javascript", "VueJS"],
-                email: "john.doe@gmail.com",
-                status: true
-            },
-            schema: {
-                fields: [{
-                    type: "input",
-    								inputType: "text",
-                    label: "ID",
-                    model: "id",
-                    readonly: true,
-                    featured: false,
-                    disabled: true
-                }, {
-                    type: "input",
-    								inputType: "text",
-                    label: "Name",
-                    model: "name",
-                    readonly: false,
-                    featured: true,
-                    required: true,
-                    disabled: false,
-                    placeholder: "User's name",
-                    validator: VueFormGenerator.validators.string
-                }, {
-                    type: "input",
-    								inputType: "password",
-                    label: "Password",
-                    model: "password",
-                    min: 6,
-                    required: true,
-                    hint: "Minimum 6 characters",
-                    validator: VueFormGenerator.validators.string
-                }, {
-                    type: "input",
-                    inputType: "number",
-                    label: "Age",
-                    model: "age",
-    								min: 18,
-                    validator: VueFormGenerator.validators.number
-                }, {
-                    type: "input",
-    								inputType: "email",
-                    label: "E-mail",
-                    model: "email",
-                    placeholder: "User's e-mail address",
-                    validator: VueFormGenerator.validators.email
-                }, {
-                    type: "checklist",
-                    label: "Skills",
-                    model: "skills",
-                    multi: true,
-                    required: true,
-                    multiSelect: true,
-                    values: ["HTML5", "Javascript", "CSS3", "CoffeeScript", "AngularJS", "ReactJS", "VueJS"]
-                }, {
-                   type: "switch",
-                    label: "Status",
-                    model: "status",
-                    multi: true,
-                    readonly: false,
-                    featured: false,
-                    disabled: false,
-                    default: true,
-    								textOn: "Active",
-    								textOff: "Inactive"
-                }]
-            },
-
-            formOptions: {
-                validateAfterLoad: true,
-                validateAfterChanged: true
-            }
+    ]
   },
   methods: {
     fixVuetifyCSS : function() {
       this.$vuetify.theme.info  = '#ffffff';
       this.$vuetify.theme.error = '#ffffff';
-    },
-    propertyChartData: function(id) {
-      return {
-        labels: this.propertyLabels(id),
-        datasets : [
-          {
-            label: this.charts[id].title,
-            backgroundColor: this.charts[id].color,
-            data: this.propertyData(id)
-          }
-        ]
-      }
-    },
-    propertyData: function(id) {
-      return store.getters.propertyData(id);
-    },
-    propertyLabels: function(id) {
-      return store.getters.propertyLabels(id);
-    },
-    updateProperty: function(id) {
-      var data   = this.propertyData(id);
-          labels = this.propertyLabels(id);
-      data.push(data.shift());
-      labels.push(labels.shift());
-      store.commit("updateProperty", {
-        id: id,
-        data: data,
-        labels: labels
-      })
     },
     removeClient: function(client) {
       this.$notify({
@@ -260,19 +136,10 @@ var app = new Vue({
       });
       store.commit("removeClient", client);
     },
-    selectedClient: function(client) {
-      window.location = "/client";
-    },
-    editGroup : function(group) {
-      console.log("edit group " + group);
-    },
     upsertClient: function(client) {
       store.commit("upsertClient", client);
-    },
-    groups : function() {
-      return store.getters.groups();
     }
   }
-});
+}).$mount('#app');
 
 app.fixVuetifyCSS();

@@ -9,4 +9,4 @@ def render_home():
 @server.route("/<string:section>")
 @authenticate(["admin"])
 def render_section(section):
-  return render(section)
+  return render("home")
