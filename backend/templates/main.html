@@ -96,13 +96,17 @@
     <script src="https://unpkg.com/paho-mqtt@1.0.4/paho-mqtt.js"></script>
     <script src="/static/comm.js"></script>
 
-    <script src="/app/dashboard/component.js"></script>
-    <link href="/app/dashboard/style.css" rel="stylesheet">
+    <script src="/static/dashboard.js"></script>
+    <link href="/static/dashboard.css" rel="stylesheet">
 
-    <script src="/app/client/component.js"></script>
-    <link href="/app/client/style.css" rel="stylesheet">
+    <script src="/static/client.js"></script>
+    <link href="/static/client.css" rel="stylesheet">
 
     <script src="/static/main.js"></script>
+
+    {% for service in services %}
+    <script src="/app/{{ service }}.js"></script>
+    {% endfor %}
 
   </body>
 </html>

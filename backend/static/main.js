@@ -18,7 +18,8 @@ var store = new Vuex.Store({
         height: 200
       }
     },
-    clients: []
+    clients: [],
+    services: [ 'Client' ]
   },
   mutations: {
     updateProperty: function(state, update) {
@@ -44,6 +45,9 @@ var store = new Vuex.Store({
       });
       // and add (new) current
       state.clients.push(current);
+    },
+    registerService: function(state, service) {
+      state.services.push(service);
     }
   },
   getters: {
@@ -138,6 +142,9 @@ var app = new Vue({
     },
     upsertClient: function(client) {
       store.commit("upsertClient", client);
+    },
+    registerService: function(service) {
+      store.commit("registerService", service);
     }
   }
 }).$mount('#app');
