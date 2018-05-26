@@ -131,7 +131,12 @@ var store = new Vuex.Store({
     },
     users: function(state) {
       return function() {
-        return state.users;
+        var sorted = [...state.users].sort(function(a,b){
+          if(a.name > b.name) { return 1; }
+          if(a.name < b.name) { return -1; }
+          return 0;
+        });
+        return sorted;
       }
     },
     user: function(state) {
