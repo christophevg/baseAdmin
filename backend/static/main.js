@@ -74,6 +74,11 @@ var store = new Vuex.Store({
         return item._id != user._id;
       });
       state.users.push(current);
+    },
+    removeUser: function(state, user) {
+      state.users = state.users.filter(function(item) {
+        return item._id != user._id;
+      });      
     }
   },
   getters: {
@@ -197,4 +202,4 @@ var app = new Vue({
   }
 }).$mount('#app');
 
-app.fixVuetifyCSS();
+// app.fixVuetifyCSS();

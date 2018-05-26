@@ -124,11 +124,18 @@ class Users(Resource):
     return [ { "_id" : str(u["_id"]), "name": u["name"] } for u in store.users.find({}, { "password" : False })]
 
 api.add_resource(Users,
-  "/api/users",
-  "/api/user/<string:id>"
+  "/api/users"
 )
 
 class User(Resource):
+  @authenticate(["admin"])
+  def delete(self, id):
+    result = store.users.delete_one({"_id" : ObjectId(id)})
+    if result.deleted_count == 1:
+      return True
+    else:
+      return abort(404, message="Unknown user: {}".format(id))
+
   @authenticate(["admin"])
   def post(self, id=None):
     user = request.get_json()

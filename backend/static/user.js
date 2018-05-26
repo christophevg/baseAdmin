@@ -2,7 +2,10 @@ var User = {
   template: `
   <div v-if="$route.params.id">
     <vue-form-generator ref="vfg" :schema="schema" :model="model" :options="formOptions" @validated="handleValidation"></vue-form-generator>
-    <center><v-btn :loading="saving" @click="updateUser()" class="primary" :disabled="isUnchanged">Update</v-btn></center>
+    <center>
+      <v-btn :loading="saving"   @click="updateUser()" class="primary" :disabled="isUnchanged">Update</v-btn>
+      <v-btn :loading="deleting" @click="removeUser()" class="important">Remove</v-btn>
+    </center>
   </div>
   <div v-else>
     <v-btn fab class="white--text" color="green" @click="addUser()" style="float:right;">
@@ -73,9 +76,46 @@ var User = {
           store.commit("upsertUser", user);
           self.saving = false;
         },
-        failure: function(response) {
-          console.log("whoops", response);
+        error: function(response) {
+          app.$notify({
+            group: "notifications",
+            title: "Could not save user...",
+            text:  response.responseJSON.message,
+            type:  "error",
+            duration: 10000
+          });
           self.saving = false;
+        }
+      });
+    },
+    removeUser: function() {
+      this.deleting = true;
+      var user = this.model;
+      var self = this;
+      $.ajax( {
+        url: "/api/user/" + user["_id"],
+        type: "delete",
+        success: function(response) {
+          store.commit("removeUser", user);
+          self.deleting = false;
+          app.$notify({
+            group: "notifications",
+            title: "Success",
+            text: "User " + user["_id"] + " was successfully removed.",
+            type: "success",
+            duration: 10000
+          });
+          app.$router.push("/user");
+        },
+        error: function(response) {
+          app.$notify({
+            group: "notifications",
+            title: "Could not remove user...",
+            text:  response.responseJSON.message,
+            type:  "error",
+            duration: 10000
+          });
+          self.deleting = false;
         }
       });
     },
@@ -86,7 +126,7 @@ var User = {
       this.model["_id"] = "";
       this.model["name"] = "";
       this.model["password"] = "";
-      this.$router.push("/user/new");
+      app.$router.push("/user/new");
     }
   },
   watch: {
@@ -104,6 +144,7 @@ var User = {
   data: function() {
     return {
       saving : false,
+      deleting: false,
       isValid : true,
       model: {
         "_id" : "",
