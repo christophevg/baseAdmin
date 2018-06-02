@@ -88,4 +88,4 @@ Vue.component( 'ClientForm', {
   methods: {}
 });
 
-app.registerService("Form");
+// app.registerClientComponent("Form");
