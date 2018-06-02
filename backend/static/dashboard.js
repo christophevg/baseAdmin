@@ -1,7 +1,6 @@
 var Dashboard = {
   template : `
 <v-layout justify-center column>
-  <v-subheader>Groups</v-subheader>
   <v-expansion-panel popout>
     <v-expansion-panel-content v-for="(group, i) in groups()" :key="i" hide-actions>
       <v-layout slot="header" align-center row spacer>

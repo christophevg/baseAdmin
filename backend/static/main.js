@@ -210,4 +210,4 @@ var app = new Vue({
   }
 }).$mount('#app');
 
-// app.fixVuetifyCSS();
+app.fixVuetifyCSS();
