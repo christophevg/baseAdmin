@@ -29,38 +29,13 @@
     try {
       var topic = message.destinationName.split("/"),
           event = JSON.parse(message.payloadString);
-
       store.commit("newMessage", { "topic" : topic, "payload" : event} );
-
-      if( handle_status_change_events(topic, event) ) { return; }
-      console.log("unhandled message", topic, JSON.parse(message.payloadString));
-
     } catch(err) {
       console.log("Failed to parse JSON message: ", err);
       return;
     }
   }    
-    
-  function handle_status_change_events(topic, event) {
-    // handle status change events
-    if( topic.length == 2 && topic[0] == "client" ) {
-      var client = topic[1];
-      if( "status" in event ) {
-        app.upsertClient({
-          "_id" : client,
-          "status" : event["status"]
-        });
-        return true;
-      }
-    }
-    return false;
-  }
 
-  function handle_stats_update(topic, event) {
-    // TODO
-    // app.updateProperty()
-  }
-    
   function connect(mqtt) {
     if(! mqtt ) { return; }
     client = new Paho.MQTT.Client(mqtt.hostname, mqtt.port, clientId);
