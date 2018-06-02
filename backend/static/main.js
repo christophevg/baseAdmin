@@ -59,7 +59,10 @@ var store = new Vuex.Store({
     updateUsers: function(state, users) {
       state.users = users;
     },
-    upsertUser: function(state, user) {
+    newUser: function(state, user) {
+      state.users.push(user);
+    },
+    updatedUser: function(state, user) {
       var current = state.users.find(function(element) {
         return element._id == user._id;
       });
@@ -68,7 +71,7 @@ var store = new Vuex.Store({
           current[k] = user[k];
         }
       } else {
-        current = user;
+        return;
       }
       state.users = state.users.filter(function(item) {
         return item._id != user._id;

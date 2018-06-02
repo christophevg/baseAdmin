@@ -129,15 +129,17 @@ api.add_resource(Users,
 
 class User(Resource):
   @authenticate(["admin"])
-  def delete(self, id):
-    result = store.users.delete_one({"_id" : ObjectId(id)})
-    if result.deleted_count == 1:
-      return True
-    else:
-      return abort(404, message="Unknown user: {}".format(id))
+  def post(self, id):
+    user = request.get_json()
+    user.pop("_id", None)
+    user["_id"]      = id
+    # TODO apply same field validations as in form
+    user["password"] = bcrypt.hashpw(user["password"], bcrypt.gensalt())
+    result = store.users.insert_one(user)
+    return str(result.inserted_id)
 
   @authenticate(["admin"])
-  def post(self, id=None):
+  def put(self, id):
     user = request.get_json()
     user.pop("_id", None)
     if "password" in user:
@@ -145,22 +147,20 @@ class User(Resource):
         user.pop("password", None)
       else:
         user["password"] = bcrypt.hashpw(user["password"], bcrypt.gensalt())
-    if id is None:
-      result = store.users.insert_one(user)
-      return str(result.inserted_id)
+    store.users.update_one(
+      { "_id": id },
+      { "$set" : user }
+    )
+    return id
+
+  @authenticate(["admin"])
+  def delete(self, id):
+    result = store.users.delete_one({"_id" : id})
+    if result.deleted_count == 1:
+      return True
     else:
-      try:
-        id = ObjectId(id)
-      except:
-        pass
-      store.users.update_one(
-        { "_id": id },
-        { "$set" : user }
-      )
-      return id
+      return abort(404, message="Unknown user: {}".format(id))
 
 api.add_resource(User,
-  "/api/user",
-  "/api/user/",
   "/api/user/<string:id>"
 )

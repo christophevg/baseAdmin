@@ -3,8 +3,9 @@ var User = {
   <div v-if="$route.params.id">
     <vue-form-generator ref="vfg" :schema="schema" :model="model" :options="formOptions" @validated="handleValidation"></vue-form-generator>
     <center>
-      <v-btn :loading="saving"   @click="updateUser()" class="primary" :disabled="isUnchanged">Update</v-btn>
-      <v-btn :loading="deleting" @click="removeUser()" class="important">Remove</v-btn>
+      <v-btn :loading="creating" @click="createUser()" class="primary"   :disabled="isInvalid"   v-if="isNew">Create</v-btn>
+      <v-btn :loading="saving"   @click="updateUser()" class="primary"   :disabled="isUnchanged" v-if="!isNew">Update</v-btn>
+      <v-btn :loading="deleting" @click="removeUser()" class="important"                         v-if="isRemovable">Remove</v-btn>
     </center>
   </div>
   <div v-else>
@@ -50,6 +51,18 @@ var User = {
         }
       }
       return true;
+    },
+    isInvalid: function() {
+      if( ! this.isValid ) { return true; }
+      return this.model["_id"]      == "" || 
+             this.model["name"]     == "" ||
+             this.model["password"] == "";
+    },
+    isNew: function() {
+      return this.$route.params.id == "new";
+    },
+    isRemovable: function() {
+      return ! this.isNew && this.model["_id"] != "admin";
     }
   },
   methods: {
@@ -59,11 +72,11 @@ var User = {
     selectUser: function(id) {
       this.$router.push("/user/" + id);
     },
-    updateUser: function() {
-      this.saving = true;
+    createUser: function() {
+      this.creating = true;
       var user = this.model;
       var self = this;
-      $.ajax( { 
+      $.ajax( {
         url: "/api/user/" + user["_id"],
         type: "post",
         data: JSON.stringify(user),
@@ -73,7 +86,34 @@ var User = {
           if(user["_id"] == "") {
             user["_id"] = response;
           }
-          store.commit("upsertUser", user);
+          store.commit("newUser", user);
+          self.creating = false;
+          self.selectUser(user["_id"]);
+        },
+        error: function(response) {
+          app.$notify({
+            group: "notifications",
+            title: "Could not save user...",
+            text:  response.responseJSON.message,
+            type:  "error",
+            duration: 10000
+          });
+          self.creating = false;
+        }
+      });
+    },
+    updateUser: function() {
+      this.saving = true;
+      var user = this.model;
+      var self = this;
+      $.ajax( { 
+        url: "/api/user/" + user["_id"],
+        type: "put",
+        data: JSON.stringify(user),
+        dataType: "json",
+        contentType: "application/json",
+        success: function(response) {
+          store.commit("updatedUser", user);
           self.saving = false;
         },
         error: function(response) {
@@ -143,6 +183,7 @@ var User = {
   },
   data: function() {
     return {
+      creating: false,
       saving : false,
       deleting: false,
       isValid : true,
@@ -156,20 +197,20 @@ var User = {
           {
             type: "input",
             inputType: "text",
-            label: "ID",
+            label: "login",
             model: "_id",
-            readonly: true,
-            featured: false,
-            disabled: true
+            required: true,
+            readonly: false,
+            disabled: function(model) {
+              return ! this.$parent.isNew;
+            }
           }, {
             type: "input",
             inputType: "text",
             label: "Name",
             model: "name",
             readonly: false,
-            featured: true,
             required: true,
-            disabled: false,
             placeholder: "User's name",
             validator: VueFormGenerator.validators.string
           }, {
@@ -178,7 +219,7 @@ var User = {
             label: "Password",
             model: "password",
             min: 6,
-            required: false,
+            required: true,
             validator: VueFormGenerator.validators.string
           }
         ]
