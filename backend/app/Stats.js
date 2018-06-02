@@ -18,35 +18,31 @@ Vue.component('line-chart', {
 
 Vue.component( 'ClientStats', {
   template : `
-  <v-layout v-if="stats()" column>
-    <v-flex xs12>
-      <v-container fluid grid-list-md class="grey lighten-4">
-        <v-layout row wrap>
-          <v-flex v-bind="{ ['xs{{chart.flex}}']: true }" v-for="(chart, id) in stats()" :key="chart.title">
-            <v-card>
-              <v-card-title>
-                <div>
-                  <h3 class="headline mb-0">{{ chart.title }}</h3>
-                </div>
-              </v-card-title>
-              <v-card-text>
-                <div style="width: 100%;">
-                  <line-chart :property="id" :chart-data="propertyChartData(chart)" :height="chart.height"></line-chart>
-                </div>
-              </v-card-text>
-              <v-card-actions class="white">
-                <v-spacer></v-spacer>
-                <v-btn v-if="false" icon @click="">
-                  <v-icon>refresh</v-icon>
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-flex>
-        </v-layout>
-      </v-container>
+<v-container fluid v-if="stats()" grid-list-xl text-xs-center>
+  <v-layout row wrap>
+    <v-flex xs12 md6 v-for="(chart, id) in stats()" :key="chart.title">
+      <v-card>
+        <v-card-title>
+          <div>
+            <h3 class="headline mb-0">{{ chart.title }}</h3>
+          </div>
+        </v-card-title>
+        <v-card-text>
+          <div style="width: 100%;">
+            <line-chart :property="id" :chart-data="propertyChartData(chart)" :height="chart.height"></line-chart>
+          </div>
+        </v-card-text>
+        <v-card-actions class="white">
+          <v-spacer></v-spacer>
+          <v-btn v-if="false" icon @click="">
+            <v-icon>refresh</v-icon>
+          </v-btn>
+        </v-card-actions>
+      </v-card>
     </v-flex>
-  </v-layout>
-  <div v-else>loading statistics...</div>`,
+  </v-layout>  
+</v-container>
+<div v-else>loading statistics...</div>`,
   created: function() {
     var id = this.$route.params.id;
     if( ! store.getters.client(id) ) {
@@ -56,32 +52,32 @@ Vue.component( 'ClientStats', {
         stats: [
           {
             stat : "idle", title: "Idle (%)",
-            color: "#0567BA", height: 200, flex: 6,
+            color: "#0567BA", height: 200,
             data: [], labels: []
           },
           {
             stat: "temperature", title: "Temperature",
-            color: "#0567BA", height: 200, flex: 6,
+            color: "#0567BA", height: 200,
             data: [], labels: []
           },
           {
             stat: "load", title: "Load 1m", index: 0,
-            color: "#0567BA", height: 200, flex: 6,
+            color: "#0567BA", height: 200,
             data: [], labels: []
           },
           {
             stat: "load", title: "Load 5m", index: 1,
-            color: "#0567BA", height: 200, flex: 6,
+            color: "#0567BA", height: 200,
             data: [], labels: []
           },
           {
             stat: "virtual_memory", title: "Memory Usage (%)", index: 2,
-            color: "#0567BA", height: 200, flex: 6,
+            color: "#0567BA", height: 200,
             data: [], labels: []
           },
           {
             stat: "disk_usage", title: "Disk Usage (%)", index: 3,
-            color: "#0567BA", height: 200, flex: 6,
+            color: "#0567BA", height: 200,
             data: [], labels: []
           }
         ]
