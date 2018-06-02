@@ -1,25 +1,7 @@
 var store = new Vuex.Store({
   state: {
-    properties : {
-      prop1: {
-        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-        data: [ 40, 39, 10, 40, 39, 80, 40 ],
-        color: "#0567BA",
-        title: 'Property 1',
-        flex: 6,
-        height: 200
-      },
-      prop2: {
-        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-        data: [ 40, 39, 10, 40, 39, 80, 40 ],
-        color: "#ff0000",
-        title: 'Property 2',
-        flex: 6,
-        height: 200
-      }
-    },
     clients: [],
-    services: [ 'Client' ],
+    services: [],
     setup: {
       status: null
     },
@@ -58,10 +40,6 @@ var store = new Vuex.Store({
       state.messages.push(message);
     },
 
-    updateProperty: function(state, update) {
-      state.properties[update.id].labels = update.labels;
-      state.properties[update.id].data   = update.data;
-    },
     upsertClient: function(state, client) {
       // find current (if any)
       var current = state.clients.find(function(element) {
@@ -127,16 +105,6 @@ var store = new Vuex.Store({
         return groups;
       }
     },
-    propertyData: function(state) {
-      return function(id) {
-        return state.properties[id].data;
-      }
-    },
-    propertyLabels: function(state) {
-      return function(id) {
-        return state.properties[id].labels;
-      }
-    },
     setupStatus: function(state) {
       return function() {
         return state.setup.status;
@@ -165,12 +133,12 @@ var store = new Vuex.Store({
 // Routes
 
 var routes = [
-  { path: '/dashboard', component: Dashboard },
-  { path: '/client',    component: Client    },
-  { path: "/user",      component: User      },
-  { path: "/user/:id",  component: User      },
-  { path: "/setup",     component: Setup     },
-  { path: "/log",       component: Log       }
+  { path: '/dashboard',  component: Dashboard },
+  { path: '/client/:id', component: Client    },
+  { path: "/user",       component: User      },
+  { path: "/user/:id",   component: User      },
+  { path: "/setup",      component: Setup     },
+  { path: "/log",        component: Log       }
 ];
 
 var router = new VueRouter({

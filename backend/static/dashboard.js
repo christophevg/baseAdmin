@@ -42,7 +42,7 @@ var Dashboard = {
       return store.getters.groups();
     },
     selectedClient: function(client) {
-      this.$router.push('/client');
+      this.$router.push('/client/' + client);
     },
     editGroup : function(group) {
       console.log("edit group " + group);

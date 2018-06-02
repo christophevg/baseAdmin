@@ -10,7 +10,7 @@ var Client = {
 
   <div class="panel panel-default">
     <div class="panel-body">
-      <component v-bind:is="currentTabComponent" class="tab"></component>
+      <component v-if="currentTabComponent" v-bind:is="currentTabComponent" class="tab"></component>
     </div>
   </div>
 </div>`,
@@ -22,12 +22,14 @@ var Client = {
   },
   computed: {
     currentTabComponent: function () {
-      if(! this.currentTab) { this.currentTab = store.state.services[0]; }
+      if(! this.currentTab) {
+        if(store.state.services.length > 0) {
+          this.currentTab = store.state.services[0];
+        } else {
+          return null;
+        }
+      }
       return 'Client' + this.currentTab;
     }
   }
 };
-
-Vue.component( 'ClientClient', {
-  template: `<div>Client...</div>`
-});
