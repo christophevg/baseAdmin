@@ -69,9 +69,10 @@ class Clients(Resource):
       if not client["_id"] in clients:
         clients[client["_id"]] = {
           "_id" : client["_id"],
-          "status": "offline"
+          "status": "offline",
         }
       clients[client["_id"]]["groups"] = client["groups"] + ["all"];
+      clients[client["_id"]]["services"] = client["services"];
     
     return clients.values();
 

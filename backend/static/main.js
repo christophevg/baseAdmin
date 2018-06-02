@@ -2,6 +2,7 @@ var store = new Vuex.Store({
   state: {
     clients: [],
     services: [],
+    clientComponents: [],
     setup: {
       status: null
     },
@@ -60,8 +61,11 @@ var store = new Vuex.Store({
       // and add (new) current
       state.clients.push(current);
     },
-    registerService: function(state, service) {
+    service: function(state, service) {
       state.services.push(service);
+    },
+    clientComponent: function(state, service) {
+      state.clientComponents.push(service);
     },
     updateStatus: function(state, status) {
       state.setup.status = status;
@@ -126,6 +130,13 @@ var store = new Vuex.Store({
           return user._id == id;
         })
       }
+    },
+    client: function(state) {
+      return function(id) {
+        return state.clients.find(function(client) {
+          return client._id == id;
+        });
+      }
     }
   }
 });
@@ -150,6 +161,9 @@ var app = new Vue({
   el: "#app",
   delimiters: ['${', '}'],
   router: router,
+  components: {
+    multiselect: VueMultiselect.Multiselect
+  },
   data: {
     drawer: null,
     sections: [
@@ -179,7 +193,10 @@ var app = new Vue({
       store.commit("upsertClient", client);
     },
     registerService: function(service) {
-      store.commit("registerService", service);
+      store.commit("service", service);
+    },
+    registerClientComponent: function(component) {
+      store.commit("clientComponent", component);
     },
     updateStatus: function(status) {
       store.commit("updateStatus", status);

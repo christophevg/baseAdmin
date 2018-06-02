@@ -1,6 +1,8 @@
 var Client = {
   template: `
 <div id="dynamic-component-demo" class="demo">
+  <h1>{{ $route.params.id }}</h1>
+  <hr><br>
   <button
     v-for="tab in tabs"
     v-bind:key="tab"
@@ -17,14 +19,14 @@ var Client = {
   data: function() {
     return {
       currentTab: null,
-      tabs: store.state.services
+      tabs: store.state.clientComponents
     }
   },
   computed: {
     currentTabComponent: function () {
       if(! this.currentTab) {
-        if(store.state.services.length > 0) {
-          this.currentTab = store.state.services[0];
+        if(this.tabs.length > 0) {
+          this.currentTab = this.tabs[0];
         } else {
           return null;
         }

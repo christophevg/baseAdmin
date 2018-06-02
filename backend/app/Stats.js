@@ -45,9 +45,9 @@ Vue.component( 'ClientStats', {
 <div v-else>loading statistics...</div>`,
   created: function() {
     var id = this.$route.params.id;
-    if( ! store.getters.client(id) ) {
+    if( ! store.getters.clientStats(id) ) {
       // create empty new client entry
-      store.commit("newClient", {
+      store.commit("newClientStats", {
         id: id,
         stats: [
           {
@@ -95,7 +95,7 @@ Vue.component( 'ClientStats', {
   },
   methods: {
     stats: function() {
-      var client = store.getters.client(this.$route.params.id);
+      var client = store.getters.clientStats(this.$route.params.id);
       if( client ) {
         return client.stats;
       }
@@ -116,14 +116,19 @@ Vue.component( 'ClientStats', {
   }
 });
 
-app.registerService("Stats");
+app.registerService({
+  name            : "ReportingService",
+  location        : "http://localhost:18181",
+});
+
+app.registerClientComponent("Stats");
 
 store.registerModule("stats", {
   state: {
     clients: []
   },
   mutations: {
-    newClient: function(state, client) {
+    newClientStats: function(state, client) {
       state.clients.push(client);
     },
     updatedClientStat: function(state, update) {
@@ -171,7 +176,7 @@ store.registerModule("stats", {
     }
   },
   getters: {
-    client: function(state) {
+    clientStats: function(state) {
       return function(id) {
         return state.clients.find(function(client) {
           return client.id == id;
