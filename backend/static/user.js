@@ -74,7 +74,11 @@ var User = {
     },
     createUser: function() {
       this.creating = true;
-      var user = this.model;
+      var user = { 
+        "_id" : this.model["_id"],
+        "name": this.model["name"],
+        "password" : this.model["password"]
+      };
       var self = this;
       $.ajax( {
         url: "/api/user/" + user["_id"],
@@ -104,7 +108,11 @@ var User = {
     },
     updateUser: function() {
       this.saving = true;
-      var user = this.model;
+      var user = { 
+        "_id" : this.model["_id"],
+        "name": this.model["name"],
+        "password" : this.model["password"]
+      };
       var self = this;
       $.ajax( { 
         url: "/api/user/" + user["_id"],
