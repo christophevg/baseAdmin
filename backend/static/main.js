@@ -23,9 +23,41 @@ var store = new Vuex.Store({
     setup: {
       status: null
     },
-    users: []
+    users: [],
+    messages: []
   },
   mutations: {
+    allUsers: function(state, users) {
+      state.users = users;
+    },
+    newUser: function(state, user) {
+      state.users.push(user);
+    },
+    updatedUser: function(state, user) {
+      var current = state.users.find(function(element) {
+        return element._id == user._id;
+      });
+      if(current) {
+        for(var k in user) {
+          current[k] = user[k];
+        }
+      } else {
+        return;
+      }
+      state.users = state.users.filter(function(item) {
+        return item._id != user._id;
+      });
+      state.users.push(current);
+    },
+    removedUser: function(state, user) {
+      state.users = state.users.filter(function(item) {
+        return item._id != user._id;
+      });      
+    },
+    newMessage: function(state, message) {
+      state.messages.push(message);
+    },
+
     updateProperty: function(state, update) {
       state.properties[update.id].labels = update.labels;
       state.properties[update.id].data   = update.data;
@@ -55,36 +87,14 @@ var store = new Vuex.Store({
     },
     updateStatus: function(state, status) {
       state.setup.status = status;
-    },
-    updateUsers: function(state, users) {
-      state.users = users;
-    },
-    newUser: function(state, user) {
-      state.users.push(user);
-    },
-    updatedUser: function(state, user) {
-      var current = state.users.find(function(element) {
-        return element._id == user._id;
-      });
-      if(current) {
-        for(var k in user) {
-          current[k] = user[k];
-        }
-      } else {
-        return;
-      }
-      state.users = state.users.filter(function(item) {
-        return item._id != user._id;
-      });
-      state.users.push(current);
-    },
-    removeUser: function(state, user) {
-      state.users = state.users.filter(function(item) {
-        return item._id != user._id;
-      });      
     }
   },
   getters: {
+    messages: function(state) {
+      return function() {
+        return state.messages.slice().reverse();
+      }
+    },
     groups: function(state) {
       return function() {
         var groups = {};
@@ -159,7 +169,8 @@ var routes = [
   { path: '/client',    component: Client    },
   { path: "/user",      component: User      },
   { path: "/user/:id",  component: User      },
-  { path: "/setup",     component: Setup     }
+  { path: "/setup",     component: Setup     },
+  { path: "/log",       component: Log       }
 ];
 
 var router = new VueRouter({
@@ -174,10 +185,11 @@ var app = new Vue({
   data: {
     drawer: null,
     sections: [
-      { icon: 'home',      text: 'Home',      path: "/"          },
-      { icon: 'dashboard', text: 'Dashboard', path: "/dashboard" },
-      { icon: 'person',    text: 'Users',     path: "/user"      },
-      { icon: 'build',     text: 'Setup',     path: "/setup"     }
+      { icon: "home",      text: "Home",      path: "/"          },
+      { icon: "dashboard", text: "Dashboard", path: "/dashboard" },
+      { icon: "person",    text: "Users",     path: "/user"      },
+      { icon: "build",     text: "Setup",     path: "/setup"     },
+      { icon: "comment",   text: "Log",       path: "/log"     }
     ]
   },
   methods: {
@@ -204,8 +216,8 @@ var app = new Vue({
     updateStatus: function(status) {
       store.commit("updateStatus", status);
     },
-    updateUsers: function(users) {
-      store.commit("updateUsers", users);
+    allUsers: function(users) {
+      store.commit("allUsers", users);
     }
   }
 }).$mount('#app');

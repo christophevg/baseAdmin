@@ -27,7 +27,7 @@ var User = {
   created: function() {
     var self = this;
     $.get( "/api/users", function(users) {
-      app.updateUsers(users);
+      app.allUsers(users);
       if(self.$route.params.id) {
         var user = store.getters.user(self.$route.params.id);
         if(user) {
@@ -144,7 +144,7 @@ var User = {
         url: "/api/user/" + user["_id"],
         type: "delete",
         success: function(response) {
-          store.commit("removeUser", user);
+          store.commit("removedUser", user);
           self.deleting = false;
           app.$notify({
             group: "notifications",

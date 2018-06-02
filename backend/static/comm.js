@@ -30,6 +30,8 @@
       var topic = message.destinationName.split("/"),
           event = JSON.parse(message.payloadString);
 
+      store.commit("newMessage", { "topic" : topic, "payload" : event} );
+
       if( handle_status_change_events(topic, event) ) { return; }
       console.log("unhandled message", topic, JSON.parse(message.payloadString));
 
