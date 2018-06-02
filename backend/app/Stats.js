@@ -185,8 +185,7 @@ store.registerModule("stats", {
   }
 });
 
-(function() {
-
+$( document ).ready(function() {
   store.subscribe( function(mutation, state) {
     if( mutation.type == "newMessage"
      && mutation.payload.topic.length == 5
@@ -198,5 +197,4 @@ store.registerModule("stats", {
       });
     }
   });
-
-})();
+});
