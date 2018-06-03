@@ -13,3 +13,8 @@ DIV.notification.vue-notification {
   font-size: 18px;
 }
 
+/* fix for addional padding on datetime picker */
+
+DIV.input-group.date {
+  padding-top: 0px;
+}
