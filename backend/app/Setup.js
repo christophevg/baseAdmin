@@ -22,6 +22,7 @@ Vue.component( 'ClientSetup', {
   },
   methods: {
     setActiveServices: function(services) {
+      this.model.services = [];
       for(var service in services) {
         this.model.services.push({
           name: service,
@@ -37,6 +38,12 @@ Vue.component( 'ClientSetup', {
         "uuid" : uuid(),
         "services" : this.model.services
       });
+      // TODO: handle this from own/incoming message?
+      store.commit("clientServices", {
+        client: id,
+        services: this.model.services
+      });
+      this.setActiveServices(store.getters.client(id).services);
       this.saving = false;
       this.model.isUnchanged = true;
     }

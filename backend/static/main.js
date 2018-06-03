@@ -64,6 +64,20 @@ var store = new Vuex.Store({
     service: function(state, service) {
       state.services.push(service);
     },
+    clientServices: function(state, update) {
+      // find current (if any)
+      var current = state.clients.find(function(element) {
+        return element._id == update.client;
+      });
+      if(current) {
+        current.services = {}
+        for(var s in update.services) {
+          current.services[update.services[s].name] = {
+            location: update.services[s].location
+          }
+        }
+      }
+    },
     clientComponent: function(state, service) {
       state.clientComponents.push(service);
     },
