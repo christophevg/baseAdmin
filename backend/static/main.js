@@ -83,6 +83,26 @@ var store = new Vuex.Store({
     },
     updateStatus: function(state, status) {
       state.setup.status = status;
+    },
+    serviceUpdate: function(state, update) {
+      // find current (if any)
+      var current = state.clients.find(function(element) {
+        return element._id == update.client;
+      });
+      if(current) {
+        if( update.service in current.services ) {
+          if( ! "config" in current.services[update.service]) {
+            current.services[update.service]["config"] = {}
+          }
+          for(var k in update.config) {
+            current.services[update.service].config[k] = update.config[k];
+          }
+        } else {
+          console.log("serviceUpdate: unknown service: " + update.service);
+        }
+      } else {
+        console.log("serviceUpdate: unknown client: " + update.client);
+      }
     }
   },
   getters: {

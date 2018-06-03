@@ -187,6 +187,9 @@ class Config(object):
         logging.warn("no service action handler defined")
     elif "config" in update:
       try:
+        # init when empty config
+        if self.config["services"][service]["config"] is None:
+          self.config["services"][service]["config"] = {}
         # for now we do 1-level k/v updates
         for k in update["config"]:
           self.config["services"][service]["config"][k] = update["config"][k]
