@@ -55,6 +55,7 @@ class Runner(Service.base, backend.client.base):
     super(self.__class__, self).on_connect(client, clientId, flags, rc)
     self.follow("client/" + self.name)
     self.follow("client/" + self.name + "/services")
+    self.follow("client/" + self.name + "/groups")
     self.follow("client/all/services")
     groups = self.config.groups
     for group in groups:
@@ -85,6 +86,7 @@ class Runner(Service.base, backend.client.base):
     self.follow("group/all/service/" + service)
     for group in self.config.groups:
       self.follow("group/" + group + "/service/" + service)
+    self.push_configuration_update(service)
   
   def remove_service(self, service):
     self.unfollow("client/" + self.name + "/service/" + service)

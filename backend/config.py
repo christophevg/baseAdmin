@@ -29,15 +29,26 @@ class Config(object):
     }
     self.initialize_persistence()
 
+  '''
+    Updates to the configuration mimic the configuration structure:
+      entire config:    .../<id>
+      all services:     .../<id>/services
+      all groups:       .../<id>/groups
+      single service    .../<id>/service/<name>
+  '''
   def handle_mqtt_update(self, topic, update):
     parts  = topic.split("/")
-    if len(parts) > 3:
+    if len(parts) > 3 and parts[2] == "service":
       service = parts[3]
       self.__update_service(service, update)
-    elif len(parts) > 2:
-      self.__update_services(update)
-    else:
+    elif len(parts) > 2 and parts[2] == "services":
+      self.__replace_services(update)
+    elif len(parts) > 2 and parts[2] == "groups":
+      self.__update_groups(update)
+    elif len(parts) == 2:
       self.__update(update)
+    else:
+      logging.error("received unhandled topic: " + topic)
 
   def handle_scheduled(self):
     now = datetime.datetime.now()
@@ -86,12 +97,17 @@ class Config(object):
   def __update(self, update):
     self.config["last-message"] = update["last-message"]
     self.__update_groups(update["groups"])
+    self.__update_services(update["services"])
+    self.config["scheduled"] = update["scheduled"]
+    self.persist()
+
+  def __update_services(self, update):
     # remove deprecated services
-    deprecated = list(set(self.services) - set(update["services"].keys()))
+    deprecated = list(set(self.config["services"].keys()) - set(update["services"].keys()))
     for service in deprecated:
       self.__remove_service(service)
     # add new services
-    additional = list(set(update["services"].keys() - set(self.services)))
+    additional = list(set(update["services"].keys() - set(self.config["services"].keys())))
     for service in additional:
       self.__add_service(service, update["services"][service]["location"])
     # update (remaining) existing (and new) services
@@ -99,18 +115,16 @@ class Config(object):
       self.config["services"][service]["config"] = update["services"][service]["config"]
       if self.on_service_update:
         self.on_service_update(service)
-    self.config["scheduled"] = update["scheduled"]
-    self.persist()
 
-  def __update_services(self, update):
-    service = update["service"]
-    if not "location" in update and not "groups" in update:
-      self.__remove_service(service)
-    else:
-      if "location" in update:
-        self.__add_service(service, update["location"])
-      if "groups" in update:
-        self.__update_groups(update["groups"])
+  def __replace_services(self, update):
+    services = {}
+    for service in update["services"]:
+      services[service["name"]] = {
+        "location" : service["location"],
+        "config" : None
+      }
+    logging.debug("new service configuration: " + str(services))
+    self.__update_services({"services" : services })
     self.config["last-message"] = update["uuid"]
     self.persist()
 
@@ -126,7 +140,7 @@ class Config(object):
 
   def __add_service(self, service, location):
     if service in self.config["services"]:
-      logging.warn("not readding already configured service " + service)
+      logging.warn("not re-adding already configured service " + service)
       return
     self.config["services"][service] = {
       "location" : location,

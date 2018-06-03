@@ -14,7 +14,11 @@ class base(Service.base):
 
   @Service.API.handle("__config")
   def __handle_config(self, data):
-    self.config = json.loads(data)
+    data = data.decode('UTF-8')
+    if data is None or data == "":
+      self.config = None
+    else:
+      self.config = json.loads(data)
     logging.info("received config update : " + str(self.config))
     self.on_config_update()
 

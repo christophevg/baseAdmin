@@ -1,27 +1,23 @@
-(function() {
+(function(globals) {
 
   var client = null;
   var clientId = "backend-ui" + Math.random();
-
-  function send(topic, msg) {
-    var message = new Paho.MQTT.Message(msg);
-    message.destinationName = topic;
-    message.qos = 1;
-    client.send(message);
-  }
+  var connected = false;
 
   function onConnect() {
-    // TODO limit to current scope
+    connected = true;
     client.subscribe("#");
   }
 
   function onConnectionLost(responseObject) {
+    connected = false;
     if (responseObject.errorCode !== 0) {
       console.log("onConnectionLost", responseObject);
     }
   }
 
   function onFailure(invocationContext, errorCode, errorMessage) {
+    connected = false;
     console.log("onFailure", errorMessage);
   }
 
@@ -68,5 +64,19 @@
       app.upsertClient(clients[i]);
     }
   });
+  
+  // expose minimal API to send messages
+  var api = globals.MQ = {};
+  
+  api.publish = function publish(topic, msg) {
+    if(! connected) {
+      console.log("can't publish messages when not connected?!");
+      return;
+    }
+    var message = new Paho.MQTT.Message(JSON.stringify(msg));
+    message.destinationName = topic;
+    message.qos = 1;
+    client.send(message);
+  }
 
-})();
+})(window);

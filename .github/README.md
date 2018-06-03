@@ -325,7 +325,7 @@ The client now has also produced some new logging:
 The service isn't known to the client, in fact it doesn't know any services. Let's introduce it to the service:
 
 ```bash
-$ mosquitto_pub -h localhost -t "client/client/services" -m '{ "service" : "SomeService", "location" : "http://localhost:21212/config"  }'
+$ mosquitto_pub -h localhost -t "client/client/services" -m '[{ "service" : "SomeService", "location" : "http://localhost:21212/config"  }]'
 ```
 
 And the client responds with more logging:

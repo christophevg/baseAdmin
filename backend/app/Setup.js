@@ -3,7 +3,7 @@ Vue.component( 'ClientSetup', {
   <div>
     <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
     <center>
-      <v-btn :loading="saving" @click="updateClient()" class="primary" :disabled="model.isUnchanged">Update</v-btn>
+      <v-btn :loading="saving" @click="updateServices()" class="primary" :disabled="model.isUnchanged">Update</v-btn>
     </center>
   </div>
   `,
@@ -29,14 +29,14 @@ Vue.component( 'ClientSetup', {
         });
       }
     },
-    updateClient: function() {
+    updateServices: function() {
       this.saving = true;
       var id = this.$route.params.id;
-      var current = store.getters.client(id).services;
       var self = this;
-      // TODO
-      // POST new services
-      // DELETE deprecated services
+      MQ.publish("client/" + id + "/services", {
+        "uuid" : uuid(),
+        "services" : this.model.services
+      });
       this.saving = false;
       this.model.isUnchanged = true;
     }
