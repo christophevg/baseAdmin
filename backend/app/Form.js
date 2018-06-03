@@ -11,7 +11,8 @@ Vue.component( 'ClientForm', {
         age: 35,
         skills: ["Javascript", "VueJS"],
         email: "john.doe@gmail.com",
-        status: true
+        status: true,
+        dt : null
       },
 
       schema: {
@@ -76,6 +77,19 @@ Vue.component( 'ClientForm', {
           default: true,
           textOn: "Active",
           textOff: "Inactive"
+        },
+        {
+          type: "dateTimePicker",
+          label: "DT",
+          model: "dt",
+          dateTimePickerOptions: {
+            format: "dd/mm/yyyy hh:ii",
+            autoclose : true,
+            minuteStep: 1,
+            startView: 0,
+            weekStart: 1,
+            startDate: new Date()
+          }
         }]
       },
 
