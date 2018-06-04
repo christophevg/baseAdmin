@@ -4,10 +4,14 @@ import argparse
 import requests
 import logging
 import time
-from urllib.parse import urlparse
 import json
 import socket
 import traceback
+
+try:
+  from urllib.parse import urlparse
+except ImportError:
+  from urlparse import urlparse
 
 import paho.mqtt.client as mqtt
 
