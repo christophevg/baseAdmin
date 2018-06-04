@@ -42,7 +42,10 @@ class Config(object):
       service = parts[3]
       self.__update_service(service, update)
     elif len(parts) > 2 and parts[2] == "services":
-      self.__replace_services(update)
+      if "services" in update:
+        self.__replace_services(update)
+      elif "service" in update:
+        self.__manage_service(update)
     elif len(parts) > 2 and parts[2] == "groups":
       self.__update_groups(update)
     elif len(parts) == 2:
@@ -126,6 +129,14 @@ class Config(object):
     logging.debug("new service configuration: " + str(services))
     self.__update_services({"services" : services })
     self.config["last-message"] = update["uuid"]
+    self.persist()
+
+  def __manage_service(self, update):
+    if "location" in update and not update["location"] is None:
+      self.__add_service(update["service"], update["location"])
+    else:
+      self.__remove_service(update["service"])
+    self.config["last-message"] == update["uuid"]
     self.persist()
 
   def __update_service(self, service, update):
