@@ -50,7 +50,7 @@ class base(object):
 
     logging.info("requesting MQ connection details from " + self.backend.geturl())
     response = requests.get(
-      self.backend.scheme + ":" + self.backend.netloc + "/api/mq/connection/mqtt",
+      self.backend.scheme + "://" + self.backend.netloc + "/api/mq/connection/mqtt",
       auth=(self.backend.username, self.backend.password)
     )
 
@@ -58,7 +58,13 @@ class base(object):
       logging.error("request for MQ connection details failed: " + str(response.status_code))
       return
 
-    self.mq = response.json()
+    m   = response.json()
+    auth = ""
+    if m["username"] and m["password"]:
+      auth = m["username"] + ":" + m["password"] + "@"
+    url = "mqtt://" + auth + m["hostname"] + ":" + str(m["port"])
+    logging.debug(url)
+    self.mqtt = urlparse(url)
 
   def connect_mqtt(self):
     if self.mqtt is None:
