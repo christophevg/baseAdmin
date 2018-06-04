@@ -49,3 +49,5 @@ import backend.rest
 
 import backend.resources
 import backend.interface
+
+from backend.plugins import *
