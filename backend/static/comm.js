@@ -5,6 +5,7 @@
   var connected = false;
 
   function onConnect() {
+    console.log("mqtt onConnect");
     connected = true;
     client.subscribe("#");
   }
@@ -12,13 +13,13 @@
   function onConnectionLost(responseObject) {
     connected = false;
     if (responseObject.errorCode !== 0) {
-      console.log("onConnectionLost", responseObject);
+      console.log("mqtt onConnectionLost", responseObject);
     }
   }
 
   function onFailure(invocationContext, errorCode, errorMessage) {
     connected = false;
-    console.log("onFailure", errorMessage);
+    console.log("mqtt onFailure", errorMessage);
   }
 
   function onMessageArrived(message) {
@@ -27,12 +28,13 @@
           event = JSON.parse(message.payloadString);
       store.commit("newMessage", { "topic" : topic, "payload" : event} );
     } catch(err) {
-      console.log("Failed to parse JSON message: ", err);
+      console.log("mqtt Failed to parse JSON message: ", err);
       return;
     }
   }    
 
   function connect(mqtt) {
+    console.log("mqtt connect using ", mqtt);
     if(! mqtt ) { return; }
     client = new Paho.MQTT.Client(mqtt.hostname, mqtt.port, clientId);
 
@@ -70,7 +72,7 @@
   
   api.publish = function publish(topic, msg) {
     if(! connected) {
-      console.log("can't publish messages when not connected?!");
+      console.log("mqtt can't publish messages when not connected");
       return;
     }
     var message = new Paho.MQTT.Message(JSON.stringify(msg));
