@@ -71,10 +71,7 @@ class StatusMonitor(Monitor):
     if "status" in status:
       self.store.status.update_one(
         { "_id": client },
-        {
-          "$currentDate" : { "lastModified": True, },
-           "$set" : { "status" : status["status"] }
-         },
+        { "$set" : { "status" : status["status"] } },
         upsert=True
       )
 
