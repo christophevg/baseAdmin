@@ -13,6 +13,7 @@ if not ADMIN_PASSWORD:
 
 def provision(collection, data, force=False):
   if force or not collection in store.collection_names():
+    logging.info("provisioning " + collection)
     if force:
       logging.info("dropping existing collection: " + collection)
       store[collection].drop();
@@ -30,25 +31,8 @@ def provision_users(force=False):
     force
   )
 
-# provision initial app collection
-def provision_app(force=False):
-  provision(
-    "app",
-    {
-      "name" : "baseAdmin Demo",
-      "sections" : [
-        {
-          "name" : "dashboard",
-          "label": "Dashboard"
-        }
-      ]
-    },
-    force
-  )
-
 # by default provisioning is only run once for each collection
 # setting a PROVISION environment variable forces re-provisioning
-force = not os.environ.get("PROVISION") is None
+force = not os.environ.get("BACKEND_PROVISION") is None
 with server.app_context():
   provision_users(force)
-  provision_app(force)

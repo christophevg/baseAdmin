@@ -11,6 +11,9 @@ import dateutil.parser
 import datetime
 import pickle
 
+class UnknownServiceError(Exception):
+  pass
+
 class Config(object):
   def __init__(self, on_group_join=None, on_group_leave=None,
                on_service_add=None, on_service_remove=None,
@@ -78,13 +81,13 @@ class Config(object):
     try:
       return self.config["services"][service]["location"]
     except KeyError:
-      raise Exception("unknown service: " + service)    
+      raise UnknownServiceError(service)    
 
   def get_service_configuration(self, service):
     try:
       return self.config["services"][service]["config"]
     except KeyError:
-      raise Exception("unknown service: " + service)
+      raise UnknownServiceError(service)
 
   # "abstract" methods to implement different ways to persist the config
 

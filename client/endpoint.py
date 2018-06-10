@@ -13,7 +13,7 @@ import requests
 from servicefactory import Service
 
 import backend.client
-from backend.config import FileBased as FileBasedConfig
+from backend.config import FileBased as FileBasedConfig, UnknownServiceError
 
 @Service.API.endpoint(port=17171)
 class Runner(Service.base, backend.client.base):
@@ -150,6 +150,9 @@ class Runner(Service.base, backend.client.base):
       config  = self.config.get_service_configuration(service)
       logging.debug("providing config for " + service + " : " + str(config))
       return json.dumps(config)
+    except UnknownServiceError as e:
+      self.fail("unknown service: " + str(e))
+      return json.dumps(None)
     except Exception as e:
       self.fail("failed to provide configuration", e)
       return json.dumps(None)

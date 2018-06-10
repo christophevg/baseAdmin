@@ -117,12 +117,15 @@ class base(object):
     self.mqtt_client.publish(topic, message,  1, False)
     logging.debug("sent message: " + topic + " : " + message)
 
-  def fail(self, message, e=None):
-    logging.error(message + " : " + str(e))
+  def fail(self, reason, e=None):
+    msg = { "message" : reason }
+    if e:
+      logging.error(reason + ":" + str(e))
+      msg["exception"] = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
+    else:
+      logging.error(reason)
+      
     self.publish(
       "client/" + self.name + "/errors",
-      json.dumps({
-        "message" : message,
-        "exception" : ''.join(traceback.format_exception(type(e), e, e.__traceback__))
-      })
+      json.dumps(msg)
     )
