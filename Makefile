@@ -6,12 +6,6 @@ update:
 requirements: requirements.txt
 	. venv/bin/activate; pip install -r $< > /dev/null
 
-run: requirements
-	. venv/bin/activate; python run.py
-
-devel: requirements
-	. venv/bin/activate; PROVISION=force python run.py
-
 console: requirements
 	. venv/bin/activate; python console.py ${ARGS}
 
@@ -23,6 +17,3 @@ demo-service: requirements
 
 system-service: requirements
 	. venv/bin/activate; PYTHONPATH=. python client/services/system.py ${ARGS}
-
-backend-store: requirements
-	. venv/bin/activate; python -m backend.store ${ARGS}

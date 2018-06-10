@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# wrapper script to allow for starting backend related services
+
+# go to repository root
+cd "$(dirname "$0")"/..
+
+# load repository-level (default) configuration
+. etc/backend.conf
+
+# load the local (overriding) configuration IF it exists
+if [ ! -z ${APP_CONFIG} ] && [ -f ${APP_CONFIG} ]; then
+  . ${APP_CONFIG}
+fi
+
+# activate the virtual python environment
+. ${VENV}/bin/activate
+
+# start the requested service
+RETVAL=0
+case "$1" in
+   "") 
+     echo "Usage: $0 [service-name]"
+     echo "       available services: store, ui"
+     RETVAL=1
+     ;;
+   store)
+     PYTHONPATH=. python -m backend.store
+     ;;
+   ui)
+     PYTHONPATH=. python -m backend
+     ;;
+esac
+
+exit $RETVAL

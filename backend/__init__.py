@@ -21,7 +21,10 @@ formatter = logging.Formatter(
 )
 logger = logging.getLogger()
 
-logger.setLevel(logging.DEBUG) # TODO make this configurable
+LOG_LEVEL = os.environ.get("LOG_LEVEL")
+if not LOG_LEVEL:
+  LOG_LEVEL = "DEBUG"
+logger.setLevel(logging.getLevelName(LOG_LEVEL))
 
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
@@ -29,20 +32,6 @@ logger.addHandler(consoleHandler)
 
 def disable_console_logging():
   logger.removeHandler(consoleHandler)
-
-# ensure we have local environment in scope, also from dot env file
-
-import logging
-
-import sys
-from os.path import join, dirname, isfile
-from dotenv import load_dotenv
-
-script_path = os.getcwd()
-dotenv_path = join(script_path, "env.local")
-if isfile(dotenv_path):
-  logging.info("loading local environment configuration from " + dotenv_path)
-  load_dotenv(dotenv_path)
 
 import backend.web
 import backend.rest

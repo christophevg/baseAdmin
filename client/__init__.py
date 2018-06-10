@@ -1,10 +1,10 @@
 import os
 import logging
 
-LOGFILE = os.environ.get("LOGFILE")
-if LOGFILE:
-  if not os.path.exists(LOGFILE): touch(LOGFILE)
-  fileHandler = logging.FileHandler(LOGFILE)
+LOG_FILE = os.environ.get("LOG_FILE")
+if LOG_FILE:
+  if not os.path.exists(LOG_FILE): touch(LOG_FILE)
+  fileHandler = logging.FileHandler(LOG_FILE)
   fileHandler.setFormatter(formatter)
   logger.addHandler(fileHandler)
 
