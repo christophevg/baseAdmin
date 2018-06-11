@@ -235,40 +235,13 @@ class FileBased(Config):
 
   def persist(self):
     config = copy.deepcopy(self.config)
-    config["checksum"] = self.hash(config)
     with NamedTemporaryFile(mode="wb+", delete=False) as fp:
       pickle.dump(config, fp, protocol=2)
-    try:
-      self.check(fp.name)
-      path = os.path.dirname(self.location)
-      if not os.path.exists(path): os.makedirs(path)
-      os.rename(fp.name, self.location)
-    except Exception as e:
-      raise Exception("generated config file is invalid: " + fp.name + ", due to: " + str(e))
+    path = os.path.dirname(self.location)
+    if not os.path.exists(path): os.makedirs(path)
+    os.rename(fp.name, self.location)
     logging.debug("persisted configuration")
 
   def load(self):
     with open(self.location, "rb") as fp:
-      config = pickle.load(fp)
-      try:
-        self.validate(config)
-        self.config = config
-      except Exception as e:
-        raise Exception("config is not valid: " + self.location + ", due to: " + str(e))
-
-  def check(self, f):
-    with open(f, "rb") as fp:
-      config = pickle.load(fp)
-      self.validate(config)
-
-  def validate(self, config):
-    expected = config["checksum"]
-    config.pop("checksum", None)
-    computed = self.hash(config)
-    assert expected == computed, "checksums don't match: expected {}, got {}".format(expected, computed)
-    return True
-
-  def hash(self, config):
-    bs = pickle.dumps(config)
-    h  = hashlib.md5(bs).hexdigest()
-    return h
+      self.config = pickle.load(fp)
