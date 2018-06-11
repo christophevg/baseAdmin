@@ -55,9 +55,12 @@ class Runner(backend.client.base):
       self.fail("couldn't parse JSON message", e)
       return
 
-    topic = topic.split("/")
-    for monitor in self.monitors:
-      monitor.handle(topic, message)
+    try:
+      topic = topic.split("/")
+      for monitor in self.monitors:
+        monitor.handle(topic, message)
+    except Exception as e:
+      self.fail("failed to handle message", e)
 
 class StatusMonitor(Monitor):
   def follows(self):
