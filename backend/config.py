@@ -113,7 +113,7 @@ class Config(object):
     for service in deprecated:
       self.__remove_service(service)
     # add new services
-    additional = list(set(update["services"].keys() - set(self.config["services"].keys())))
+    additional = list(set(update["services"].keys()) - set(self.config["services"].keys()))
     for service in additional:
       self.__add_service(service, update["services"][service]["location"])
     # update (remaining) existing (and new) services
