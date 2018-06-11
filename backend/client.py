@@ -8,6 +8,8 @@ import json
 import socket
 import traceback
 
+from backend import HOSTNAME
+
 try:
   from urllib.parse import urlparse
 except ImportError:
@@ -16,7 +18,7 @@ except ImportError:
 import paho.mqtt.client as mqtt
 
 class base(object):
-  def __init__(self, name="client", description=None):
+  def __init__(self, name=HOSTNAME, description=None):
     self.name = name
     if description is None:
       description = self.name + ": a baseAdmin client."
