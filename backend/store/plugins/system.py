@@ -12,8 +12,8 @@ class SystemMonitor(Monitor):
       { "_id": client },
       { "$push"  : { "stats" : {
         "$each"  : [ stats ],
-        "$sort"  : { "system_time" : -1 },
-        "$slice" : 12
+        "$sort"  : { "system_time" : 1 },
+        "$slice" : -12
       }}},
       upsert=True
     )

@@ -92,10 +92,10 @@ Vue.component( 'ClientStats', {
       });
       // retrieve history data
       $.get( "/api/client/" + id + "/stats", function( stats ) {
-        for(var s=stats.length-1; s>-1; s--) {
+        for(var idx in stats) {
           store.dispatch( "updateStats", {
             client : id,
-            stats  : stats[s]
+            stats  : stats[idx]
           });
         }
       });
