@@ -105,7 +105,7 @@ class Config(object):
   def __update(self, update):
     self.config["last-message"] = update["last-message"]
     self.__update_groups(update["groups"])
-    self.__update_services(update["services"])
+    self.__update_services(update)
     self.config["scheduled"] = update["scheduled"]
     self.persist()
 
