@@ -1,6 +1,7 @@
 class Monitor(object):
-  def __init__(self, store):
+  def __init__(self, store, runner):
     self.store = store
+    self.mqtt  = runner
 
   def follows(self):
     return []

@@ -26,7 +26,7 @@ class Runner(backend.client.base):
   
   def load_monitors(self):
     for monitor in Monitor.__subclasses__():
-      self.monitors.append(monitor(store))
+      self.monitors.append(monitor(store, self))
 
   def start(self):
     super(self.__class__, self).start()
@@ -110,12 +110,13 @@ class ConfigMonitor(Monitor):
     if len(topic) == 2:
       client = topic[1]
       # send latest version if reported config version is different
-      if "config" in message:
-        if self.configs[client].last_message_id != message["config"]:
-          logging.info("sending latest config to outdated client: " + client)
-          config = copy.deepcopy(self.configs[client].config)
-          config.pop("_id", None)
-          self.publish("client/" + client, json.dumps(config))
+      if "status" in message and message["status"] == "online":
+        if "config" in message:
+          if self.configs[client].last_message_id != message["config"]:
+            logging.info("sending config to outdated client: " + client)
+            config = copy.deepcopy(self.configs[client].config)
+            config.pop("_id", None)
+            self.mqtt.publish("client/" + client, json.dumps(config))
       
     if (len(topic) == 3 and topic[2] == "services") or\
        (len(topic) == 4 and topic[2] == "service"):
