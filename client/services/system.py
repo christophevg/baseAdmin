@@ -46,13 +46,13 @@ class ReportingService(client.service.base):
       return 60
 
   def loop(self):
-    if self.config != None:
+    interval = .300
+    if self.config:
       start = time.time()
       self.publish("stats", self.collect())
-      delay = time.time() - start
-      time.sleep(self.reporting_interval()-delay)
-    else:
-      time.sleep(.300)
+      delay = self.reporting_interval() - (time.time() - start)
+      if delay > 0: interval = delay
+    time.sleep(interval)
 
 if __name__ == "__main__":
   ReportingService().run()
