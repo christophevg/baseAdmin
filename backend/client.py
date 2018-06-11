@@ -123,7 +123,7 @@ class base(object):
     msg = { "message" : reason }
     if e:
       logging.error(reason + ":" + str(e))
-      msg["exception"] = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
+      msg["exception"] = traceback.format_exc()
     else:
       logging.error(reason)
       
