@@ -104,7 +104,10 @@ api.add_resource(Config,
 class Stats(Resource):
   @authenticate(["admin"])
   def get(self, client):
-    return store.system.find_one({"_id" : client })["stats"]
+    try:
+      return store.system.find_one({"_id" : client })["stats"]
+    except:
+      return None
 
 api.add_resource(Stats,
   "/api/client/<string:client>/stats"
