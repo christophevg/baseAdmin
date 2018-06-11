@@ -17,13 +17,15 @@ class UnknownServiceError(Exception):
 class Config(object):
   def __init__(self, on_group_join=None, on_group_leave=None,
                on_service_add=None, on_service_remove=None,
-               on_service_update=None, on_service_action=None):
+               on_service_update=None, on_service_action=None,
+               on_schedule=None):
     self.on_group_join     = on_group_join
     self.on_group_leave    = on_group_leave
     self.on_service_add    = on_service_add
     self.on_service_remove = on_service_remove
     self.on_service_update = on_service_update
     self.on_service_action = on_service_action
+    self.on_schedule       = on_schedule
     self.config   = {
       "last-message" : None,
       "groups"       : [],
@@ -191,6 +193,8 @@ class Config(object):
     })
     self.config["scheduled"].sort(key=operator.itemgetter("schedule"))
     logging.info("scheduled update for " + service + " in " + str((schedule - datetime.datetime.now()).total_seconds()) + "s")
+    if self.on_schedule:
+      self.on_schedule(service, schedule, update)
     return False
 
   def __apply(self, service, update):

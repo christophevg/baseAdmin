@@ -35,7 +35,8 @@ class Runner(Service.base, backend.client.base):
       on_service_add    = self.add_service,
       on_service_remove = self.remove_service,
       on_service_update = self.push_configuration_update,
-      on_service_action = self.perform_action
+      on_service_action = self.perform_action,
+      on_schedule       = self.notify_schedule
     )
 
   def start(self):
@@ -120,7 +121,13 @@ class Runner(Service.base, backend.client.base):
       self.fail("could not connect to " + service, e)
     except Exception as e:
       self.fail("could not post to " + service + "/" + action, e)
-    
+
+  def notify_schedule(self, service, schedule, update):
+    self.publish_service_message({
+      "schedule": str(schedule),
+      "update"  : update
+    }, service, "scheduled" )
+
   def publish_service_message(self, message, service=None, scope=None):
     topic = "client/" + self.name
     if not service is None:
