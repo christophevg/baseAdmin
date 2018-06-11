@@ -25,7 +25,7 @@ class StoreBased(backend.config.Config):
     logging.debug("persisted configuration for " + self.client)
 
   def load(self):
-    config = store.config.find_one({ "_id" : self.client})
+    config = store.config.find_one({ "_id" : self.client}, {"_id": False})
     if config is None:
       raise KeyError("unknown client " + self.client)
     self.config = config
