@@ -11,11 +11,17 @@ from backend.web      import server
 from backend.store    import store
 from backend.security import authenticate
 
+from backend import APP_NAME, APP_AUTHOR, APP_DESCRIPTION
+
 def render(template, **kwargs):
   user = None
   if request.authorization:
     user = store.users.find_one({ "_id": request.authorization.username })
-  app  = store.app.find_one({})
+  app = {
+    "name"        : APP_NAME,
+    "author"      : APP_AUTHOR,
+    "description" : APP_DESCRIPTION
+  }
   try:
     return render_template(
       template + ".html",

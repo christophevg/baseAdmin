@@ -5,6 +5,14 @@ APP_NAME = os.environ.get("APP_NAME")
 if not APP_NAME:
   APP_NAME = "baseAdmin"
 
+APP_AUTHOR = os.environ.get("APP_AUTHOR")
+if not APP_AUTHOR:
+  APP_AUTHOR = "Christophe VG"
+
+APP_DESCRIPTION = os.environ.get("APP_DESCRIPTION")
+if not APP_DESCRIPTION:
+  APP_DESCRIPTION = "A baseAdmin Demo"
+
 HOSTNAME = socket.gethostname()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
