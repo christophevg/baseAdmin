@@ -8,6 +8,11 @@ cd "$(dirname "$0")"/..
 # load repository-level (default) configuration
 . etc/backend.conf
 
+# load repository-level overriding configuration
+if [ -f etc/backend-app.conf ]; then
+  . etc/backend-app.conf
+fi
+
 # load the local (overriding) configuration IF it exists
 if [ ! -z ${APP_CONFIG} ] && [ -f ${APP_CONFIG} ]; then
   . ${APP_CONFIG}
