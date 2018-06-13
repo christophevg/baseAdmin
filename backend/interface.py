@@ -2,6 +2,7 @@ import os
 from os import listdir
 from os.path import isfile, join
 import logging
+import git
 
 from flask  import render_template, send_from_directory
 from flask  import request
@@ -36,6 +37,18 @@ def render(template, **kwargs):
       user=user,
       without_sections=True
     )
+
+@server.route("/static/main.js")
+def send_main_js():
+  repo = git.Repo(search_parent_directories=True)
+  sha  = repo.head.object.hexsha
+  info = {
+    "git" : repo.git.rev_parse(sha, short=4)
+  }
+  return render_template(
+    "main.js",
+    info=info
+  )
 
 @server.route("/app/<path:filename>")
 def send_app_static(filename):
