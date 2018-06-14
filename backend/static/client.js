@@ -45,10 +45,9 @@ $( document ).ready(function() {
      && mutation.payload.topic[0] == "client"
      && "status" in mutation.payload.payload )
     {
-      app.upsertClient({
-        "_id"    : mutation.payload.topic[1],
-        "status" : mutation.payload.payload.status
-      });
+      client = mutation.payload.payload;
+      client["_id"] = mutation.payload.topic[1];
+      app.upsertClient(client);
     }
   });
 });
