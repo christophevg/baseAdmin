@@ -7,6 +7,7 @@ import time
 import json
 import socket
 import traceback
+import git
 
 from backend import HOSTNAME
 
@@ -89,7 +90,12 @@ class base(object):
     self.publish("client/" + self.name , json.dumps(self.on_connect_message()))
 
   def on_connect_message(self):
-    return { "status" : "online" }
+    repo = git.Repo(search_parent_directories=True)
+    sha  = repo.head.object.hexsha
+    return {
+      "status" : "online",
+      "git"    : repo.git.rev_parse(sha, short=4)
+    }
   
   def on_message(self, client, clientId, msg):
     topic = msg.topic
