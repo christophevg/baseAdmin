@@ -6,11 +6,11 @@
 cd "$(dirname "$0")"/..
 
 # load repository-level (default) configuration
-. etc/backend.conf
+. etc/cloud.conf
 
 # load repository-level overriding configuration
 if [ -f etc/backend-app.conf ]; then
-  . etc/backend-app.conf
+  . etc/cloud-app.conf
 fi
 
 # load the local (overriding) configuration IF it exists
@@ -26,17 +26,12 @@ RETVAL=0
 case "$1" in
    "") 
      echo "Usage: $0 [service-name]"
-     echo "       available services: store, ui, cloud"
+     echo "       available services: ui"
      RETVAL=1
-     ;;
-   store)
-     PYTHONPATH=. python -m backend.store
      ;;
    ui)
      PYTHONPATH=. python -m backend
      ;;
-   cloud)
-     PYTHONPATH=. python backend/cloud.py
 esac
 
 exit $RETVAL

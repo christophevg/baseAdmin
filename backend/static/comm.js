@@ -23,6 +23,7 @@
   }
 
   function onMessageArrived(message) {
+    console.log("onMessageArrived", message.destinationName, message.payloadString);
     try {
       var topic = message.destinationName.split("/"),
           event = JSON.parse(message.payloadString);
@@ -60,13 +61,6 @@
     connect(data);
   });
 
-  // initialize with clients known at server-side
-  $.get("/api/clients", function(clients) {
-    for(var i in clients) {
-      app.upsertClient(clients[i]);
-    }
-  });
-  
   // expose minimal API to send messages
   var api = globals.MQ = {};
   

@@ -1,6 +1,9 @@
 var store = new Vuex.Store({
   state: {
-    clients: [],
+    clients: {
+      initialized: false,
+      data : []
+    },
     services: [],
     clientComponents: [],
     setup: {
@@ -44,7 +47,7 @@ var store = new Vuex.Store({
 
     upsertClient: function(state, client) {
       // find current (if any)
-      var current = state.clients.find(function(element) {
+      var current = state.clients.data.find(function(element) {
         return element._id == client._id;
       });
       // update or create current
@@ -53,21 +56,15 @@ var store = new Vuex.Store({
           current[k] = client[k];
         }
       } else {
-        current = client;
+        state.clients.data.push(client);
       }
-      // replace current (if any)
-      state.clients = state.clients.filter(function(item) {
-        return item._id != client._id;
-      });
-      // and add (new) current
-      state.clients.push(current);
     },
     service: function(state, service) {
       state.services.push(service);
     },
     clientServices: function(state, update) {
       // find current (if any)
-      var current = state.clients.find(function(element) {
+      var current = state.clients.data.find(function(element) {
         return element._id == update.client;
       });
       if(current) {
@@ -87,7 +84,7 @@ var store = new Vuex.Store({
     },
     serviceUpdate: function(state, update) {
       // find current (if any)
-      var current = state.clients.find(function(element) {
+      var current = state.clients.data.find(function(element) {
         return element._id == update.client;
       });
       if(current) {
@@ -106,6 +103,19 @@ var store = new Vuex.Store({
       }
     }
   },
+  actions: {
+    initClients: function(context) {
+      if(! context.state.clients.initialized) {
+        context.state.clients.initialized = true;
+        // initialize with clients known at server-side
+        $.get("/api/clients", function(clients) {
+          for(var i in clients) {
+            app.upsertClient(clients[i]);
+          }
+        });
+      }
+    }
+  },
   getters: {
     messages: function(state) {
       return function() {
@@ -114,9 +124,10 @@ var store = new Vuex.Store({
     },
     groups: function(state) {
       return function() {
+        store.dispatch("initClients");
         var groups = {};
-        for(var c in state.clients) {
-          var client = state.clients[c];
+        for(var c in state.clients.data) {
+          var client = state.clients.data[c];
           var client_groups = client.groups;
           for(var g in client_groups) {
             var group = client_groups[g];
@@ -168,9 +179,16 @@ var store = new Vuex.Store({
     },
     client: function(state) {
       return function(id) {
-        return state.clients.find(function(client) {
+        store.dispatch("initClients");
+        return state.clients.data.find(function(client) {
           return client._id == id;
         });
+      }
+    },
+    clients: function(state) {
+      return function() {
+        store.dispatch("initClients");
+        return state.clients.data;
       }
     }
   }
@@ -179,7 +197,7 @@ var store = new Vuex.Store({
 // Routes
 
 var routes = [
-  { path: '/dashboard',  component: Dashboard },
+  { path: '/',           component: Dashboard },
   { path: '/client/:id', component: Client    },
   { path: "/user",       component: User      },
   { path: "/user/:id",   component: User      },
@@ -202,8 +220,7 @@ var app = new Vue({
   data: {
     drawer: null,
     sections: [
-      { icon: "home",      text: "Home",      path: "/"          },
-      { icon: "dashboard", text: "Dashboard", path: "/dashboard" },
+      { icon: "dashboard", text: "Dashboard", path: "/" },
       { icon: "person",    text: "Users",     path: "/user"      },
       { icon: "build",     text: "Setup",     path: "/setup"     },
       { icon: "comment",   text: "Log",       path: "/log"     }

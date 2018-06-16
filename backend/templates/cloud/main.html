@@ -24,8 +24,6 @@
     <link href="/static/vendor/css/bootstrap-datetimepicker.css" rel="stylesheet">
     
     <link href="/static/main.css"      rel="stylesheet">
-    <link href="/static/dashboard.css" rel="stylesheet">
-    <link href="/static/client.css"    rel="stylesheet">
 
     {% block moreCSS %}{% endblock %}
   </head>
@@ -41,7 +39,6 @@
         </v-toolbar-title>
       </v-toolbar>
 
-      {% if not without_sections %}
       <v-navigation-drawer fixed clipped app v-model="drawer">
         <v-list dense>
           <template v-for="(item, i) in sections">
@@ -56,7 +53,6 @@
           </template>
         </v-list>
       </v-navigation-drawer>
-      {% endif %}
 
       <v-content>
         <div class="content-wrapper">
@@ -93,25 +89,16 @@
       Vue.component('Multiselect', VueMultiselect.Multiselect);
     </script>
 
-    <script src="/static/vendor/Chart.min.js"></script>
-    <script src="/static/vendor/vue-chartjs.min.js"></script>
-
     <script src="/static/vendor/jquery.min.js"></script>
-
-    <script src="/static/vendor/bootstrap.min.js"></script>
     <script src="/static/vendor/moment.min.js"></script>
-    <script src="/static/vendor/bootstrap-datetimepicker.min.js"></script>
-    
+    <script src="/static/vendor/bootstrap.min.js"></script>
+
     <script src="/static/vendor/paho-mqtt.js"></script>
 
     <script src="/static/comm.js"></script>
-    <script src="/static/common.js"></script>
-    <script src="/static/dashboard.js"></script>
-    <script src="/static/client.js"></script>
-    <script src="/static/user.js"></script>
-    <script src="/static/setup.js"></script>
-    <script src="/static/log.js"></script>
 
+    <script src="/static/cloud/dashboard.js"></script>
+    
     <script src="/static/main.js"></script>
 
     {% for service in services %}

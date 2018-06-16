@@ -12,6 +12,7 @@ from backend.web      import server
 from backend.store    import store
 from backend.security import authenticate
 
+from backend import BACKEND_MODE, CLOUD, MASTER
 from backend import APP_NAME, APP_AUTHOR, APP_DESCRIPTION
 
 def render(template, **kwargs):
@@ -25,7 +26,7 @@ def render(template, **kwargs):
   }
   try:
     return render_template(
-      template + ".html",
+      os.path.join(BACKEND_MODE, template + ".html"),
       app=app,
       user=user,
       **kwargs
@@ -46,22 +47,27 @@ def send_main_js():
     "git" : repo.git.rev_parse(sha, short=4)
   }
   return render_template(
-    "main.js",
+    os.path.join(BACKEND_MODE, "main.js"),
     info=info
   )
 
-@server.route("/app/<path:filename>")
-def send_app_static(filename):
-  return send_from_directory("app", filename)
-
-@server.route("/")
-def render_home():
-  return render("main", without_sections=True)
+if MASTER:
+  @server.route("/app/<path:filename>")
+  def send_app_static(filename):
+    return send_from_directory("app", filename)
 
 def list_services():
-  path = os.path.join(os.path.dirname(__file__), "app")
-  services = [os.path.splitext(f)[0] for f in listdir(path) if isfile(join(path, f))]
-  return services
+  if MASTER:
+    path = os.path.join(os.path.dirname(__file__), "app")
+    services = [os.path.splitext(f)[0] for f in listdir(path) if isfile(join(path, f))]
+    return services
+  else:
+    return []
+
+@server.route("/")
+@authenticate(["admin"])
+def render_home():
+  return render("main", services=list_services())
 
 @server.route("/<path:section>")
 @authenticate(["admin"])
