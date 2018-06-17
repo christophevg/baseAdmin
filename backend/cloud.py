@@ -11,6 +11,8 @@ from backend import HOSTNAME
 INTERVAL = os.environ.get("IP_CHECK_INTERVAL")
 if not INTERVAL:
   INTERVAL = 60
+else:
+  INTERVAL = int(INTERVAL)
 
 CLOUD_URL = os.environ.get("CLOUD_URL")
 if not CLOUD_URL:
