@@ -20,6 +20,7 @@ import paho.mqtt.client as mqtt
 
 class base(object):
   def __init__(self, name=HOSTNAME, description=None):
+    logging.info("client endpoint starting...")
     self.name = name
     if description is None:
       description = self.name + ": a baseAdmin client."
@@ -57,7 +58,7 @@ class base(object):
     if not self.cloud:
       logging.warn("can't fetch master information without cloud URL.")
       return
-    logging.info("requesting master IP from " + self.cloud.geturl())
+    logging.debug("requesting master IP from " + self.cloud.geturl())
     response = requests.get(
       self.cloud.scheme + "://" + self.cloud.netloc + "/api/client/" + HOSTNAME,
       auth=(self.cloud.username, self.cloud.password)
@@ -74,7 +75,7 @@ class base(object):
       #   auth = m["username"] + ":" + m["password"] + "@"
       url = "mqtt://" + master["ip"] + ":1883"
       self.mqtt = urlparse(url)
-      logging.info("acquired MQTT URL: " + url)
+      logging.debug("acquired MQTT URL: " + url)
     else:
       logging.error("failed to process master IP information" + str(client))
 
@@ -117,7 +118,7 @@ class base(object):
 
   def follow(self, topic):
     if self.mqtt_client is None: return
-    logging.info("following " + topic)
+    logging.debug("following " + topic)
     self.mqtt_client.subscribe(topic)
     return self
 

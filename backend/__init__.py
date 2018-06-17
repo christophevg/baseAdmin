@@ -44,16 +44,3 @@ def disable_console_logging():
   logger.removeHandler(consoleHandler)
 
 logging.getLogger("git.cmd").setLevel(logging.WARNING)
-
-import backend.web
-import backend.rest
-
-import backend.interface
-
-if MASTER:
-  import backend.resources.master
-  logging.info("Running Backend in MASTER mode")
-  from backend.plugins import *
-else:
-  import backend.resources.cloud
-  logging.info("Running Backend in CLOUD mode")

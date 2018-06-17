@@ -226,14 +226,14 @@ class FileBased(Config):
   def initialize_persistence(self):
     if not os.path.exists(self.location):
       try:
-        logging.info("persisting initial configuration to " + self.location)
+        logging.debug("persisting initial configuration to " + self.location)
         self.persist()
       except Exception as e:
         logging.error("could not persist initial configuration: " + str(e))
     else:
       try:
         self.load()
-        logging.info("loaded persisted configuration: " + str(self.config))
+        logging.debug("loaded persisted configuration: " + str(self.config))
       except Exception as e:
         logging.error("could not load persisted configuration: " + str(e))
 
