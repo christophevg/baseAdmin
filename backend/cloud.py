@@ -1,6 +1,10 @@
 import os
 import logging
 import requests
+
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
 import socket
 import time
 
@@ -25,10 +29,14 @@ class Connector(Service.base):
 
   def refresh_current_ip(self):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    self.previous_ip = self.current_ip
-    self.current_ip  = s.getsockname()[0]
-    s.close()
+    try:
+      s.connect(("8.8.8.8", 80))
+      self.previous_ip = self.current_ip
+      self.current_ip  = s.getsockname()[0]
+    except Exception as e:
+      logging.warn("unable to refresh current ip address" + str(e))
+    finally:
+      s.close()
 
   def loop(self):
     self.refresh_current_ip()
@@ -40,11 +48,14 @@ class Connector(Service.base):
     data = {
       "ip" : self.current_ip
     }
-    result = requests.post(
-      os.path.join(CLOUD_URL, "master", HOSTNAME),
-      json=data
-    )
-    logging.debug(result)
+    try:
+      result = requests.post(
+        os.path.join(CLOUD_URL, "master", HOSTNAME),
+        json=data
+      )
+    except Exception as e:
+      logging.warn("unable to post update of IP address: " + str(e))
+      self.current_ip = self.previous_ip
 
 if __name__ == "__main__":
   Connector().run()
