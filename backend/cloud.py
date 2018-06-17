@@ -24,6 +24,7 @@ if not CLOUD_URL:
 
 class Connector(Service.base):
   def __init__(self):
+    logging.info("cloud connector starting...")
     self.previous_ip = None
     self.current_ip  = None
 
