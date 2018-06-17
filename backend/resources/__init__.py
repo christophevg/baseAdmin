@@ -21,20 +21,14 @@ MQTT_URL = os.environ.get("MQTT_URL")
 if not MQTT_URL:
   MQTT_URL = "mqtt://localhost:1883"
 
-p = urlparse(MQTT_URL)
-MQ = {
-  "hostname" : p.hostname,
-  "port"     : p.port,
-  "username" : p.username,
-  "password" : p.password
-}
+MQ = urlparse(MQTT_URL)
 
 MQ_WS = {
-  "ssl"      : p.scheme == "wss" or p.port == 19044,
-  "hostname" : p.hostname,
-  "port"     : 39044 if p.port == 19044 else 9001,
-  "username" : p.username,
-  "password" : p.password  
+  "ssl"      : MQ.scheme == "wss" or MQ.port == 19044,
+  "hostname" : MQ.hostname,
+  "port"     : 39044 if MQ.port == 19044 else 9001,
+  "username" : MQ.username,
+  "password" : MQ.password  
 }
 
 class Connection(Resource):
@@ -51,14 +45,11 @@ api.add_resource(Connection,
 
 class MQInfo(Resource):
   @authenticate(["admin"])
-  def get(self, arg=None):
-    if arg is None or arg == "ws":
-      return MQ_WS;
-    return MQ
+  def get(self):
+    return MQ_WS;
 
 api.add_resource(MQInfo,
-  "/api/mq/connection",
-  "/api/mq/connection/<string:arg>"
+  "/api/mq/connection"
 )
 
 if MASTER: import backend.resources.master
