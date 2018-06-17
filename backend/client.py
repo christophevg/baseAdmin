@@ -26,7 +26,11 @@ class base(object):
 
     self.parser = argparse.ArgumentParser(description=description)
     self.parser.add_argument(
-      "--backend",  type=str, help="backend url.",
+      "--cloud",  type=str, help="cloud url.",
+      default=os.environ.get("CLOUD_URL")
+    )
+    self.parser.add_argument(
+      "--master",  type=str, help="master url.",
       default=os.environ.get("BACKEND_URL")
     )
     self.parser.add_argument(
@@ -42,32 +46,37 @@ class base(object):
 
   def process_arguments(self):
     # configure Client from envionment variables or command line arguments
-    self.backend = None if self.args.backend is None else urlparse(self.args.backend)
+    self.cloud   = None if self.args.cloud   is None else urlparse(self.args.cloud)
+    self.master  = None if self.args.master  is None else urlparse(self.args.master)
     self.mqtt    = None if self.args.mqtt    is None else urlparse(self.args.mqtt)
 
-    # if no MQ configuration provided, try to fetch it from the backend
+    # if no MQ configuration provided, try to fetch it from the cloud or master
     if self.mqtt is None: self.get_mqtt_connection_details()
 
   def get_mqtt_connection_details(self):
-    if not self.backend: return
-
-    logging.info("requesting MQ connection details from " + self.backend.geturl())
-    response = requests.get(
-      self.backend.scheme + "://" + self.backend.netloc + "/api/mq/connection/mqtt",
-      auth=(self.backend.username, self.backend.password)
-    )
-
-    if response.status_code != requests.codes.ok:
-      logging.error("request for MQ connection details failed: " + str(response.status_code))
+    if not self.cloud:
+      logging.warn("can't fetch master information without cloud URL.")
       return
-
-    m   = response.json()
-    auth = ""
-    if m["username"] and m["password"]:
-      auth = m["username"] + ":" + m["password"] + "@"
-    url = "mqtt://" + auth + m["hostname"] + ":" + str(m["port"])
-    logging.debug(url)
-    self.mqtt = urlparse(url)
+    logging.info("requesting master IP from " + self.cloud.geturl())
+    response = requests.get(
+      self.cloud.scheme + "://" + self.cloud.netloc + "/api/client/" + HOSTNAME,
+      auth=(self.cloud.username, self.cloud.password)
+    )
+    if response.status_code != requests.codes.ok:
+      logging.error("request for master IP failed: " + str(response.status_code))
+      return
+    client = response.json()
+    if "master" in client:
+      master = client["master"]
+      # TODO: make more generic with auth, port,...
+      # auth   = ""
+      # if m["username"] and m["password"]:
+      #   auth = m["username"] + ":" + m["password"] + "@"
+      url = "mqtt://" + master["ip"] + ":1883"
+      self.mqtt = urlparse(url)
+      logging.info("acquired MQTT URL: " + url)
+    else:
+      logging.error("failed to process master IP information" + str(client))
 
   def connect_mqtt(self):
     if self.mqtt is None:
