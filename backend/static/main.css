@@ -18,3 +18,7 @@ DIV.notification.vue-notification {
 DIV.input-group.date {
   padding-top: 0px;
 }
+
+fieldset {
+  border: 0px;
+}
