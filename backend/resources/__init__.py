@@ -17,9 +17,11 @@ from backend.rest     import api
 
 from backend          import MASTER, CLOUD
 
-MQTT_URL = os.environ.get("MQTT_URL")
+MQTT_URL = os.environ.get("CLOUDMQTT_URL")
 if not MQTT_URL:
-  MQTT_URL = "mqtt://localhost:1883"
+  MQTT_URL = os.environ.get("MQTT_URL")
+  if not MQTT_URL:
+    MQTT_URL = "mqtt://localhost:1883"
 
 MQ = urlparse(MQTT_URL)
 
