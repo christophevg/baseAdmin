@@ -25,11 +25,10 @@ if not MQTT_URL:
 
 MQ = urlparse(MQTT_URL)
 
-# this is CloudMQTT specific for now
 MQ_WS = {
   "ssl"      : MQ.scheme == "wss" or MQ.port != 1883,
   "hostname" : MQ.hostname,
-  "port"     : 3000 + int(str(MQ.port)[-3]) if MQ.port != 1883 else 9001,
+  "port"     : 30000 + int(str(MQ.port)[-4:]) if MQ.port != 1883 else 9001,
   "username" : MQ.username,
   "password" : MQ.password  
 }
