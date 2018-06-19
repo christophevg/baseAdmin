@@ -4,8 +4,7 @@ var store = new Vuex.Store({
       initialized: false,
       data: []
     },
-    messages: [],
-    git: "{{ info.git }}"
+    messages: []
   },
   mutations: {
     master : function(state, master) {
