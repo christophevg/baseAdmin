@@ -17,18 +17,17 @@ from backend.rest     import api
 
 from backend          import MASTER, CLOUD
 
-MQTT_URL = os.environ.get("CLOUDMQTT_URL")
-if not MQTT_URL:
-  MQTT_URL = os.environ.get("MQTT_URL")
-  if not MQTT_URL:
-    MQTT_URL = "mqtt://localhost:1883"
+MQTT_URL  = os.environ.get("CLOUDMQTT_URL")
+CLOUDMQTT = not MQTT_URL is None
+if not CLOUDMQTT:
+  MQTT_URL = os.environ.get("MQTT_URL") or "mqtt://localhost:1883"
 
 MQ = urlparse(MQTT_URL)
 
 MQ_WS = {
-  "ssl"      : MQ.scheme == "wss" or MQ.port != 1883,
+  "ssl"      : MQ.scheme == "wss" or CLOUDMQTT,
   "hostname" : MQ.hostname,
-  "port"     : 30000 + int(str(MQ.port)[-4:]) if MQ.port != 1883 else 9001,
+  "port"     : 30000 + int(str(MQ.port)[-4:]) if CLOUDMQTT else 9001,
   "username" : MQ.username,
   "password" : MQ.password  
 }
