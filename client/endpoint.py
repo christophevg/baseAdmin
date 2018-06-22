@@ -45,15 +45,29 @@ class Runner(Service.base, backend.client.base):
     for service in self.config.services:
       self.push_configuration_update(service)
     # also start this service
+    self.retries = 0
     self.run()
 
   def loop(self):
+    self.check_uplink()
     self.config.handle_scheduled()
     self.check_services()
     time.sleep(0.05)
   
+  def check_uplink(self):
+    if not self.mqtt_client:
+      self.retries += 1
+      logging.warn("EndPoint: No MQTT uplink. Retrying (" + str(self.retries)+ "/5) in 5s.")
+      time.sleep(5)
+      if self.retries > 5:
+        self.retries = 0
+        logging.warn("Requesting update of Master info...")
+        self.get_mqtt_connection_details()
+      self.connect_mqtt()
+  
   def on_connect(self, client, clientId, flags, rc):
     super(self.__class__, self).on_connect(client, clientId, flags, rc)
+    self.retries = 0
     self.follow("client/" + self.name)
     self.follow("client/" + self.name + "/services")
     self.follow("client/" + self.name + "/groups")
