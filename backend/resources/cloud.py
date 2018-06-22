@@ -52,6 +52,9 @@ class Master(Resource):
       }),
       1, False
     )
+  def delete(self, master):
+    store.masters.delete_one({"_id" : master})
+    store.clients.update({ "master" : master }, { "master": ""})
 
 api.add_resource(Master,
   "/api/master/<string:master>"

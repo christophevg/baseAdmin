@@ -21,6 +21,11 @@ var store = new Vuex.Store({
         state.masters.data.push(master);
       }
     },
+    deleteMaster: function(state, master) {
+      state.masters.data = state.masters.data.filter(function(item) {
+        return item._id != master;
+      });
+    },
     newMessage: function(state, message) {
       state.messages.push(message);
     }
