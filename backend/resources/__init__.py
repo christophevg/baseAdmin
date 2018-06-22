@@ -1,5 +1,6 @@
 import os
 import logging
+import socket
 
 try:
   from urllib.parse import urlparse
@@ -47,7 +48,17 @@ api.add_resource(Connection,
 class MQInfo(Resource):
   @authenticate(["admin"])
   def get(self):
-    return MQ_WS;
+    config = MQ_WS
+    if config["hostname"] == "localhost":
+      s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+      try:
+        s.connect(("8.8.8.8", 80))
+        config["hostname"] = s.getsockname()[0]
+      except Exception as e:
+        return None
+      finally:
+        s.close()
+    return config
 
 api.add_resource(MQInfo,
   "/api/mq/connection"
