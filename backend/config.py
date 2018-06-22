@@ -103,11 +103,12 @@ class Config(object):
     pass
 
   def __update(self, update):
-    self.config["last-message"] = update["last-message"]
-    self.__update_groups(update["groups"])
-    self.__update_services(update)
-    self.config["scheduled"] = update["scheduled"]
-    self.persist()
+    if "last-message" in update:
+      self.config["last-message"] = update["last-message"]
+      self.__update_groups(update["groups"])
+      self.__update_services(update)
+      self.config["scheduled"] = update["scheduled"]
+      self.persist()
 
   def __update_services(self, update):
     # remove deprecated services
