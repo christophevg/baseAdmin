@@ -51,23 +51,26 @@ class base(object):
     self.master  = None if self.args.master  is None else urlparse(self.args.master)
     self.mqtt    = None if self.args.mqtt    is None else urlparse(self.args.mqtt)
 
-    # if no MQ configuration provided, try to fetch it from the cloud or master
+    # if no MQ configuration provided, try to find one
     if self.mqtt is None: self.get_mqtt_connection_details()
 
   def get_mqtt_connection_details(self):
     if not self.cloud:
       logging.warn("can't fetch master information without cloud URL.")
       return
-    logging.debug("requesting master IP from " + self.cloud.geturl())
-    response = requests.get(
-      self.cloud.scheme + "://" + self.cloud.netloc + "/api/client/" + HOSTNAME,
-      auth=(self.cloud.username, self.cloud.password)
-    )
-    if response.status_code != requests.codes.ok:
-      logging.error("request for master IP failed: " + str(response.status_code))
-      return
-    client = response.json()
-    if "master" in client:
+    self.mqtt = None
+    client    = None
+    master    = None
+    try:
+      logging.debug("requesting master IP from " + self.cloud.geturl())
+      response = requests.get(
+        self.cloud.scheme + "://" + self.cloud.netloc + "/api/client/" + HOSTNAME,
+        auth=(self.cloud.username, self.cloud.password)
+      )
+      if response.status_code != requests.codes.ok:
+        logging.error("request for master IP failed: " + str(response.status_code))
+        return
+      client = response.json()
       master = client["master"]
       # TODO: make more generic with auth, port,...
       # auth   = ""
@@ -75,25 +78,30 @@ class base(object):
       #   auth = m["username"] + ":" + m["password"] + "@"
       url = "mqtt://" + master["ip"] + ":1883"
       self.mqtt = urlparse(url)
-      logging.debug("acquired MQTT URL: " + url)
-    else:
-      logging.error("failed to process master IP information" + str(client))
+      logging.debug("acquired MQTT URL: " + self.mqtt.geturl())
+    except Exception as e:
+      logging.error("failed to determine MQTT configuration...")
+      logging.error("  cloud response: " + str(client))
+      logging.error("  exception: " + str(e))
 
   def connect_mqtt(self):
     if self.mqtt is None:
       logging.warning("no MQTT configuration available!")
       return
 
-    clientId = self.name + "@" + socket.gethostname()
-    self.mqtt_client = mqtt.Client(userdata=clientId)
-    if self.mqtt.username and self.mqtt.password:
-      self.mqtt_client.username_pw_set(self.mqtt.username, self.mqtt.password)
-    self.mqtt_client.on_connect = self.on_connect
-    self.mqtt_client.on_message = self.on_message
-    self.mqtt_client.will_set("client/" + self.name, json.dumps({ "status" : "offline" }), 1, False)
-    logging.debug("connecting to MQ " + self.mqtt.netloc)
-    self.mqtt_client.connect(self.mqtt.hostname, self.mqtt.port)
-    self.mqtt_client.loop_start()
+    try:
+      clientId = self.name + "@" + socket.gethostname()
+      self.mqtt_client = mqtt.Client(userdata=clientId)
+      if self.mqtt.username and self.mqtt.password:
+        self.mqtt_client.username_pw_set(self.mqtt.username, self.mqtt.password)
+      self.mqtt_client.on_connect = self.on_connect
+      self.mqtt_client.on_message = self.on_message
+      self.mqtt_client.will_set("client/" + self.name, json.dumps({ "status" : "offline" }), 1, False)
+      logging.debug("connecting to MQ " + self.mqtt.netloc)
+      self.mqtt_client.connect(self.mqtt.hostname, self.mqtt.port)
+      self.mqtt_client.loop_start()
+    except Exception as e:
+      logging.error("failed to connect to MQTT: " + str(e))
 
   def on_connect(self, client, clientId, flags, rc):
     logging.debug("connected with result code " + str(rc))
