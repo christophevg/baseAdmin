@@ -128,6 +128,7 @@ var store = new Vuex.Store({
         var groups = {};
         for(var c in state.clients.data) {
           var client = state.clients.data[c];
+          if(client._id == "__default__") { continue; }
           var client_groups = client.groups;
           for(var g in client_groups) {
             var group = client_groups[g];
