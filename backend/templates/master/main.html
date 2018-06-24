@@ -114,6 +114,10 @@
     <script src="/static/master/setup.js"></script>
     <script src="/static/master/log.js"></script>
 
+    {% if app_main_js %}
+    <script src="/app/main.js"></script>
+    {% endif %}
+
     <script src="/static/main.js"></script>
 
     {% for service in services %}

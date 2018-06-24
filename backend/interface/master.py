@@ -36,12 +36,15 @@ def list_services():
   services = [os.path.splitext(f)[0] for f in listdir(path) if isfile(join(path, f))]
   return services
 
+def has_main_js():
+  return isfile(os.path.join(os.path.dirname(__file__), "..", "app", "main.js"))
+
 @server.route("/")
 @authenticate(["admin"])
 def render_home():
-  return render("main", services=list_services())
+  return render("main", services=list_services(), app_main_js=has_main_js())
 
 @server.route("/<path:section>")
 @authenticate(["admin"])
 def render_section(section):
-  return render("main", services=list_services())
+  return render("main", services=list_services(), app_main_js=has_main_js())
