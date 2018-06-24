@@ -117,6 +117,15 @@ class ConfigMonitor(Monitor):
             config = copy.deepcopy(self.configs[client].config)
             config.pop("_id", None)
             self.mqtt.publish("client/" + client, json.dumps(config))
+          else:
+            if self.configs[client].last_message_id is None:
+              if not self.configs["__default__"].last_message_id is None:
+                logging.info("sending default config to client: " + client)
+                self.configs[client].config = copy.deepcopy(self.configs["__default__"].config)
+                self.configs[client].persist()
+                config = copy.deepcopy(self.configs[client].config)
+                config.pop("_id", None)
+                self.mqtt.publish("client/" + client, json.dumps(config))
       
     if (len(topic) == 3 and topic[2] == "services") or\
        (len(topic) == 4 and topic[2] == "service"):
