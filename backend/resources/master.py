@@ -38,7 +38,6 @@ class Config(Resource):
     config = store.config.find_one({"_id" : client })
     if config is None:
       return abort(404, message="Unknown client: {}".format(client))
-    config.pop("_id", None)
     if topic is None:
       return config
     else:
