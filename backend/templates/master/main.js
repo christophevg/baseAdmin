@@ -205,21 +205,6 @@ var routes = [
   { path: "/log",        component: Log       }
 ];
 
-if(typeof updateRoutes === "function") { 
-  updateRoutes(routes);
-}
-
-var sections = [
-  { icon: "dashboard", text: "Dashboard", path: "/" },
-  { icon: "person",    text: "Users",     path: "/user"      },
-  { icon: "build",     text: "Setup",     path: "/setup"     },
-  { icon: "comment",   text: "Log",       path: "/log"     }
-];
-
-if(typeof updateSections === "function") { 
-  updateSections(sections);
-}
-
 var router = new VueRouter({
   routes: routes,
   mode  : 'history'
@@ -234,7 +219,12 @@ var app = new Vue({
   },
   data: {
     drawer: null,
-    sections: sections
+    sections: [
+      { icon: "dashboard", text: "Dashboard", path: "/" },
+      { icon: "person",    text: "Users",     path: "/user"      },
+      { icon: "build",     text: "Setup",     path: "/setup"     },
+      { icon: "comment",   text: "Log",       path: "/log"     }
+    ]
   },
   methods: {
     fixVuetifyCSS : function() {
