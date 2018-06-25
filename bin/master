@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# wrapper script to allow for starting backend related services
+# wrapper script to allow for starting master related services
 
 # go to repository root
 cd "$(dirname "$0")"/..
 
 # load repository-level (default) configuration
-. etc/backend.conf
+. etc/master.conf
 
 # load repository-level overriding configuration
-if [ -f etc/backend-app.conf ]; then
-  . etc/backend-app.conf
+if [ -f etc/master-app.conf ]; then
+  . etc/master-app.conf
 fi
 
 # load the local (overriding) configuration IF it exists

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# wrapper script to allow for starting backend related services
+# wrapper script to allow for starting cloud related services
 
 # go to repository root
 cd "$(dirname "$0")"/..
@@ -9,7 +9,7 @@ cd "$(dirname "$0")"/..
 . etc/cloud.conf
 
 # load repository-level overriding configuration
-if [ -f etc/backend-app.conf ]; then
+if [ -f etc/cloud-app.conf ]; then
   . etc/cloud-app.conf
 fi
 
