@@ -2,7 +2,7 @@ var Dashboard = {
   template : `
 <v-layout justify-center column>
   <v-expansion-panel popout>
-    <v-expansion-panel-content v-for="(group, i) in groups()" :key="i" hide-actions>
+    <v-expansion-panel-content v-for="(group, i) in groups" :key="i" hide-actions>
       <v-layout slot="header" align-center row spacer>
         <v-flex xs4 sm2 md1>
           <v-avatar slot="activator" size="36px">
@@ -20,7 +20,7 @@ var Dashboard = {
       </v-layout>
 
       <div style="float:left;margin-left:15px;">
-      <v-btn color="primary" fab small dark @click="editGroup(group)">
+      <v-btn color="primary" fab small dark @click="editGroup(group.name)">
         <v-icon>edit</v-icon>
       </v-btn>
     </div>
@@ -36,16 +36,74 @@ var Dashboard = {
 
     </v-expansion-panel-content>
   </v-expansion-panel>
+  <center>
+    <v-btn @click.stop="createGroupDialog=true" fab color="primary">
+      <v-icon>add</v-icon>
+    </v-btn>
+  </center>
+  <v-dialog v-model="createGroupDialog" max-width="500px">
+    <v-card>
+      <v-card-title>Create new Group</v-card-title>
+      <v-card-text>
+        <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn color="secondary" flat @click.stop="createGroupDialog=false">Close</v-btn>
+        <v-btn color="primary"   flat @click.stop="createGroup()">Add</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </v-layout>`,
-  methods: {
+  data: function() {
+    return {
+      more_groups : [],
+      createGroupDialog: false,
+      model: {
+        name: ""
+      },
+      schema: {
+        fields: [{
+          type: "input",
+          inputType: "text",
+          label: "name",
+          model: "name",
+        }]
+      },
+      formOptions: {
+        validateAfterLoad: true,
+        validateAfterChanged: true
+      }
+    }
+  },
+  computed: {
     groups : function() {
-      return store.getters.groups();
-    },
+      var g = store.getters.groups();
+      for(var i in this.more_groups) {
+        g[this.more_groups[i]] = {
+          name: this.more_groups[i],
+          excerpt: " ",
+          color: "green",
+          icon: "check_circle",
+          total: 0,
+          clients: []
+        }
+      }
+      return g;
+    }
+  },
+  methods: {
     selectedClient: function(client) {
       this.$router.push('/client/' + client);
     },
     editGroup : function(group) {
-      console.log("edit group " + group);
+      this.$router.push('/group/' + group);
+    },
+    createGroup: function() {
+      if( this.model.name != "" ) {
+        this.more_groups.push(this.model.name);
+        this.model.name = "";
+      }
+      this.createGroupDialog = false;
     }
   }
 };

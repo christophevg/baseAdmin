@@ -52,7 +52,13 @@ class Config(object):
       elif "service" in update:
         self.__manage_service(update)
     elif len(parts) > 2 and parts[2] == "groups":
-      self.__update_groups(update)
+      if "groups" in update:
+        self.__update_groups(update["groups"])
+      elif "group" in update and "member" in update:
+        if update["member"]:
+          self.__join_group(update["group"])
+        else:
+          self.__leave_group(update["group"])          
     elif len(parts) == 2:
       self.__update(update)
     else:
@@ -185,6 +191,24 @@ class Config(object):
       for group in additional:
         self.on_group_join(group)
     self.config["groups"] = list(required)
+
+  def __join_group(self, group):
+    if group in self.config["groups"]:
+      logging.warn("not joining already joined group " + group)
+      return
+    if self.on_group_join:
+      self.on_group_join(group)
+    self.config["groups"].append(group)
+    self.persist()
+
+  def __leave_group(self, group):
+    if not (group in self.config["groups"]):
+      logging.warn("not leaving not previously joined group " + group)
+      return
+    if self.on_group_leave:
+      self.on_group_leave(group)
+    self.config["groups"].remove(group)
+    self.persist()
 
   def __schedule(self, service, schedule, update):
     self.config["scheduled"].append({

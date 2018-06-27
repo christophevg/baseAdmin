@@ -5,7 +5,10 @@ var store = new Vuex.Store({
       data : []
     },
     services: [],
-    clientComponents: [],
+    clientComponents: {
+      client : [],
+      group  : []
+    },
     setup: {
       status: null
     },
@@ -59,6 +62,29 @@ var store = new Vuex.Store({
         state.clients.data.push(client);
       }
     },
+    joinedGroup: function(state, update) {
+      var current = state.clients.data.find(function(element) {
+        return element._id == update.client;
+      });
+      if(current) {
+        current.groups.push(update.group)
+      } else {
+        state.clients.data.push({
+          _id: update.client,
+          groups: [ update.group ]
+        })
+      }
+    },
+    leftGroup: function(state, update) {
+      var current = state.clients.data.find(function(element) {
+        return element._id == update.client;
+      });
+      if(current) {
+        current.groups = current.groups.filter(function(element) {
+          return element != update.group;
+        });
+      }
+    },
     service: function(state, service) {
       state.services.push(service);
     },
@@ -77,7 +103,10 @@ var store = new Vuex.Store({
       }
     },
     clientComponent: function(state, service) {
-      state.clientComponents.push(service);
+      state.clientComponents.client.push(service);
+    },
+    groupComponent: function(state, service) {
+      state.clientComponents.group.push(service);
     },
     updateStatus: function(state, status) {
       state.setup.status = status;
@@ -156,6 +185,16 @@ var store = new Vuex.Store({
         return groups;
       }
     },
+    group : function(state) {
+      return function(id) {
+        console.log("group");
+        store.dispatch("initClients");
+        var clients = state.clients.data.filter(function(item) {
+          return item.groups && item.groups.indexOf(id) > -1 && item._id != "__default__";
+        });
+        return { _id: id, clients: clients, state: "loaded" };
+      } 
+    },
     setupStatus: function(state) {
       return function() {
         return state.setup.status;
@@ -198,12 +237,12 @@ var store = new Vuex.Store({
 // Routes
 
 var routes = [
-  { path: '/',           component: Dashboard },
-  { path: '/client/:id', component: Client    },
-  { path: "/user",       component: User      },
-  { path: "/user/:id",   component: User      },
-  { path: "/setup",      component: Setup     },
-  { path: "/log",        component: Log       }
+  { path: '/',                         component: Dashboard },
+  { path: '/:scope(client|group)/:id', component: Client    },
+  { path: "/user",                     component: User      },
+  { path: "/user/:id",                 component: User      },
+  { path: "/setup",                    component: Setup     },
+  { path: "/log",                      component: Log       }
 ];
 
 var router = new VueRouter({
@@ -250,6 +289,9 @@ var app = new Vue({
     },
     registerClientComponent: function(component) {
       store.commit("clientComponent", component);
+    },
+    registerGroupComponent: function(component) {
+      store.commit("groupComponent", component);
     },
     updateStatus: function(status) {
       store.commit("updateStatus", status);

@@ -103,3 +103,4 @@ Vue.component( 'ClientForm', {
 });
 
 // app.registerClientComponent("Form");
+// app.registerGroupComponent("Form");

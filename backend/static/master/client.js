@@ -1,7 +1,7 @@
 var Client = {
   template: `
 <div id="dynamic-component-demo" class="demo">
-  <h1>{{ $route.params.id }}</h1>
+  <h1><v-icon large color="blue darken-2" v-if="$route.params.scope == 'group'">group_work</v-icon> {{ $route.params.id }}</h1>
   <hr><br>
   <button
     v-for="tab in tabs"
@@ -10,19 +10,60 @@ var Client = {
     v-on:click="currentTab = tab"
   >{{ tab }}</button>
 
-  <div class="panel panel-default">
+  <div v-if="tabs.length" class="panel panel-default">
     <div class="panel-body">
       <component v-if="currentTabComponent" v-bind:is="currentTabComponent" class="tab"></component>
+    </div>
+  </div>
+  <div v-else>
+    <p v-if="group">
+      Groups have no configuration options. Add options using 'app.registerGroupComponents'.
+    </p>
+    <p v-else>
+      Clients have no configuration options. Add options using 'app.registerClientComponents'.
+    </p>
+  </div>
+
+  <div>
+    <h2>Group Members</h2>
+    <div v-if="group.state == 'loading'">
+      Hold on, I'm fetching this group for you...
+    </div>
+    <div v-else> 
+      <p style="margin:10px;">
+
+        The following clients are connected to this group. You can add more by
+        typing their name at the end of the list, confirming the name with
+        'enter'. To have a client leave the group, use the X button next to the
+        name of the client.
+
+      </p>
+      <div style="margin-top:15px;">
+        <v-select v-model="group.clients" chips tags solo append-icon="" @input="joinGroup">
+          <template slot="selection" slot-scope="data">
+           <v-chip :selected="data.selected" close @input="leaveGroup(data.item._id)">
+             <strong>{{ data.item._id }}</strong>&nbsp;
+           </v-chip>
+          </template>
+        </v-select>
+      </div>
+
     </div>
   </div>
 </div>`,
   data: function() {
     return {
       currentTab: null,
-      tabs: store.state.clientComponents
     }
   },
   computed: {
+    group: function() {
+      if( this.$route.params.scope != "group" ) { return null; }
+      return store.getters.group(this.$route.params.id);
+    },
+    tabs: function() {
+      return store.state.clientComponents[this.$route.params.scope];
+    },
     currentTabComponent: function () {
       if(! this.currentTab) {
         if(this.tabs.length > 0) {
@@ -32,6 +73,29 @@ var Client = {
         }
       }
       return 'Client' + this.currentTab;
+    }
+  },
+  methods: {
+    joinGroup: function(data) {
+      var client = data[data.length-1];
+      var group  = this.$route.params.id;
+      var self = this;
+      MQ.publish("client/" + client + "/groups", {
+        "uuid" : uuid(),
+        "group" : group,
+        "member" : true
+      });
+      store.commit("joinedGroup", { group: group, client: client });
+    },
+    leaveGroup: function(client) {
+      var group  = this.$route.params.id;
+      var self = this;
+      MQ.publish("client/" + client + "/groups", {
+        "uuid" : uuid(),
+        "group" : group,
+        "member" : false
+      });
+      store.commit("leftGroup", { group: group, client: client });
     }
   }
 };

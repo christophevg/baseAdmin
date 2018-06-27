@@ -101,6 +101,7 @@ class ConfigMonitor(Monitor):
     return [
       "client/+",
       "client/+/services",
+      "client/+/groups",
       "group/+/services",
       "client/+/service/+",
       "group/+/service/+"
@@ -128,5 +129,6 @@ class ConfigMonitor(Monitor):
                 self.mqtt.publish("client/" + client, json.dumps(config))
       
     if (len(topic) == 3 and topic[2] == "services") or\
-       (len(topic) == 4 and topic[2] == "service"):
+       (len(topic) == 4 and topic[2] == "service")  or\
+       (len(topic) == 3 and topic[2] == "groups"):
       self.configs.handle_mqtt_update("/".join(topic), message)
