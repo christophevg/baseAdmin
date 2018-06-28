@@ -24,7 +24,7 @@ var Client = {
     </p>
   </div>
 
-  <div>
+  <div v-if="group">
     <h2>Group Members</h2>
     <div v-if="group.state == 'loading'">
       Hold on, I'm fetching this group for you...
