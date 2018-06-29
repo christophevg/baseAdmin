@@ -19,3 +19,10 @@ def send_main_js():
     os.path.join("master", "main.js"),
     info=info
   )
+
+@server.route("/static/router.js")
+@authenticate(["admin"])
+def send_router_js():
+  return render_template(
+    os.path.join("master", "router.js")
+  )

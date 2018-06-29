@@ -26,10 +26,7 @@ var Client = {
 
   <div v-if="group && this.$route.params.id != 'all'">
     <h2>Group Members</h2>
-    <div v-if="group.state == 'loading'">
-      Hold on, I'm fetching this group for you...
-    </div>
-    <div v-else> 
+    <div v-if="group.loaded">
       <p style="margin:10px;">
 
         The following clients are connected to this group. You can add more by
@@ -47,7 +44,9 @@ var Client = {
           </template>
         </v-select>
       </div>
-
+    </div>
+    <div v-else> 
+      Hold on, I'm fetching this group for you...
     </div>
   </div>
 </div>`,
@@ -79,23 +78,21 @@ var Client = {
     joinGroup: function(data) {
       var client = data[data.length-1];
       var group  = this.$route.params.id;
-      var self = this;
       MQ.publish("client/" + client + "/groups", {
         "uuid" : uuid(),
         "group" : group,
         "member" : true
       });
-      store.commit("joinedGroup", { group: group, client: client });
+      store.dispatch("joinGroup", { group: group, client: client });
     },
     leaveGroup: function(client) {
       var group  = this.$route.params.id;
-      var self = this;
       MQ.publish("client/" + client + "/groups", {
         "uuid" : uuid(),
         "group" : group,
         "member" : false
       });
-      store.commit("leftGroup", { group: group, client: client });
+      store.dispatch("leaveGroup", { group: group, client: client });
     }
   }
 };

@@ -19,37 +19,37 @@ Vue.component('line-chart', {
 Vue.component( 'ClientStats', {
   template : `
 <div>
-<v-container fluid v-if="stats()" grid-list-xl text-xs-center>
-  <v-layout row wrap>
-    <v-flex xs12 md6 v-for="(chart, id) in stats()" :key="chart.title">
-      <v-card>
-        <v-card-title>
-          <div>
-            <h3 class="headline mb-0">{{ chart.title }}</h3>
-          </div>
-        </v-card-title>
-        <v-card-text>
-          <div style="width: 100%;">
-            <line-chart :property="id" :chart-data="propertyChartData(chart)" :height="chart.height"></line-chart>
-          </div>
-        </v-card-text>
-        <v-card-actions class="white">
-          <v-spacer></v-spacer>
-          <v-btn v-if="false" icon @click="">
-            <v-icon>refresh</v-icon>
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-flex>
-  </v-layout>  
-</v-container>
-<div v-else>loading statistics...</div>
-<div>
-    <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
-    <center>
-      <v-btn :loading="saving" @click="updateInterval()" class="primary" :disabled="model.isUnchanged">Update</v-btn>
-    </center>
-</div>
+  <v-container fluid v-if="stats()" grid-list-xl text-xs-center>
+    <v-layout row wrap>
+      <v-flex xs12 md6 v-for="(chart, id) in stats()" :key="chart.title">
+        <v-card>
+          <v-card-title>
+            <div>
+              <h3 class="headline mb-0">{{ chart.title }}</h3>
+            </div>
+          </v-card-title>
+          <v-card-text>
+            <div style="width: 100%;">
+              <line-chart :property="id" :chart-data="propertyChartData(chart)" :height="chart.height"></line-chart>
+            </div>
+          </v-card-text>
+          <v-card-actions class="white">
+            <v-spacer></v-spacer>
+          </v-card-actions>
+        </v-card>
+      </v-flex>
+    </v-layout>  
+  </v-container>
+  <div v-else>loading statistics...</div>
+  <div v-if="client.loaded">
+      <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
+      <center>
+        <v-btn :loading="saving" @click="updateInterval()" class="primary" :disabled="model.isUnchanged">Update</v-btn>
+      </center>
+  </div>
+  <div v-else>
+  Hold on, I'm loading the configuration parameters...
+  </div>
 </div>`,
   created: function() {
     var id = this.$route.params.id;
@@ -99,26 +99,27 @@ Vue.component( 'ClientStats', {
           });
         }
       });
-      // load stats config/interval
+    }
+  },
+  computed: {
+    client : function() {
+      var id = this.$route.params.id;
       var client = store.getters.client(id);
-      if( client ) {
-        try {
-          this.model.interval = client.services.ReportingService.config.interval;
-        } catch {
-          console.log("could not load interval");
+      if(client.loaded) {
+        if("ReportingService" in client.services) {
+          if("config" in client.services.ReportingService) {
+            if(client.services.ReportingService.config) {
+              this.setInterval(client.services.ReportingService.config.interval);
+            }
+          }
         }
-      } else {
-        var self = this;
-        $.get( "/api/client/" + id, function(client) {
-          app.upsertClient(client);
-          client = store.getters.client(id);
-          this.model.interval = client.services.ReportingService.config.interval;          
-        });
       }
+      return client;
     }
   },
   data: function() {
     return {
+      initialized: false,
       saving : false,
       model: {
         interval: null,
@@ -144,6 +145,11 @@ Vue.component( 'ClientStats', {
     }
   },
   methods: {
+    setInterval: function(interval) {
+      if(this.initialized) { return; }
+      this.initialized = true;
+      this.model.interval = interval;
+    },
     updateInterval: function() {
       this.saving = true;
       var id = this.$route.params.id;
@@ -152,7 +158,6 @@ Vue.component( 'ClientStats', {
         "uuid" : uuid(),
         "config" : { "interval" : this.model.interval }
       });
-      // TODO: handle this from own/incoming message?
       store.commit("serviceUpdate", {
         client: id,
         service: "ReportingService",

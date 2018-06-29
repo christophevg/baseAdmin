@@ -1,27 +1,31 @@
 Vue.component( 'ClientSetup', {
   template: `
   <div>
-    <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
-    <center>
-      <v-btn :loading="saving" @click="updateServices()" class="primary" :disabled="model.isUnchanged">Update</v-btn>
-    </center>
+    <div v-if="client.loaded">
+      <vue-form-generator :schema="schema" :model="model" :options="formOptions"></vue-form-generator>
+      <center>
+        <v-btn :loading="saving" @click="updateServices()" class="primary" :disabled="model.isUnchanged">Update</v-btn>
+      </center>
+    </div>
+    <div v-else>
+Hold on, I'm loading this client...
+    </div>
   </div>
   `,
-  created: function() {
-    var id = this.$route.params.id;
-    var client = store.getters.client(id);
-    if( client ) {
-      this.setActiveServices(client.services);
-    } else {
-      var self = this;
-      $.get( "/api/client/" + id, function(client) {
-        app.upsertClient(client);
-        self.setActiveServices(store.getters.client(id).services);
-      });
+  computed: {
+    client : function() {
+      var id = this.$route.params.id;
+      var client = store.getters.client(id);
+      if(client.loaded) {
+        this.setActiveServices(client.services);
+      }
+      return client;
     }
   },
   methods: {
     setActiveServices: function(services) {
+      if(this.initialized) { return; }
+      this.initialized = true;
       this.model.services = [];
       for(var service in services) {
         this.model.services.push({
@@ -38,7 +42,6 @@ Vue.component( 'ClientSetup', {
         "uuid" : uuid(),
         "services" : this.model.services
       });
-      // TODO: handle this from own/incoming message?
       store.commit("clientServices", {
         client: id,
         services: this.model.services
@@ -50,6 +53,7 @@ Vue.component( 'ClientSetup', {
   },
   data: function() {
     return {
+      initialized: false,
       saving : false,
       model: {
         isUnchanged: true,

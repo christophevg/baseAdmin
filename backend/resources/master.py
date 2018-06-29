@@ -34,6 +34,9 @@ class Clients(Resource):
           "groups"  : client["groups"] + [ "all" ],
           "services": client["services"]
         }
+      else:
+        clients[client["_id"]]["groups"]   += client["groups"]
+        clients[client["_id"]]["services"] = client["services"]
     
     return clients.values();
 

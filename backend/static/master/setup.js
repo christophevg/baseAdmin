@@ -2,7 +2,7 @@ var Setup = {
   template: `
   <div>
     <h1>Status</h1>
-    <div v-if="status()" v-html="status()"></div>
+    <div v-if="setup.loaded" v-html="setup.status"></div>
     <div v-else>loading setup status...</div>
     <h1>Default Client</h1>
     <div>
@@ -14,17 +14,44 @@ var Setup = {
     </div>
   </div>
 `,
+  computed: {
+    setup : function() {
+      return store.getters.setup();
+    }
+  },
   methods: {
-    status : function() {
-      return store.getters.setupStatus();
-    },
     showDefaultClient: function() {
       this.$router.push("/client/__default__");
     }
-  },
-  created: function() {
-    $.get( "/api/status", function( value ) {
-      app.updateStatus(syntaxHighlight(JSON.stringify(value, null, 2)));
-    });    
   }
 };
+
+store.registerModule("setup", {
+  state: {
+    setup: {
+      loaded : false,
+      status: ""
+    }
+  },
+  mutations: {
+    updatedSetup: function(state, update) {
+      state.setup.status = update;
+      state.setup.loaded = true;
+    }
+  },
+  getters: {
+    setup: function(state) {
+      return function() {
+        if(! state.setup.loaded) {
+          $.get( "/api/status", function( value ) {
+            store.commit(
+              "updatedSetup",
+              syntaxHighlight(JSON.stringify(value, null, 2))
+            );
+          });        
+        }
+        return state.setup;
+      }
+    }
+  }
+});

@@ -1,16 +1,18 @@
 var store = new Vuex.Store({
   state: {
+    groups: {
+      loaded: false,
+      data: {}
+    },
     clients: {
-      initialized: false,
-      data : []
+      loading: false,
+      loaded: false,
+      data: []
     },
     services: [],
     clientComponents: {
       client : [],
       group  : []
-    },
-    setup: {
-      status: null
     },
     users: [],
     messages: [],
@@ -47,7 +49,6 @@ var store = new Vuex.Store({
     newMessage: function(state, message) {
       state.messages.push(message);
     },
-
     upsertClient: function(state, client) {
       // find current (if any)
       var current = state.clients.data.find(function(element) {
@@ -55,6 +56,7 @@ var store = new Vuex.Store({
       });
       // update or create current
       if(current) {
+        current["loaded"] = true;
         for(var k in client) {
           current[k] = client[k];
         }
@@ -118,7 +120,10 @@ var store = new Vuex.Store({
       });
       if(current) {
         if( update.service in current.services ) {
-          if( ! "config" in current.services[update.service]) {
+          if( ! ("config" in current.services[update.service])) {
+            current.services[update.service]["config"] = {}
+          }
+          if( ! current.services[update.service]["config"] ) {
             current.services[update.service]["config"] = {}
           }
           for(var k in update.config) {
@@ -134,15 +139,74 @@ var store = new Vuex.Store({
   },
   actions: {
     initClients: function(context) {
-      if(! context.state.clients.initialized) {
-        context.state.clients.initialized = true;
-        // initialize with clients known at server-side
-        $.get("/api/clients", function(clients) {
-          for(var i in clients) {
-            app.upsertClient(clients[i]);
-          }
-        });
+      if(context.state.clients.loading || context.state.clients.loaded) {
+        return;
       }
+      context.state.clients.loading = true;
+      $.get("/api/clients", function(clients) {
+        // update client info
+        for(var i in clients) {
+          clients[i]["loaded"] = true;
+          app.upsertClient(clients[i]);
+        }
+        context.state.clients.loaded = true;
+        context.dispatch("rebuildGroups");
+      });
+    },
+    rebuildGroups: function(context) {
+      // step 1: clear memberships in all groups
+      for(var g in context.state.groups.data) {
+        while(context.state.groups.data[g].clients.length > 0) {
+          context.state.groups.data[g].clients.pop();
+        }
+        context.state.groups.data[g].total = 0;
+      }
+    
+      // step 2: add current clients, creating new groups as we go along
+      for(var c in context.state.clients.data) {
+        var client = context.state.clients.data[c];
+        if(client._id == "__default__") { continue; }
+        var client_groups = client.groups;
+        for(var g in client_groups) {
+          var group = client_groups[g];
+          if(!(group in context.state.groups.data)) {
+            context.state.groups.data[group] = {
+              name: group,
+              excerpt: " ",
+              color: "green",
+              icon: "check_circle",
+              total: 0,
+              clients: []
+            }
+          }
+          context.state.groups.data[group].clients.push({
+            title: client._id,
+            color: client.status == "online" ? "green" : "red"
+          });
+          context.state.groups.data[group].total++;
+          if(client.status != "online") {
+            context.state.groups.data[group].color = "red";
+            context.state.groups.data[group].icon  = "remove_circle";
+          }
+        }
+      }
+      
+      // step 3: prune empty groups
+      for(var g in context.state.groups.data) {
+        if(context.state.groups.data[g].clients.length < 1) {
+          delete context.state.groups.data[g];
+        }
+      }
+      
+      context.state.groups.loaded = true;
+    },
+    joinGroup: function(context, membership) {
+      context.commit("joinedGroup", membership);
+      context.dispatch("rebuildGroups");
+    },
+    leaveGroup: function(context, membership) {
+      context.commit("leftGroup", membership);
+      context.dispatch("rebuildGroups");
     }
   },
   getters: {
@@ -154,50 +218,35 @@ var store = new Vuex.Store({
     groups: function(state) {
       return function() {
         store.dispatch("initClients");
-        var groups = {};
-        for(var c in state.clients.data) {
-          var client = state.clients.data[c];
-          if(client._id == "__default__") { continue; }
-          var client_groups = client.groups;
-          for(var g in client_groups) {
-            var group = client_groups[g];
-            if(!(group in groups)) {
-              groups[group] = {
-                name: group,
-                excerpt: " ",
-                color: "green",
-                icon: "check_circle",
-                total: 0,
-                clients: []
-              }
-            }
-            groups[group].clients.push({
-              title: client._id,
-              color: client.status == "online" ? "green" : "red"
-            });
-            groups[group].total++;
-            if(client.status != "online") {
-              groups[group].color = "red";
-              groups[group].icon  = "remove_circle";
-            }
-          }
-        }
-        return groups;
+        return state.groups;
       }
     },
     group : function(state) {
       return function(id) {
-        console.log("group");
         store.dispatch("initClients");
         var clients = state.clients.data.filter(function(item) {
           return item.groups && item.groups.indexOf(id) > -1 && item._id != "__default__";
         });
-        return { _id: id, clients: clients, state: "loaded" };
+        return { _id: id, clients: clients, loaded: state.clients.loaded };
       } 
     },
-    setupStatus: function(state) {
+    clients: function(state) {
       return function() {
-        return state.setup.status;
+        store.dispatch("initClients");
+        return state.clients.data;
+      }
+    },
+    client: function(state) {
+      return function(id) {
+        store.dispatch("initClients");
+        var client = state.clients.data.find(function(client) {
+          return client._id == id;
+        });
+        if(! client) {
+          client = { _id : id, loaded: false };
+          store.commit("upsertClient", client);
+        }
+        return client;
       }
     },
     users: function(state) {
@@ -217,89 +266,6 @@ var store = new Vuex.Store({
         })
       }
     },
-    client: function(state) {
-      return function(id) {
-        store.dispatch("initClients");
-        return state.clients.data.find(function(client) {
-          return client._id == id;
-        });
-      }
-    },
-    clients: function(state) {
-      return function() {
-        store.dispatch("initClients");
-        return state.clients.data;
-      }
-    }
+
   }
 });
-
-// Routes
-
-var routes = [
-  { path: '/',                         component: Dashboard },
-  { path: '/:scope(client|group)/:id', component: Client    },
-  { path: "/user",                     component: User      },
-  { path: "/user/:id",                 component: User      },
-  { path: "/setup",                    component: Setup     },
-  { path: "/log",                      component: Log       }
-];
-
-var router = new VueRouter({
-  routes: routes,
-  mode  : 'history'
-});
-
-var app = new Vue({
-  el: "#app",
-  delimiters: ['${', '}'],
-  router: router,
-  components: {
-    multiselect: VueMultiselect.Multiselect
-  },
-  data: {
-    drawer: null,
-    sections: [
-      { icon: "dashboard", text: "Dashboard", path: "/" },
-      { icon: "person",    text: "Users",     path: "/user"      },
-      { icon: "build",     text: "Setup",     path: "/setup"     },
-      { icon: "comment",   text: "Log",       path: "/log"     }
-    ]
-  },
-  methods: {
-    fixVuetifyCSS : function() {
-      this.$vuetify.theme.info  = '#ffffff';
-      this.$vuetify.theme.error = '#ffffff';
-    },
-    removeClient: function(client) {
-      this.$notify({
-        group: "notifications",
-        title: "<b>" + client + "</b> Offline",
-        text:  "Client <b>" + client + "</b> just went offline.",
-        type:  "error",
-        duration: 10000
-      });
-      store.commit("removeClient", client);
-    },
-    upsertClient: function(client) {
-      store.commit("upsertClient", client);
-    },
-    registerService: function(service) {
-      store.commit("service", service);
-    },
-    registerClientComponent: function(component) {
-      store.commit("clientComponent", component);
-    },
-    registerGroupComponent: function(component) {
-      store.commit("groupComponent", component);
-    },
-    updateStatus: function(status) {
-      store.commit("updateStatus", status);
-    },
-    allUsers: function(users) {
-      store.commit("allUsers", users);
-    }
-  }
-}).$mount('#app');
-
-app.fixVuetifyCSS();
