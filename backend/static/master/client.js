@@ -24,7 +24,7 @@ var Client = {
     </p>
   </div>
 
-  <div v-if="group">
+  <div v-if="group && this.$route.params.id != 'all'">
     <h2>Group Members</h2>
     <div v-if="group.state == 'loading'">
       Hold on, I'm fetching this group for you...
