@@ -16,17 +16,24 @@ class Clients(Resource):
   @authenticate(["admin"])
   def get(self):
     clients = {};
+    # take all clients we have seen ... status=on/offline
     for client in store.status.find({}, { "lastModified": False }):
-      clients[client["_id"]] = client;
-    
+      clients[client["_id"]] = {
+        "_id"     : client["_id"],
+        "status"  : client["status"],
+        "groups"  : [ "all" ],
+        "services": []
+      }
+
+    # take all clients we have config information for add them if no status
     for client in store.config.find():
       if not client["_id"] in clients:
         clients[client["_id"]] = {
-          "_id" : client["_id"],
-          "status": "offline",
+          "_id"     : client["_id"],
+          "status"  : "offline",
+          "groups"  : client["groups"] + [ "all" ],
+          "services": client["services"]
         }
-      clients[client["_id"]]["groups"] = client["groups"] + ["all"];
-      clients[client["_id"]]["services"] = client["services"];
     
     return clients.values();
 
@@ -38,6 +45,7 @@ class Config(Resource):
     config = store.config.find_one({"_id" : client })
     if config is None:
       return abort(404, message="Unknown client: {}".format(client))
+    config["groups"] += ["all"]
     if topic is None:
       return config
     else:
