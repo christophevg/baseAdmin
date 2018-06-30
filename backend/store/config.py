@@ -36,8 +36,17 @@ class Collection(object):
     self.configs = {}
 
   def handle_mqtt_update(self, topic, update):
-    client = topic.split("/")[1]
-    self[client].handle_mqtt_update(topic, update)
+    scope  = topic.split("/")[0]
+    if scope == "client":
+      client = topic.split("/")[1]
+      self[client].handle_mqtt_update(topic, update)
+    else:
+      group   = topic.split("/")[1]
+      logging.debug("dispatching to group " + group)
+      clients = store.config.find({"groups" : group}, {"_id": True})
+      for client in clients:
+        logging.debug("  - " + client["_id"])
+        self[client["_id"]].handle_mqtt_update(topic, update)
 
   def __getitem__(self, client):
     if not client in self.configs:
