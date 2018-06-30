@@ -45,7 +45,7 @@ def send_app_static(filename):
 def list_services():
   path = os.path.join(os.path.dirname(__file__), "..", "app", BACKEND_MODE)
   services = [os.path.splitext(f)[0] for f in listdir(path) if isfile(join(path, f))]
-  return services
+  return sorted(services)
 
 @server.route("/")
 @authenticate(["admin"])
