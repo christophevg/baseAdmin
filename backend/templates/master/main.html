@@ -44,16 +44,36 @@
 
       {% if not without_sections %}
       <v-navigation-drawer fixed clipped app v-model="drawer">
-        <v-list dense>
-          <template v-for="(item, i) in sections">
-            <v-list-tile :to="item.path">
+        <v-list>
+          <template v-for="section in sections">
+            <v-list-group v-if="section.group" :prepend-icon="section.icon" no-action value="true">
+              <v-list-tile slot="activator">
+                <v-list-tile-content>
+                  <v-list-tile-title>${ section.text }</v-list-tile-title>
+                </v-list-tile-content>
+              </v-list-tile>
+
+              <template v-for="subsection in section.subsections">
+                <v-list-tile :to="subsection.path">
+                  <v-list-tile-content>
+                    <v-list-tile-title>${ subsection.text }</v-list-tile-title>
+                  </v-list-tile-content>
+                  <v-list-tile-action>
+                    <v-icon>${ subsection.icon }</v-icon>
+                  </v-list-tile-action>
+                </v-list-tile>
+              </template>
+            </v-list-group>
+
+            <v-list-tile v-if="! section.group" :to="section.path">
               <v-list-tile-action>
-                <v-icon>${ item.icon }</v-icon>
+                <v-icon>${ section.icon }</v-icon>
               </v-list-tile-action>
               <v-list-tile-content>
-                <v-list-tile-title>${ item.text }</v-list-tile-title>
+                <v-list-tile-title>${ section.text }</v-list-tile-title>
               </v-list-tile-content>
             </v-list-tile>
+
           </template>
         </v-list>
       </v-navigation-drawer>
