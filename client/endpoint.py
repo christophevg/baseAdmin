@@ -212,6 +212,14 @@ class Runner(Service.base, backend.client.base):
       logging.error("failed to publish event " + scope + " : " + str(e))
       return None
 
+  @Service.API.handle("get_master")
+  def handle_get_master(self, data=None):
+    return json.dumps(self.master.netloc)
+
+  @classmethod
+  def get_master(cls):
+    return cls.perform( "get_master" ).json()
+
 # passthrough Service API support (cosmetic)
 class API(Runner):
   pass

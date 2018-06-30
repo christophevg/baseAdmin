@@ -79,6 +79,9 @@ class base(object):
       url = "mqtt://" + master["ip"] + ":1883"
       self.mqtt = urlparse(url)
       logging.debug("acquired MQTT URL: " + self.mqtt.geturl())
+      # TODO review this regarding configured master info
+      #      and take into account
+      self.master = urlparse("http://" + master["ip"])
     except Exception as e:
       logging.error("failed to determine MQTT configuration...")
       logging.error("  cloud response: " + str(client))
