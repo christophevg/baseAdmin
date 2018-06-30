@@ -99,7 +99,7 @@ var User = {
             group: "notifications",
             title: "Could not save user...",
             text:  response.responseJSON.message,
-            type:  "error",
+            type:  "warn",
             duration: 10000
           });
           self.creating = false;
@@ -129,7 +129,7 @@ var User = {
             group: "notifications",
             title: "Could not save user...",
             text:  response.responseJSON.message,
-            type:  "error",
+            type:  "warn",
             duration: 10000
           });
           self.saving = false;
@@ -160,7 +160,7 @@ var User = {
             group: "notifications",
             title: "Could not remove user...",
             text:  response.responseJSON.message,
-            type:  "error",
+            type:  "warn",
             duration: 10000
           });
           self.deleting = false;

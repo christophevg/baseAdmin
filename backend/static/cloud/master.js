@@ -60,7 +60,7 @@ var Master = {
             group: "notifications",
             title: "Could not add client...",
             text:  response.responseJSON.message,
-            type:  "error",
+            type:  "warn",
             duration: 10000
           });
           update["client"] = client;
@@ -88,7 +88,7 @@ var Master = {
             group: "notifications",
             title: "Could not remove client...",
             text:  response.responseJSON.message,
-            type:  "error",
+            type:  "warn",
             duration: 10000
           });
         }

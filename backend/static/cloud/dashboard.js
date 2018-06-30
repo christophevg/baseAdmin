@@ -56,7 +56,7 @@ var Dashboard = {
             group: "notifications",
             title: "Could not remove master...",
             text:  response.responseJSON.message,
-            type:  "error",
+            type:  "warn",
             duration: 10000
           });
         }
