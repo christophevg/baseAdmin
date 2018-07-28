@@ -56,10 +56,7 @@ var Client = {
       <v-card v-for="(message, i) in messages" :key="i">
         <v-card-title>
           <div>
-            <v-btn v-if="message.client" depressed small color="primary" @click="gotoClient(message.client)">
-              {{ message.client }}
-            </v-btn>
-            <div v-else class="grey--text">{{ message.topic }}</div>
+            <div style="display:inline-block;width:155px;text-align:center;margin-right:15px;">{{ message.when }}</div> 
             <span>{{ message.payload }}</span>
           </div>
         </v-card-title>

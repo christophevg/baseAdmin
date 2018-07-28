@@ -47,6 +47,7 @@ var store = new Vuex.Store({
       });      
     },
     newMessage: function(state, message) {
+      message["when"] = (new Date()).toLocaleString(navigator.language, {hour12:false});
       state.messages.push(message);
     },
     upsertClient: function(state, client) {

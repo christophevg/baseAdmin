@@ -6,6 +6,8 @@ var Log = {
     <v-card v-for="(message, i) in messages" :key="i">
       <v-card-title>
         <div>
+          <div style="display:inline-block;width:155px;text-align:center;margin-right:5px;">{{ message.when }}</div> 
+  
           <v-btn v-if="message.client" depressed small color="primary" @click="gotoClient(message.client)">
             {{ message.client }}
           </v-btn>
