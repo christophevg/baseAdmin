@@ -149,7 +149,7 @@ class Runner(Service.base, backend.client.base):
         action["payload"]
       )
     except requests.exceptions.ConnectionError as e:
-      self.fail("could not connect to " + service, e)
+      self.fail("could not connect to " + service)
     except Exception as e:
       self.fail("could not post to " + service + "/" + action, e)
 
