@@ -114,6 +114,7 @@ class base(object):
 
   def on_disconnect(self, client, userData, rc):
     logging.error("MQTT broker disconnected")
+    self.mqtt_client.loop_stop()
     self.mqtt_client = None
 
   def on_connect_message(self):
