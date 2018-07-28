@@ -49,6 +49,24 @@ var Client = {
       Hold on, I'm fetching this group for you...
     </div>
   </div>
+
+  <div>
+    <h1>Related Activity</h1>
+    <v-layout justify-center column>
+      <v-card v-for="(message, i) in messages" :key="i">
+        <v-card-title>
+          <div>
+            <v-btn v-if="message.client" depressed small color="primary" @click="gotoClient(message.client)">
+              {{ message.client }}
+            </v-btn>
+            <div v-else class="grey--text">{{ message.topic }}</div>
+            <span>{{ message.payload }}</span>
+          </div>
+        </v-card-title>
+      </v-card>
+    </v-layout>
+  </div>
+
 </div>`,
   data: function() {
     return {
@@ -72,6 +90,18 @@ var Client = {
         }
       }
       return 'Client' + this.currentTab;
+    },
+    messages : function() {
+      var messages = store.getters.messages();
+      var related = [];
+      for(var i in messages) {
+        messages[i]["client"] =
+          messages[i].topic[0] == "client" ? messages[i].topic[1] : false;
+        if( messages[i].topic[1] == this.$route.params.id ) {
+          related.push(messages[i]);
+        }
+      }
+      return related;
     }
   },
   methods: {
