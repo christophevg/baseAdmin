@@ -65,7 +65,8 @@ class base(object):
       logging.debug("requesting master IP from " + self.cloud.geturl())
       response = requests.get(
         self.cloud.scheme + "://" + self.cloud.netloc + "/api/client/" + HOSTNAME,
-        auth=(self.cloud.username, self.cloud.password)
+        auth=(self.cloud.username, self.cloud.password),
+        timeout=10
       )
       if response.status_code != requests.codes.ok:
         logging.error("request for master IP failed: " + str(response.status_code))
