@@ -74,7 +74,7 @@ class Runner(Service.base, backend.client.base):
     self.follow("client/all/services")
     groups = self.config.groups
     for group in groups:
-      self.follow("client/" + group + "/services")
+      self.follow("group/" + group + "/services")
     for service in self.config.services:
       self.follow("client/" + self.name + "/service/" + service)
       self.follow("group/all/service/" + service)
