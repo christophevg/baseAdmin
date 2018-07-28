@@ -1,14 +1,15 @@
-# The baseAdmin Client implements an end-point or node within the baseAdmin
-# network as a service. It connects to the baseAdmin network and receives
-# messages containing configuration updates. These updates are then dispatched
-# to the corresponding services. A local cache of the configuration is
-# maintained to allow for disconnected operation.
+# Tis module implements an end-point (based on backend.client) within the
+# baseAdmin network as a service. It connects to the baseAdmin network and
+# receives messages containing configuration updates. These updates are then
+# dispatched to the corresponding services. A local cache of the configuration
+# is maintained to allow for disconnected operation.
 
 import os
 import logging
 import time
 import json
 import requests
+import git
 
 from servicefactory import Service
 
@@ -68,7 +69,7 @@ class Runner(Service.base, backend.client.base):
   def on_connect(self, client, clientId, flags, rc):
     super(self.__class__, self).on_connect(client, clientId, flags, rc)
     self.retries = 0
-    self.follow("client/" + self.name)
+    self.follow("client/" + self.name, self.on_online)
     self.follow("client/" + self.name + "/services")
     self.follow("client/" + self.name + "/groups")
     self.follow("client/all/services")
@@ -81,10 +82,26 @@ class Runner(Service.base, backend.client.base):
       for group in groups:
         self.follow("group/" + group + "/service/" + service)
 
-  def on_connect_message(self):
-    message = super(self.__class__, self).on_connect_message()
-    message["config"] = self.config.last_message_id
-    return message 
+  def last_will_message(self):
+    return {
+      "topic": "client/" + self.name,
+      "message": json.dumps( self.status_message("offline") )
+    }
+
+  def on_online(self):
+    self.publish(
+      "client/" + self.name,
+      json.dumps( self.status_message("online") )
+    )
+
+  def status_message(self, status):
+    repo = git.Repo(search_parent_directories=True)
+    sha  = repo.head.object.hexsha
+    return {
+      "status" : status,
+      "git"    : repo.git.rev_parse(sha, short=4),
+      "config" : self.config.last_message_id
+    }
 
   def join_group(self, group):
     self.follow("group/" + group + "/services")

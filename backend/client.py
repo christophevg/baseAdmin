@@ -7,7 +7,6 @@ import time
 import json
 import socket
 import traceback
-import git
 
 from backend import HOSTNAME
 
@@ -38,6 +37,7 @@ class base(object):
       "--mqtt", type=str, help="mqtt url",
       default=os.environ.get("MQTT_URL")
     )
+    self.subscription_callbacks = {}
 
   def start(self):
     self.args = self.parser.parse_args()
@@ -90,7 +90,7 @@ class base(object):
 
   def connect_mqtt(self):
     if self.mqtt is None:
-      logging.warning("no MQTT configuration available!")
+      logging.warning("client: no MQTT configuration available!")
       return
 
     try:
@@ -101,7 +101,10 @@ class base(object):
       self.mqtt_client.on_connect    = self.on_connect
       self.mqtt_client.on_disconnect = self.on_disconnect
       self.mqtt_client.on_message    = self.on_message
-      self.mqtt_client.will_set("client/" + self.name, json.dumps({ "status" : "offline" }), 1, False)
+      self.mqtt_client.on_subscribe  = self.on_subscribe
+      last_will = self.last_will_message()
+      if last_will:
+        self.mqtt_client.will_set(last_will["topic"], last_will["message"], 1, False)
       logging.debug("connecting to MQ " + self.mqtt.netloc)
       self.mqtt_client.connect(self.mqtt.hostname, self.mqtt.port)
       self.mqtt_client.loop_start()
@@ -110,22 +113,16 @@ class base(object):
       self.mqtt_client = None
 
   def on_connect(self, client, clientId, flags, rc):
-    logging.debug("connected with result code " + str(rc))
-    self.publish("client/" + self.name , json.dumps(self.on_connect_message()))
+    logging.debug("client: connected with result code " + str(rc) + " as " + clientId)
 
   def on_disconnect(self, client, userData, rc):
-    logging.error("MQTT broker disconnected")
+    logging.error("client: MQTT broker disconnected")
     self.mqtt_client.loop_stop()
     self.mqtt_client = None
 
-  def on_connect_message(self):
-    repo = git.Repo(search_parent_directories=True)
-    sha  = repo.head.object.hexsha
-    return {
-      "status" : "online",
-      "git"    : repo.git.rev_parse(sha, short=4)
-    }
-  
+  def last_will_message(self):
+    return None
+
   def on_message(self, client, clientId, msg):
     topic = msg.topic
     msg   = str(msg.payload.decode("utf-8"))
@@ -135,11 +132,18 @@ class base(object):
   def handle_mqtt_message(self, topic, msg):
     pass
 
-  def follow(self, topic):
+  def follow(self, topic, callback=None):
     if self.mqtt_client is None: return
     logging.debug("following " + topic)
-    self.mqtt_client.subscribe(topic)
+    (result, mid) = self.mqtt_client.subscribe(topic)
+    if not callback is None:
+      self.subscription_callbacks[mid] = callback
     return self
+
+  def on_subscribe(self, client, userdata, mid, granted_qos):
+    if mid in self.subscription_callbacks:
+      self.subscription_callbacks[mid]()
+      del self.subscription_callbacks[mid]
 
   def unfollow(self, topic):
     if self.mqtt_client is None: return
