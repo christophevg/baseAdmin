@@ -6,6 +6,7 @@ from flask  import render_template, send_from_directory
 from flask  import request
 from jinja2 import TemplateNotFound
 
+from backend import __version__
 from backend import BACKEND_MODE, CLOUD, MASTER
 from backend import APP_NAME, APP_AUTHOR, APP_DESCRIPTION
 
@@ -43,7 +44,7 @@ def send_app_static(filename):
   return send_from_directory(os.path.join("app", BACKEND_MODE), filename)
 
 def list_services():
-  path = os.path.join(os.path.dirname(__file__), "..", "app", BACKEND_MODE)
+  path = os.path.join(os.path.dirname(__file__), "app", BACKEND_MODE)
   services = [os.path.splitext(f)[0] for f in listdir(path) if isfile(join(path, f))]
   return sorted(services)
 
@@ -57,5 +58,20 @@ def render_home():
 def render_section(section):
   return render("main", services=list_services())
 
-if MASTER: import backend.interface.master
-if CLOUD:  import backend.interface.cloud
+@server.route("/static/main.js")
+@authenticate(["admin"])
+def send_main_js():
+  info = {
+    "version" : __version__
+  }
+  return render_template(
+    os.path.join(BACKEND_MODE, "main.js"),
+    info=info
+  )
+
+@server.route("/static/router.js")
+@authenticate(["admin"])
+def send_router_js():
+  return render_template(
+    os.path.join("master", "router.js")
+  )

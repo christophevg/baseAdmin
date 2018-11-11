@@ -1,3 +1,5 @@
+__version__ = "1.0.0"
+
 import os
 import socket
 
@@ -42,5 +44,3 @@ logger.addHandler(consoleHandler)
 
 def disable_console_logging():
   logger.removeHandler(consoleHandler)
-
-logging.getLogger("git.cmd").setLevel(logging.WARNING)

@@ -16,7 +16,7 @@ var store = new Vuex.Store({
     },
     users: [],
     messages: [],
-    git: "{{ info.git }}"
+    version: "{{ info.version }}"
   },
   mutations: {
     allUsers: function(state, users) {

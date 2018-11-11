@@ -9,9 +9,10 @@ import logging
 import time
 import json
 import requests
-import git
 
 from servicefactory import Service
+
+import client
 
 import backend.client
 from backend.config import FileBased as FileBasedConfig, UnknownServiceError
@@ -95,11 +96,9 @@ class Runner(Service.base, backend.client.base):
     )
 
   def status_message(self, status):
-    repo = git.Repo(search_parent_directories=True)
-    sha  = repo.head.object.hexsha
     return {
       "status" : status,
-      "git"    : repo.git.rev_parse(sha, short=4),
+      "version": client.__version__,
       "config" : self.config.last_message_id
     }
 
