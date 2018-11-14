@@ -51,6 +51,8 @@ templates_path = ['_templates']
 # source_suffix = '.rst'
 
 from recommonmark.parser import CommonMarkParser
+from recommonmark.transform import AutoStructify
+
 source_parsers = { ".md": CommonMarkParser }
 source_suffix  = ['.rst', '.md']
 
@@ -78,7 +80,7 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -175,3 +177,10 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
+
+def setup(app):
+  app.add_config_value('recommonmark_config', {
+    'auto_toc_tree_section': 'Contents',
+    "enable_eval_rst" : True
+  }, True)
+  app.add_transform(AutoStructify)
