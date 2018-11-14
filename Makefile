@@ -11,6 +11,11 @@ requirements: venv requirements.txt
 dist: requirements
 	. venv/bin/activate; python setup.py sdist bdist_wheel
 
+dist-test: dist
+	rm -rf $@
+	mkdir $@
+	cd $@; cp -r ../demo .; virtualenv venv;	. venv/bin/activate; pip install ../dist/baseadmin-1.0.0.tar.gz gunicorn; gunicorn demo.backend:server
+
 publish-test: dist
 	. venv/bin/activate; twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
@@ -27,4 +32,13 @@ docs: requirements
 	. venv/bin/activate; cd docs; make html
 	open docs/_build/html/index.html
 
-.PHONY: dist docs
+backend: requirements
+	. venv/bin/activate; gunicorn demo.backend:server
+
+client: requirements
+	. venv/bin/activate; PYTHON_PATH=. python -m demo.client
+
+clean:
+	@rm -rf dist dist-test *.egg-info build docs/_build .coverage .tox *.pkl
+
+.PHONY: dist docs backend client dist-test

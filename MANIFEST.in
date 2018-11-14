@@ -1,4 +1,5 @@
-include Makefile LICENSE .github/README.md
-include *.md
+include Makefile LICENSE.txt .github/README.md
+recursive-include baseadmin/backend/static * 
+recursive-include baseadmin/backend/templates *
 global-exclude __pycache__
 global-exclude *.py[co]

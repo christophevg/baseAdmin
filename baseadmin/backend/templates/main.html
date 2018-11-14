@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{ app.description }}">
+    <meta name="author" content="{{ app.author }}">
+
+    <title>{{ app.name }}{% if self.title() %} - {% endif %} {% block title %}{% endblock %}</title>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="/static/vendor/html5shiv.min.js"></script>
+      <script src="/static/vendor/respond.min.js"></script>
+    <![endif]-->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <link href="/static/vendor/css/roboto-material-icons.css"    rel="stylesheet">
+    <link href="/static/vendor/css/vuetify.min.css"              rel="stylesheet">
+    <link href="/static/vendor/css/vfg.css"                      rel="stylesheet">
+    <link href="/static/vendor/css/vue-multiselect.min.css"      rel="stylesheet">
+    <link href="/static/vendor/css/bootstrap-datetimepicker.css" rel="stylesheet">
+    
+    <link href="/static/css/main.css"      rel="stylesheet">
+    <link href="/static/css/dashboard.css" rel="stylesheet">
+    <link href="/static/css/client.css"    rel="stylesheet">
+
+    {% block moreCSS %}{% endblock %}
+  </head>
+
+  <body>
+    <v-app id="app">
+      <v-toolbar color="blue darken-3" dark app clipped-left fixed>
+        <v-toolbar-title :style="$vuetify.breakpoint.smAndUp ? 'width: 300px; min-width: 250px' : 'min-width: 72px'" class="ml-0 pl-3">
+          {% if not without_sections %}
+          <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
+          {% endif %}
+          <span class="hidden-xs-only">{{ app.name }}</span>
+        </v-toolbar-title>
+      </v-toolbar>
+
+      {% if not without_sections %}
+      <v-navigation-drawer fixed clipped app v-model="drawer">
+        <v-list>
+          <template v-for="section in sections">
+            <v-list-group v-if="section.group" :prepend-icon="section.icon" no-action value="true">
+              <v-list-tile slot="activator">
+                <v-list-tile-content>
+                  <v-list-tile-title>${ section.text }</v-list-tile-title>
+                </v-list-tile-content>
+              </v-list-tile>
+
+              <template v-for="subsection in section.subsections">
+                <v-list-tile :to="subsection.path">
+                  <v-list-tile-content>
+                    <v-list-tile-title>${ subsection.text }</v-list-tile-title>
+                  </v-list-tile-content>
+                  <v-list-tile-action>
+                    <v-icon>${ subsection.icon }</v-icon>
+                  </v-list-tile-action>
+                </v-list-tile>
+              </template>
+            </v-list-group>
+
+            <v-list-tile v-if="! section.group" :to="section.path">
+              <v-list-tile-action>
+                <v-icon>${ section.icon }</v-icon>
+              </v-list-tile-action>
+              <v-list-tile-content>
+                <v-list-tile-title>${ section.text }</v-list-tile-title>
+              </v-list-tile-content>
+            </v-list-tile>
+
+          </template>
+        </v-list>
+      </v-navigation-drawer>
+      {% endif %}
+
+      <v-content>
+        <div class="content-wrapper">
+          <router-view></router-view>
+          <notifications group="notifications" position="bottom right"/>
+        </div>
+      </v-content>
+    </v-app>
+
+    <script src="/static/vendor/js/vue.js"></script>
+    <script src="/static/vendor/js/vuetify.js"></script>
+    <script src="/static/vendor/js/vuex.js"></script>
+    <script src="/static/vendor/js/vue-router.js"></script>
+    <script>
+      Vue.use(VueRouter);
+    </script>
+
+    <script type="text/javascript">
+      window.vue = window.Vue; // quick fix for vue-notification
+    </script>
+    <script src="/static/vendor/js/vue-notification.js"></script>
+    <script>
+      window.vueNotification = window["vue-notification"].default;
+      Vue.use(vueNotification);
+    </script>
+
+    <script src="/static/vendor/js/vue-form-generator.min.js"></script>
+    <script>
+      Vue.use(VueFormGenerator);
+    </script>
+
+    <script src="/static/vendor/js/vue-multiselect.min.js"></script>
+    <script>
+      Vue.component('Multiselect', VueMultiselect.Multiselect);
+    </script>
+
+    <script src="/static/vendor/js/Chart.min.js"></script>
+    <script src="/static/vendor/js/vue-chartjs.min.js"></script>
+    <script src="/static/vendor/js/jquery.min.js"></script>
+    <script src="/static/vendor/js/bootstrap.min.js"></script>
+    <script src="/static/vendor/js/moment.min.js"></script>
+    <script src="/static/vendor/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="/static/vendor/js/paho-mqtt.js"></script>
+
+    <script src="/static/js/comm.js"></script>
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/client.js"></script>
+    <script src="/static/js/user.js"></script>
+    <script src="/static/js/log.js"></script>
+    <script src="/static/js/dashboard-cloud.js"></script>
+    <script src="/static/js/master.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/setup.js"></script>
+    <script src="/static/js/router.js"></script>
+
+    {% for service in services %}
+    <script src="/app/{{ service }}.js"></script>
+    {% endfor %}
+
+  </body>
+</html>

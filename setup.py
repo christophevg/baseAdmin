@@ -2,12 +2,12 @@ import os
 import re
 import setuptools
 
-NAME             = "baseAdmin"
+NAME             = "baseadmin"
 AUTHOR           = "Christophe VG"
 AUTHOR_EMAIL     = "contact@christophe.vg"
 DESCRIPTION      = "A framework for building distributed IoT applications."
 LICENSE          = "MIT"
-KEYWORDS         = "framework IoT configuration reporting"
+KEYWORDS         = "A Python base for administrative tools for distributed (IoT) applications."
 URL              = "https://github.com/christophevg/" + NAME
 README           = ".github/README.md"
 CLASSIFIERS      = [
@@ -27,7 +27,13 @@ CLASSIFIERS      = [
   "Programming Language :: Python :: 3.5",
   "Programming Language :: Python :: 3.6",
 ]
-INSTALL_REQUIRES = []
+INSTALL_REQUIRES = [
+  "flask",
+  "flask_restful",
+  "pymongo",
+  "py-bcrypt",
+  "paho-mqtt"
+]
 ENTRY_POINTS     = {}
 SCRIPTS = []
 
@@ -58,4 +64,5 @@ if __name__ == "__main__":
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,
         entry_points=ENTRY_POINTS,
-        scripts=SCRIPTS)
+        scripts=SCRIPTS,
+        include_package_data=True)
