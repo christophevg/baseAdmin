@@ -8,17 +8,16 @@ from flask  import render_template, send_from_directory
 from flask  import request
 from jinja2 import TemplateNotFound
 
-from baseadmin.backend import __version__
-from baseadmin.backend import config
+from baseadmin import config, __version__
 
+from baseadmin.backend          import db
 from baseadmin.backend.web      import server
 from baseadmin.backend.security import authenticate
-from baseadmin.backend.store    import store
 
 def render(template, **kwargs):
   user = None
   if request.authorization:
-    user = store.users.find_one({ "_id": request.authorization.username })
+    user = db.users.find_one({ "_id": request.authorization.username })
   try:
     return render_template(
       template + ".html",
@@ -64,7 +63,7 @@ def send_app_static(filename):
 
 def list_services():
   try:
-    path = os.path.join(config["root"], "media", "js")
+    path = join(config["root"], "media", "js")
     services = [os.path.splitext(f)[0] for f in listdir(path) if isfile(join(path, f))]
     return sorted(services)
   except OSError:

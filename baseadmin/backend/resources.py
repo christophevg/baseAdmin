@@ -18,14 +18,11 @@ from flask_restful    import Resource, abort
 
 import paho.mqtt.client as mqtt
 
+from baseadmin import config
+
 from baseadmin.backend.store    import store
 from baseadmin.backend.security import authenticate
 from baseadmin.backend.rest     import api
-
-MQTT_URL  = os.environ.get("CLOUDMQTT_URL")
-CLOUDMQTT = not MQTT_URL is None
-if not CLOUDMQTT:
-  MQTT_URL = os.environ.get("MQTT_URL") or "mqtt://localhost:1883"
 
 MQ = urlparse(MQTT_URL)
 

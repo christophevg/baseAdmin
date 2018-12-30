@@ -1,34 +1,33 @@
-__version__ = "1.0.0"
-
 import os
-import socket
 import logging
 
-cwd = os.getcwd()
+from baseadmin.pki                     import decode
 
-config = {
-  "name"        : os.environ.get("APP_NAME")        or os.path.basename(cwd),
-  "root"        : os.environ.get("APP_ROOT")        or cwd,
-  "author"      : os.environ.get("APP_AUTHOR")      or "Unknown Author",
-  "description" : os.environ.get("APP_DESCRIPTION") or "A baseAdmin app"
-}
+from baseadmin.backend.store           import setup, StoreNotAvailableError
+from baseadmin.backend.store.provision import provision
 
-HOSTNAME = socket.gethostname()  
+class BackendError(Exception):
+  pass
 
-logger = logging.getLogger()
+db          = None
+private_key = None
+public_key  = None
 
-formatter = logging.Formatter(
-  '%(asctime)s - %(name)-10.10s - [%(levelname)-5.5s] - %(message)s'
-)
+def init(provided_db=None):
+  global db, private_key, public_key
+  if not db is None: return
 
-if len(logger.handlers) > 0:
-  logger.handlers[0].setFormatter(formatter)
-else:
-  consoleHandler = logging.StreamHandler()
-  consoleHandler.setFormatter(formatter)
-  logger.addHandler(consoleHandler)
+  try:
+    db = provided_db or setup()
+  except StoreNotAvailableError as e:
+    raise BackendError("Could not initialize store: {0}".format(str(e)))
 
-LOG_LEVEL = os.environ.get("LOG_LEVEL") or "DEBUG"
-logger.setLevel(logging.getLevelName(LOG_LEVEL))
+  # by default provisioning is only run once for each collection
+  # setting a PROVISION environment variable forces re-provisioning
+  force = not os.environ.get("BACKEND_PROVISION") is None
+  provision(db, force)
 
-logging.info("baseAdmin backend starting...")
+  keys = db.pki.find_one({"_id": ""})
+
+  private_key = decode(str(keys["key"]))
+  public_key  = decode(str(keys["public"]))

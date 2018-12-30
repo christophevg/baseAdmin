@@ -32,7 +32,12 @@ INSTALL_REQUIRES = [
   "flask_restful",
   "pymongo",
   "py-bcrypt",
-  "paho-mqtt"
+  "paho-mqtt",
+  "gunicorn",
+  "pycryptodome",
+  "python-dateutil",
+  "python-dotenv",
+  "cryptography"
 ]
 ENTRY_POINTS     = {}
 SCRIPTS = []

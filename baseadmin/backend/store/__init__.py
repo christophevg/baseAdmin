@@ -1,17 +1,24 @@
 import os
 import logging
 
-from pymongo import MongoClient
+from pymongo        import MongoClient
+from pymongo.errors import ConnectionFailure
 
-MONGO_URI = os.environ.get("MONGODB_URI")
-if not MONGO_URI:
-  MONGO_URI = "mongodb://localhost:27017/cloud"
+from baseadmin      import config
 
-logging.debug("connecting to " + MONGO_URI)
-mongo = MongoClient(MONGO_URI)
+database = config["store"]["uri"].split("/")[-1]
 
-database = MONGO_URI.split("/")[-1]
+class StoreNotAvailableError(Exception):
+  pass
 
-store = mongo[database]
-
-import baseadmin.backend.provision
+def setup():
+  logging.debug("connecting to " + config["store"]["uri"])
+  mongo = MongoClient(
+    config["store"]["uri"],
+    serverSelectionTimeoutMS=config["store"]["timeout"]
+  )
+  try:
+    mongo.admin.command("ismaster")
+    return mongo[database]
+  except ConnectionFailure:
+    raise StoreNotAvailableError(config["store"]["uri"])

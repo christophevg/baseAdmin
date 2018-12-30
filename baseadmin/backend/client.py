@@ -1,3 +1,6 @@
+# The backend client deals with the low-level communication with the backend.
+# It implements the registration with the root of the network
+
 import os
 import sys
 import argparse
@@ -8,51 +11,22 @@ import json
 import socket
 import traceback
 
-from baseadmin.backend import HOSTNAME
-
-try:
-  from urllib.parse import urlparse
-except ImportError:
-  from urlparse import urlparse
+# from baseadmin.backend import HOSTNAME
+#
+# try:
+#   from urllib.parse import urlparse
+# except ImportError:
+#   from urlparse import urlparse
 
 import paho.mqtt.client as mqtt
 
 class base(object):
-  def __init__(self, name=HOSTNAME, description=None):
-    logging.info("client endpoint starting...")
-    self.name = name
-    if description is None:
-      description = self.name + ": a baseAdmin client."
+  def __init__(self, root="http://localhost:8000", network=None):
+    self.root    = root
+    self.network = network
 
-    self.parser = argparse.ArgumentParser(description=description)
-    self.parser.add_argument(
-      "--cloud",  type=str, help="cloud url.",
-      default=os.environ.get("CLOUD_URL")
-    )
-    self.parser.add_argument(
-      "--master",  type=str, help="master url.",
-      default=os.environ.get("BACKEND_URL")
-    )
-    self.parser.add_argument(
-      "--mqtt", type=str, help="mqtt url",
-      default=os.environ.get("MQTT_URL")
-    )
-    self.subscription_callbacks = {}
-
-  def start(self):
-    self.args = self.parser.parse_args()
-    self.process_arguments()
-    self.mqtt_client = None
-    self.connect_mqtt()
-
-  def process_arguments(self):
-    # configure Client from envionment variables or command line arguments
-    self.cloud   = None if self.args.cloud   is None else urlparse(self.args.cloud)
-    self.master  = None if self.args.master  is None else urlparse(self.args.master)
-    self.mqtt    = None if self.args.mqtt    is None else urlparse(self.args.mqtt)
-
-    # if no MQ configuration provided, try to find one
-    if self.mqtt is None: self.get_mqtt_connection_details()
+  def connect(self):
+    
 
   def get_mqtt_connection_details(self):
     if not self.cloud:

@@ -1,4 +1,4 @@
-# Tis module implements an end-point (based on backend.client) within the
+# This module implements an end-point (based on backend.client) within the
 # baseAdmin network as a service. It connects to the baseAdmin network and
 # receives messages containing configuration updates. These updates are then
 # dispatched to the corresponding services. A local cache of the configuration
