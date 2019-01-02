@@ -9,7 +9,6 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import padding
 
-
 def generate_key_pair():
   key = rsa.generate_private_key(
      public_exponent=65537,
@@ -81,7 +80,7 @@ if __name__ == "__main__":
     "pass"   : "test pass",
     "pubkey" : public_pem,
   }
-  payload = base64.b64encode(json.dumps(data))
+  payload = base64.b64encode(json.dumps(data, sort_keys=True))
   signature = sign(payload, key_loaded)
   validate(payload, signature, public_loaded)
 

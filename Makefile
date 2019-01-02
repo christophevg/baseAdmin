@@ -32,13 +32,18 @@ docs: requirements
 	. venv/bin/activate; cd docs; make html
 	open docs/_build/html/index.html
 
-backend: requirements
-	. venv/bin/activate; gunicorn demo.backend:server
-
-client: requirements
-	. venv/bin/activate; PYTHON_PATH=. python -m demo.client
-
 clean:
 	@rm -rf dist dist-test *.egg-info build docs/_build .coverage .tox *.pkl
 
 .PHONY: dist docs backend client dist-test
+
+# demo targets
+
+demo-backend-web: requirements
+	. venv/bin/activate; gunicorn demo.backend.web:server
+
+demo-backend-mq: requirements
+	. venv/bin/activate; python -m demo.backend.mq
+
+demo-client: requirements
+	. venv/bin/activate; PYTHON_PATH=. python -m demo.client

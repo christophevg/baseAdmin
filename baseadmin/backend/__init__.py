@@ -1,33 +1,30 @@
 import os
 import logging
+import bcrypt
 
-from baseadmin.pki                     import decode
+import baseadmin
+from baseadmin import config, store
 
-from baseadmin.backend.store           import setup, StoreNotAvailableError
-from baseadmin.backend.store.provision import provision
+# provision initial users collection
 
-class BackendError(Exception):
-  pass
+def init():
+  provision_users(baseadmin.db)
 
-db          = None
-private_key = None
-public_key  = None
-
-def init(provided_db=None):
-  global db, private_key, public_key
-  if not db is None: return
-
-  try:
-    db = provided_db or setup()
-  except StoreNotAvailableError as e:
-    raise BackendError("Could not initialize store: {0}".format(str(e)))
-
-  # by default provisioning is only run once for each collection
-  # setting a PROVISION environment variable forces re-provisioning
-  force = not os.environ.get("BACKEND_PROVISION") is None
-  provision(db, force)
-
-  keys = db.pki.find_one({"_id": ""})
-
-  private_key = decode(str(keys["key"]))
-  public_key  = decode(str(keys["public"]))
+def provision_users(db, force=False):
+  store.load(
+    db,
+    "users",
+    [
+      {
+        "_id"     : "admin",
+        "name"    : "Admin",
+        "password": bcrypt.hashpw(config["admin"]["pass"], bcrypt.gensalt())
+      },
+      {
+        "_id"     : config["register"]["user"],
+        "name"    : "Client Registration Account",
+        "password": bcrypt.hashpw(config["register"]["pass"], bcrypt.gensalt())
+      },
+    ],
+    force
+  )

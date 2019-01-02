@@ -6,9 +6,8 @@ from base64 import b64encode
 
 from flask_restful import Resource
 
-from baseadmin.backend import init
+from baseadmin import init, get_db
 init(mongomock.MongoClient().db)
-from baseadmin.backend import db
 
 from baseadmin              import pki
 
@@ -24,6 +23,7 @@ class TestSignature(Resource):
 api.add_resource(TestSignature, "/api/test/signature")
 
 def test_validation_of_correct_signature():
+  db = get_db()
   key, public = pki.generate_key_pair()
   db.pki.drop()
   db.pki.insert_one({
@@ -40,6 +40,7 @@ def test_validation_of_correct_signature():
 test_validation_of_correct_signature()
 
 def test_failing_validation_of_incorrect_signature():
+  db = get_db()
   key, public = pki.generate_key_pair()
   db.pki.drop()
   db.pki.insert_one({

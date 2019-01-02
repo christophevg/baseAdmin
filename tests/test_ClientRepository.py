@@ -1,12 +1,12 @@
 import mongomock
 
-from baseadmin.backend import init
+from baseadmin import init, get_db
 init(mongomock.MongoClient().db)
-from baseadmin.backend import db
 
 from baseadmin.backend.repositories import clients
 
 def test_registration_of_valid_request():
+  db = get_db()
   request = {
     "name"      : "test name",
     "pass"      : "test pass",

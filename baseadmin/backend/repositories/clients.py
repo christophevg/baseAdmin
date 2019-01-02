@@ -1,8 +1,8 @@
-from baseadmin.backend import db
+import baseadmin
 
 def register(request):
   try:
-    db.requests.insert_one({
+    baseadmin.db.requests.insert_one({
       "name"      : request["name"],
       "pass"      : request["pass"],
       "pubkey"    : request["pubkey"]

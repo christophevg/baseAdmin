@@ -10,7 +10,7 @@ from jinja2 import TemplateNotFound
 
 from baseadmin import config, __version__
 
-from baseadmin.backend          import db
+from baseadmin                  import db
 from baseadmin.backend.web      import server
 from baseadmin.backend.security import authenticate
 

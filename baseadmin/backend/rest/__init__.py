@@ -9,10 +9,8 @@ import json
 
 from base64 import b64encode, b64decode
 
-from baseadmin               import pki
-
-from baseadmin.backend       import db, private_key
-from baseadmin.backend.web   import server
+from baseadmin             import pki, db, private_key
+from baseadmin.backend.web import server
 
 def sign(payload, key=private_key, origin=""):
   encoded   = b64encode(json.dumps(payload))

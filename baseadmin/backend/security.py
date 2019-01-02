@@ -4,8 +4,7 @@ import bcrypt
 
 from flask import request, Response
 
-from baseadmin         import config
-from baseadmin.backend import db
+from baseadmin import config, db
 
 def valid_credentials(users, auth):
   if not auth or not auth.username or not auth.password: return False
