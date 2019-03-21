@@ -8,13 +8,11 @@ venv:
 requirements: venv requirements.txt
 	. venv/bin/activate; pip install --upgrade -r requirements.txt > /dev/null
 
+upgrade: requirements
+	. venv/bin/activate; pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U
+
 dist: requirements
 	. venv/bin/activate; python setup.py sdist bdist_wheel
-
-dist-test: dist
-	rm -rf $@
-	mkdir $@
-	cd $@; cp -r ../demo .; virtualenv venv;	. venv/bin/activate; pip install ../dist/baseadmin-1.0.0.tar.gz gunicorn; gunicorn demo.backend:server
 
 publish-test: dist
 	. venv/bin/activate; twine upload --repository-url https://test.pypi.org/legacy/ dist/*
@@ -22,28 +20,14 @@ publish-test: dist
 publish: dist
 	. venv/bin/activate; twine upload dist/*
 
-test:
-	tox
+test: requirements
+	. venv/bin/activate; tox
 
-coverage: test requirements
-	. venv/bin/activate; coverage report
+coverage: test
+	. venv/bin/activate; coverage report; coverage html
 
 docs: requirements
 	. venv/bin/activate; cd docs; make html
 	open docs/_build/html/index.html
 
-clean:
-	@rm -rf dist dist-test *.egg-info build docs/_build .coverage .tox *.pkl
-
-.PHONY: dist docs backend client dist-test
-
-# demo targets
-
-demo-backend-web: requirements
-	. venv/bin/activate; gunicorn demo.backend.web:server
-
-demo-backend-mq: requirements
-	. venv/bin/activate; python -m demo.backend.mq
-
-demo-client: requirements
-	. venv/bin/activate; PYTHON_PATH=. python -m demo.client
+.PHONY: dist docs

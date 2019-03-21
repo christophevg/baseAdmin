@@ -46,6 +46,7 @@ requests==2.20.1
 requests-toolbelt==0.8.0
 sentinels==1.0.0
 servicefactory==0.9
+simple-rsa==1.0.0
 six==1.11.0
 smmap2==2.0.5
 snowballstemmer==1.2.1

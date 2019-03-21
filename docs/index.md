@@ -1,12 +1,13 @@
-# baseAdmin
+# baseadmin
 
-> A Python base for administrative tools for distributed (IoT) applications.
+A Pythonic base for building administrator tools for distributed (IoT) applications.
 
 [![Latest Version on PyPI](https://img.shields.io/pypi/v/baseadmin.svg)](https://pypi.python.org/pypi/baseadmin/)
+[![Supported Implementations](https://img.shields.io/pypi/pyversions/baseadmin.svg)](https://pypi.python.org/pypi/baseadmin/)
 [![Build Status](https://secure.travis-ci.org/christophevg/baseadmin.svg?branch=master)](http://travis-ci.org/christophevg/baseadmin)
 [![Documentation Status](https://readthedocs.org/projects/baseadmin/badge/?version=latest)](https://baseadmin.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/christophevg/baseadmin/badge.svg?branch=master)](https://coveralls.io/github/christophevg/baseadmin?branch=master)
-[![Built with PyPi Template](https://img.shields.io/badge/PyPi_Template-v0.0.5-blue.svg)](https://github.com/christophevg/baseadmin)
+[![Built with PyPi Template](https://img.shields.io/badge/PyPi_Template-v0.0.6-blue.svg)](https://github.com/christophevg/pypi-template)
 
 ```eval_rst
 .. warning:: **Work in Progress** - I've only just started working on this and I'm literally exploring my own code as I write it ;-) So until this warning is removed, I wouldn't trust myself using this ;-) Do play with it, but remember things can and will change overnight.

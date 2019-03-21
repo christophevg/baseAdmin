@@ -5,9 +5,9 @@ import setuptools
 NAME             = "baseadmin"
 AUTHOR           = "Christophe VG"
 AUTHOR_EMAIL     = "contact@christophe.vg"
-DESCRIPTION      = "A framework for building distributed IoT applications."
+DESCRIPTION      = "A Pythonic base for building administrator tools for distributed (IoT) applications."
 LICENSE          = "MIT"
-KEYWORDS         = "A Python base for administrative tools for distributed (IoT) applications."
+KEYWORDS         = ""
 URL              = "https://github.com/christophevg/" + NAME
 README           = ".github/README.md"
 CLASSIFIERS      = [
@@ -37,7 +37,7 @@ INSTALL_REQUIRES = [
   "pycryptodome",
   "python-dateutil",
   "python-dotenv",
-  "cryptography"
+  "simple-rsa"
 ]
 ENTRY_POINTS     = {}
 SCRIPTS = []
