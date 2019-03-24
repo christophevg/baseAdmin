@@ -4,13 +4,11 @@ import logging
 from flask import Flask
 import jinja2
 
-import baseadmin
-
 reason = None
 
 def server(environ, start_response):
   global reason
-  data = "baseAdmin could not be initialized: {0}\n".format(reason)
+  data = "baseadmin could not be initialized: {0}\n".format(reason)
   status = '200 OK'
   response_headers = [
     ('Content-type', 'text/plain'),
@@ -28,11 +26,10 @@ try:
   ])
   server.jinja_loader = my_loader
 
-  # baseadmin.backend.init()
-  # import baseadmin.backend.rest
+  import baseadmin.backend.api
   # import baseadmin.backend.interface
 
-  logging.info("baseAdmin backend web server is ready. awaiting clients...")
+  logging.info("baseadmin backend web server is ready. awaiting clients...")
 except baseadmin.Error as e:
   reason = str(e)
-  logging.error("baseAdmin could not be initialized: {0}".format(reason))
+  logging.error("baseadmin could not be initialized: {0}".format(reason))

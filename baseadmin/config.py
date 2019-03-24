@@ -11,7 +11,11 @@ class app(object):
   description = os.environ.get("APP_DESCRIPTION") or "A baseAdmin app"
 
 class client(object):
-  name        = os.environ.get("CLIENT_NAME") or socket.gethostname()
+  name        = os.environ.get("CLIENT_NAME")     or socket.gethostname()
+  secret      = os.environ.get("CLIENT_SECRET")   or "secret"
+
+if client.secret == "secret":
+  logging.warn("using default client secret")
 
 class store(object):
   uri         = os.environ.get("MONGODB_URI") \
@@ -29,6 +33,9 @@ logging.debug("baseAdmin config = " + str({
     "root"        : app.root,
     "author"      : app.author,
     "description" : app.description
+  },
+  "client": {
+    "name"        : client.name
   },
   "Store": {
     "uri"         : store.uri,

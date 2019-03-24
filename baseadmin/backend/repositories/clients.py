@@ -1,11 +1,11 @@
-import baseadmin
+from baseadmin.storage import db
 
 def register(request):
   try:
-    baseadmin.db.requests.insert_one({
-      "name"      : request["name"],
-      "pass"      : request["pass"],
-      "pubkey"    : request["pubkey"]
+    db.requests.insert_one({
+      "name"  : request["name"],
+      "pass"  : request["pass"],
+      "pubkey": request["pubkey"]
     })
-  except KeyError:
-    raise ValueError("invalid request")
+  except KeyError as e:
+    raise ValueError("invalid request: {0}".format(str(e)))
