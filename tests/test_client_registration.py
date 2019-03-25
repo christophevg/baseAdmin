@@ -25,7 +25,7 @@ def test_incorrect_request(app):
     data=json.dumps(dict(foo="bar")),
     content_type="application/json"
   )
-  assert response.status_code == 500 # unathorized
+  assert response.status_code == 500 # error
   assert response.data == "invalid request: 'name'"
 
 def test_correct_request(app, db):

@@ -2,6 +2,8 @@ import os
 import logging
 import socket
 
+from baseadmin.tools import VariableSleep
+
 CWD = os.getcwd()
 
 class app(object):
@@ -24,11 +26,16 @@ class store(object):
 
 class messaging(object):
   uri         = os.environ.get("CLOUDMQTT_URL") \
-                or os.environ.get("MQTT_URL"),
+                or os.environ.get("MQTT_URL") \
+                or "mqtt://localhost:1883"
   cloud       = not os.environ.get("CLOUDMQTT_URL") is None
 
+class master(object):
+  root        = os.environ.get("MASTER_ROOT") or "http://localhost:8000"
+  interval    = VariableSleep(60, 60)
+
 logging.debug("baseAdmin config = " + str({
-  "App" : {
+  "app" : {
     "name"        : app.name,
     "root"        : app.root,
     "author"      : app.author,
@@ -37,12 +44,16 @@ logging.debug("baseAdmin config = " + str({
   "client": {
     "name"        : client.name
   },
-  "Store": {
+  "store": {
     "uri"         : store.uri,
     "timeout"     : store.timeout
   },
-  "Messaging" : {
+  "messaging" : {
     "uri"         : messaging.uri,
     "cloud"       : messaging.cloud
+  },
+  "master" : {
+    "root"        : master.root,
+    "interval"    : str(master.interval)
   }
 }))

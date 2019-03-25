@@ -1,3 +1,8 @@
 from baseadmin.client.endpoint import Runner
 
-Runner().start()
+try:
+  endpoint = Runner()
+  endpoint.connect()
+except KeyboardInterrupt:
+  pass
+

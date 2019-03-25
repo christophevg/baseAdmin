@@ -1,4 +1,3 @@
-import traceback
 import os
 import logging
 import pymongo
@@ -22,6 +21,9 @@ class Database(object):
   
   def __getattr__(self, collection):
     if collection == "_pytestfixturefunction": return None
+    return self[collection]
+
+  def __getitem__(self, collection):
     if not self.instance: self.connect()
     return self.instance[collection]
 

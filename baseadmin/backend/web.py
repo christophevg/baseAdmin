@@ -1,5 +1,6 @@
 import os
 import logging
+import traceback
 
 from flask import Flask
 import jinja2
@@ -30,6 +31,8 @@ try:
   # import baseadmin.backend.interface
 
   logging.info("baseadmin backend web server is ready. awaiting clients...")
-except baseadmin.Error as e:
+except Exception as e:
   reason = str(e)
   logging.error("baseadmin could not be initialized: {0}".format(reason))
+  exception = traceback.format_exc()
+  logging.error(exception)
