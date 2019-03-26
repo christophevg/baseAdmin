@@ -57,7 +57,8 @@ class Runner(object):
       try:
         response = requests.get(url, auth=(config.client.name, self.password))
         if response.status_code == requests.codes.ok:
-          self.master = response.json()["uri"]
+          self.master = response.json()
+          db.config.insert_one({"_id": "master", "value": self.master})
           return
         else:
           logging.error("get {0} failed: {1}".format(url, response.text))

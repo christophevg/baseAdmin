@@ -33,6 +33,4 @@ try:
   logging.info("baseadmin backend web server is ready. awaiting clients...")
 except Exception as e:
   reason = str(e)
-  logging.error("baseadmin could not be initialized: {0}".format(reason))
-  exception = traceback.format_exc()
-  logging.error(exception)
+  logging.exception("baseadmin could not be initialized: {0}".format(reason))

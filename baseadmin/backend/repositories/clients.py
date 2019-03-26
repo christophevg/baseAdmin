@@ -9,13 +9,13 @@ def request(name, request):
   if client: return client
 
   if not db.requests.find_one({"_id" : name}):
-    logging.info("registering {0}".format(name))
     try:
       db.requests.insert_one({
         "_id"   : name,
         "pass"  : request["pass"],
         "pubkey": request["pubkey"]
       })
+      logging.info("received registration request for {0}".format(name))
     except DuplicateKeyError:
       pass
     except KeyError as e:
@@ -24,7 +24,10 @@ def request(name, request):
 
 def assign(name, master):
   request = db.requests.find_one({"_id": name})
-  # TODO
+  request["master"] = master
+  db.clients.insert_one(request)
+  db.requests.delete_one({"_id": name})
+  logging.info("assigned {0} to {1}".format(name, master))
 
 def get(name):
   return db.clients.find_one({"_id": name})

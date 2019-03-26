@@ -1,5 +1,4 @@
 import logging
-import traceback
 
 from flask         import request, Response
 from flask_restful import Resource
@@ -18,25 +17,39 @@ class ClientRegistration(Resource):
         "", 401, { "WWW-Authenticate": 'Basic realm="registration"' }
       )
     try:
-      return clients.request(
-        request.authorization.username,
-        request.get_json()
+      client = request.authorization.username
+      return clients.request(client, request.get_json())
+    except:
+      logging.exception(
+        "failed to store request for {0}: {1}".format(
+          client, request.get_data(as_text=True)
+        )
       )
-    except Exception as e:
-      return Response(str(e), 500)
+      return Response("failed to store registration request", 500)
 
 api.add_resource(ClientRegistration, "/api/clients/register")
+
 
 class ClientMaster(Resource):
   @authenticated("clients")
   def get(self):
     try:
-      info = clients.get(request.authorization.username)
-      logging.debug("providing {0}".format(info))
-      return info
-    except Exception as e:
-      exception = traceback.format_exc()
-      logging.error(exception)
-      return Response(str(e), 500)
+      client = request.authorization.username
+      return clients.get(client)["master"]
+    except:
+      logging.exception("failed to retrieve client {0}".format(
+        request.authorization.username
+      ))
+      return Response("failed to retrieve client info", 500)
+
+  @authenticated("users")
+  def post(self):
+    try:
+      client = request.authorization.username
+      master = request.get_json()["master"]
+      clients.assign(client, master)
+    except:
+      logging.exception("failed to assign {0} to {1}".format(client, master))
+      return Response("failed to assign client to master", 500)
 
 api.add_resource(ClientMaster, "/api/clients/master")
