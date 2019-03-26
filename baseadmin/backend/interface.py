@@ -8,11 +8,10 @@ from flask  import render_template, send_from_directory
 from flask  import request
 from jinja2 import TemplateNotFound
 
-from baseadmin import config, __version__
-
-from baseadmin                  import db
+from baseadmin                  import config, __version__
+from baseadmin.storage          import db
 from baseadmin.backend.web      import server
-from baseadmin.backend.security import authenticate
+from baseadmin.backend.security import authenticated
 
 def render(template, **kwargs):
   user = None
@@ -34,17 +33,17 @@ def render(template, **kwargs):
     )
 
 @server.route("/")
-@authenticate(["admin"])
+@authenticated("users")
 def render_home():
   return render("main", services=list_services())
 
 @server.route("/<path:section>")
-@authenticate(["admin"])
+@authenticated("users")
 def render_section(section):
   return render("main", services=list_services())
 
 @server.route("/static/js/main.js")
-@authenticate(["admin"])
+@authenticated("users")
 def send_main_js():
   info = {
     "version" : __version__
@@ -52,18 +51,18 @@ def send_main_js():
   return render_template("main.js", info=info)
 
 @server.route("/static/js/router.js")
-@authenticate(["admin"])
+@authenticated("users")
 def send_router_js():
   return render_template("router.js")
 
 @server.route("/app/<path:filename>")
-@authenticate(["admin"])
+@authenticated("users")
 def send_app_static(filename):
-  return send_from_directory(os.path.join(config["root"], "media", "js"), filename)
+  return send_from_directory(os.path.join(config.app.root, "media", "js"), filename)
 
 def list_services():
   try:
-    path = join(config["root"], "media", "js")
+    path = join(config.app.root, "media", "js")
     services = [os.path.splitext(f)[0] for f in listdir(path) if isfile(join(path, f))]
     return sorted(services)
   except OSError:
