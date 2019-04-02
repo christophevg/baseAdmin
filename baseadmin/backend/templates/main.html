@@ -41,7 +41,7 @@
         </v-toolbar-title>
       </v-toolbar>
 
-      {% if not without_sections %}
+      {% if user %}
       <v-navigation-drawer fixed clipped app v-model="drawer">
         <v-list>
           <template v-for="section in sections">
@@ -123,14 +123,18 @@
 
     <script src="/static/js/comm.js"></script>
     <script src="/static/js/common.js"></script>
+
+    <script src="/static/js/main.js"></script>
+
+    <script src="/static/js/landing.js"></script>
     <script src="/static/js/dashboard.js"></script>
     <script src="/static/js/client.js"></script>
     <script src="/static/js/user.js"></script>
     <script src="/static/js/log.js"></script>
     <script src="/static/js/dashboard-cloud.js"></script>
     <script src="/static/js/master.js"></script>
-    <script src="/static/js/main.js"></script>
     <script src="/static/js/setup.js"></script>
+
     <script src="/static/js/router.js"></script>
 
     {% for service in services %}

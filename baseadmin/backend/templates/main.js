@@ -21,7 +21,8 @@ var store = new Vuex.Store({
       group  : []
     },
     users: [],
-    version: "{{ info.version }}"
+    version: "{{ app.version }}",
+    provision: {{ provision }}
   },
   mutations: {
     master : function(state, master) {

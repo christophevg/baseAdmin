@@ -57,9 +57,9 @@
     client.connect(options);
   }
 
-  $.get("/api/mq/connection", function(data) {
-    connect(data);
-  });
+  // $.get("/api/mq/connection", function(data) {
+  //   connect(data);
+  // });
 
   // expose minimal API to send messages
   var api = globals.MQ = {};

@@ -15,4 +15,5 @@ def output_json(data, code, headers=None):
 api = flask_restful.Api(server)
 api.representations = { 'application/json': output_json }
 
+import baseadmin.backend.api.provisioning
 import baseadmin.backend.api.clients

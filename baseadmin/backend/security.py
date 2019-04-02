@@ -9,9 +9,8 @@ from baseadmin         import config
 from baseadmin.storage import db
 
 def valid_credentials(group, auth):
-  logging.debug("checking authentication for {0}".format(group))
   if not auth or not auth.username or not auth.password:
-    logging.debug("non authentication information")
+    logging.debug("no authentication information")
     return False
   user = db[group].find_one({ "_id" : auth.username })
   if not user:

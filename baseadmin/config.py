@@ -2,11 +2,13 @@ import os
 import logging
 import socket
 
+from baseadmin       import __version__
 from baseadmin.tools import VariableSleep
 
 CWD = os.getcwd()
 
 class app(object):
+  version     = __version__
   name        = os.environ.get("APP_NAME")        or os.path.basename(CWD)
   root        = os.environ.get("APP_ROOT")        or CWD
   author      = os.environ.get("APP_AUTHOR")      or "Unknown Author"
