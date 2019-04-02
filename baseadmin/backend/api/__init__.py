@@ -17,3 +17,4 @@ api.representations = { 'application/json': output_json }
 
 import baseadmin.backend.api.provisioning
 import baseadmin.backend.api.clients
+import baseadmin.backend.api.mq

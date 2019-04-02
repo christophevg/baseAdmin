@@ -2,6 +2,11 @@ import os
 import logging
 import socket
 
+try:
+  from urllib.parse import urlparse
+except ImportError:
+  from urlparse import urlparse
+
 from baseadmin       import __version__
 from baseadmin.tools import VariableSleep
 
@@ -30,7 +35,28 @@ class messaging(object):
   uri         = os.environ.get("CLOUDMQTT_URL") \
                 or os.environ.get("MQTT_URL") \
                 or "mqtt://localhost:1883"
+  ws          = None
   cloud       = not os.environ.get("CLOUDMQTT_URL") is None
+
+mq = urlparse(messaging.uri)
+
+messaging.ws = {
+  "ssl"      : mq.scheme == "wss" or messaging.cloud,
+  "hostname" : mq.hostname,
+  "port"     : 30000 + int(str(mq.port)[-4:]) if messaging.cloud else 9001,
+  "username" : mq.username,
+  "password" : mq.password
+}
+
+if mq.hostname == "localhost":
+  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  try:
+    s.connect(("8.8.8.8", 80))
+    messaging.ws["hostname"] = s.getsockname()[0]
+  except Exception as e:
+    messaging.ws = None
+  finally:
+    s.close()
 
 class master(object):
   root        = os.environ.get("MASTER_ROOT") or "http://localhost:8000"
@@ -52,6 +78,7 @@ logging.debug("baseAdmin config = " + str({
   },
   "messaging" : {
     "uri"         : messaging.uri,
+    "ws"          : messaging.ws,
     "cloud"       : messaging.cloud
   },
   "master" : {
