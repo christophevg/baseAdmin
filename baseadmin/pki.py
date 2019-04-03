@@ -33,7 +33,7 @@ class KeyStore(object):
       [
         {
           "_id"    : "",
-          "key"    : rsa.encode(self.private),
+          "private": rsa.encode(self.private),
           "public" : rsa.encode(self.public)
         }
       ]
@@ -43,7 +43,7 @@ class KeyStore(object):
     logging.debug("load keys for {0}".format(name))
     keys = db.pki.find_one({"_id": name})
     try:
-      return ( rsa.decode(str(keys["key"])), rsa.decode(str(keys["public"])) )
+      return ( rsa.decode(str(keys["private"])), rsa.decode(str(keys["public"])) )
     except Exception as e:
       logging.warn(str(e))
       return ( None, None )

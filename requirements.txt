@@ -8,6 +8,7 @@ cffi==1.11.5
 chardet==3.0.4
 Click==7.0
 CommonMark==0.5.4
+coverage==4.5.3
 cryptography==2.4.2
 docutils==0.14
 enum34==1.1.6
@@ -26,8 +27,10 @@ itsdangerous==1.1.0
 Jinja2==2.10
 MarkupSafe==1.1.0
 mongomock==3.14.0
+mqfactory==0.0.1
 packaging==18.0
 paho-mqtt==1.4.0
+persist-queue==0.4.1
 pkginfo==1.4.2
 pluggy==0.8.0
 psutil==5.4.8
