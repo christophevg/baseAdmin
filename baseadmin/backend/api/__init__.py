@@ -8,7 +8,7 @@ import json
 from baseadmin.backend.web import server
 
 def output_json(data, code, headers=None):
-  resp = make_response(json.dumps(sign(data)), code)
+  resp = make_response(json.dumps(data), code)
   resp.headers.extend(headers or {})
   return resp
 

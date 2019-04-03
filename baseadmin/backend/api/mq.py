@@ -5,7 +5,7 @@ from flask_restful import Resource
 
 from baseadmin                       import config
 from baseadmin.backend.security      import authenticated
-from baseadmin.backend.rest          import api
+from baseadmin.backend.api          import api
 
 class Connection(Resource):
   @authenticated("users")

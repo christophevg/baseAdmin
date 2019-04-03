@@ -3,7 +3,7 @@ import logging
 from flask         import request, Response
 from flask_restful import Resource
 
-from baseadmin.backend.rest          import api
+from baseadmin.backend.api           import api
 from baseadmin.backend.repositories  import users
 
 class Provisioning(Resource):
