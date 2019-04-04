@@ -30,4 +30,7 @@ docs: requirements
 	. venv/bin/activate; cd docs; make html
 	open docs/_build/html/index.html
 
+demo: requirements
+	. venv/bin/activate; gunicorn demo.backend.web:server
+
 .PHONY: dist docs
