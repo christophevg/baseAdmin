@@ -1,9 +1,6 @@
 from baseadmin.storage import db
 from baseadmin.pki     import keys
 
-# FIXME: required to make sure the keys are initialized
-keys.private
-
 from mqfactory                      import Threaded, MessageQueue
 from mqfactory.transport.mqtt       import MQTTTransport
 from mqfactory.transport.qos        import Acknowledging
@@ -12,7 +9,6 @@ from mqfactory.store                import Persisting
 from mqfactory.store.mongo          import MongoCollection
 from mqfactory.message.security     import Signing
 from mqfactory.message.security.rsa import RsaSignature
-from mqfactory.message.security.rsa import generate_key_pair, encode
 
 mq = JsonFormatting(
        Signing(
@@ -27,8 +23,6 @@ mq = JsonFormatting(
              outbox=MongoCollection(db.outbox)
            )
          ),
-         adding=RsaSignature(MongoCollection(db.pki), me="")
+         adding=RsaSignature(keys, me="")
        )
      )
-
-mq.send("everybody", "hello...")
