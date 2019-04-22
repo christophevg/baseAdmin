@@ -1,5 +1,8 @@
 import os
 import logging
+
+logger = logging.getLogger(__name__)
+
 import socket
 
 try:
@@ -21,10 +24,21 @@ class app(object):
 
 class client(object):
   name        = os.environ.get("CLIENT_NAME")     or socket.gethostname()
+  ip          = None
   secret      = os.environ.get("CLIENT_SECRET")   or "secret"
 
+if client.ip is None:
+  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  try:
+    s.connect(("8.8.8.8", 80))
+    client.ip = s.getsockname()[0]
+  except Exception as e:
+    pass
+  finally:
+    s.close()
+
 if client.secret == "secret":
-  logging.warn("using default client secret")
+  logger.warn("using default client secret")
 
 class store(object):
   uri         = os.environ.get("MONGODB_URI") \
@@ -49,20 +63,13 @@ messaging.ws = {
 }
 
 if mq.hostname == "localhost":
-  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-  try:
-    s.connect(("8.8.8.8", 80))
-    messaging.ws["hostname"] = s.getsockname()[0]
-  except Exception as e:
-    messaging.ws = None
-  finally:
-    s.close()
+  messaging.ws["hostname"] = client.ip
 
 class master(object):
   root        = os.environ.get("MASTER_ROOT") or "http://localhost:8000"
   interval    = VariableSleep(60, 60)
 
-logging.debug("baseAdmin config = " + str({
+logger.debug("baseAdmin config = " + str({
   "app" : {
     "name"        : app.name,
     "root"        : app.root,
@@ -70,7 +77,8 @@ logging.debug("baseAdmin config = " + str({
     "description" : app.description
   },
   "client": {
-    "name"        : client.name
+    "name"        : client.name,
+    "ip"          : client.ip
   },
   "store": {
     "uri"         : store.uri,

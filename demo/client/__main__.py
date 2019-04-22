@@ -1,8 +1,6 @@
-from baseadmin.client.endpoint import Runner
+from baseadmin.client.endpoint import Node
 
 try:
-  endpoint = Runner()
-  endpoint.connect()
+  Node().connect()
 except KeyboardInterrupt:
   pass
-

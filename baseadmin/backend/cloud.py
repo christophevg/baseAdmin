@@ -2,9 +2,6 @@ import os
 import logging
 import requests
 
-logging.getLogger("requests").setLevel(logging.WARNING)
-logging.getLogger("urllib3").setLevel(logging.WARNING)
-
 import socket
 import time
 

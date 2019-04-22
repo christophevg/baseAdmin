@@ -12,3 +12,6 @@ build
 .tox
 docs/_build
 htmlcov
+archive*
+demo/master/server.key
+demo/master/server.crt

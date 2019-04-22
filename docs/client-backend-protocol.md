@@ -1,3 +1,5 @@
 # Client-Backend Protocol
 
-**TODO**
+virgin master node -> root: POST /api/masters/register
+@root                     : POST /api/masters
+ 

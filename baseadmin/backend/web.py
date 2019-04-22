@@ -1,5 +1,8 @@
 import os
 import logging
+
+logger = logging.getLogger(__name__)
+
 import traceback
 
 from flask import Flask
@@ -30,7 +33,7 @@ try:
   import baseadmin.backend.api
   import baseadmin.backend.interface
 
-  logging.info("baseadmin backend web server is ready. awaiting clients...")
+  logger.info("baseadmin backend web server is ready. awaiting clients...")
 except Exception as e:
   reason = str(e)
-  logging.exception("baseadmin could not be initialized: {0}".format(reason))
+  logger.exception("baseadmin could not be initialized: {0}".format(reason))
