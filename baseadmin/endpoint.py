@@ -2,6 +2,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+import sys
 import requests
 import json
 import uuid
@@ -10,6 +11,7 @@ import time
 from functools import wraps
 import dateutil.parser
 import datetime
+import signal
 
 import warnings
 warnings.simplefilter("ignore")
@@ -169,12 +171,14 @@ def perform_scheduled_tasks():
 
 socketio.start_background_task(perform_scheduled_tasks)
 
+keep_going = True
+
 def connect():
   if socketio.eio.state == "connected": return
   master = db.config.find_one({"_id": "master"})["value"]
   token   = db.config.find_one({"_id": "token"})["value"]
   logger.info("connecting to {0} using {1}".format(master, token))
-  while True:
+  while keep_going:
     try:
       socketio.connect(
         master,
@@ -185,21 +189,27 @@ def connect():
       return True
     except sio.exceptions.ConnectionError as e:
       logger.warn("couldn't connect")
-      logger.exception(e)
       logger.info("retrying in 3 seconds...")
       time.sleep(3)
   return False
 
 def run():
   logging.info("starting...")
-  while connect():
+  while keep_going and  connect():
     try:
       while socketio.eio.state == "connected":
         socketio.wait()
         logger.info("stopped waiting")
-    except KeyboardInterrupt:
       socketio.disconnect()
       return
     except Exception as e:
       socketio.disconnect()
       logger.exception(e)
+
+# temp solution for easier termination of endpoint
+def my_teardown_handler(signal, frame):
+  global keep_going
+  keep_going = False
+  socketio.disconnect()
+  sys.exit(1)
+signal.signal(signal.SIGINT, my_teardown_handler)
