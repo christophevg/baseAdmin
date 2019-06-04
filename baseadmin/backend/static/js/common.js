@@ -25,3 +25,10 @@ function uuid() {
     return v.toString(16);
   });
 }
+
+function log() {
+  console.log.apply(
+    this,
+    [ new Date() ].concat( Array.prototype.slice.call(arguments) )
+  );
+}

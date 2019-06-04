@@ -37,36 +37,15 @@ if client.ip is None:
   finally:
     s.close()
 
-if client.secret == "secret":
-  logger.warn("using default client secret")
+if client.secret == "secret": logger.warn("using default client secret")
 
 class store(object):
   uri         = os.environ.get("MONGODB_URI") \
                 or "mongodb://localhost:27017/" + app.name
   timeout     = 1000
 
-class messaging(object):
-  uri         = os.environ.get("CLOUDMQTT_URL") \
-                or os.environ.get("MQTT_URL") \
-                or "mqtt://localhost:1883"
-  ws          = None
-  cloud       = not os.environ.get("CLOUDMQTT_URL") is None
-
-mq = urlparse(messaging.uri)
-
-messaging.ws = {
-  "ssl"      : mq.scheme == "wss" or messaging.cloud,
-  "hostname" : mq.hostname,
-  "port"     : 30000 + int(str(mq.port)[-4:]) if messaging.cloud else 9001,
-  "username" : mq.username,
-  "password" : mq.password
-}
-
-if mq.hostname == "localhost":
-  messaging.ws["hostname"] = client.ip
-
 class master(object):
-  root        = os.environ.get("MASTER_ROOT") or "http://localhost:8000"
+  root        = os.environ.get("MASTER_ROOT") or None
   interval    = VariableSleep(60, 60)
 
 logger.debug("baseAdmin config = " + str({
@@ -83,11 +62,6 @@ logger.debug("baseAdmin config = " + str({
   "store": {
     "uri"         : store.uri,
     "timeout"     : store.timeout
-  },
-  "messaging" : {
-    "uri"         : messaging.uri,
-    "ws"          : messaging.ws,
-    "cloud"       : messaging.cloud
   },
   "master" : {
     "root"        : master.root,

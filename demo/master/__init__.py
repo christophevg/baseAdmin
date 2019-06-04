@@ -28,15 +28,28 @@ gunicorn_logger = logging.getLogger("gunicorn.error")
 gunicorn_logger.handlers[0].setFormatter(formatter)
 gunicorn_logger.setLevel(logging.getLevelName(LOG_LEVEL))
 
+logging.getLogger("gunicorn.error").setLevel(logging.INFO)
+logging.getLogger("engineio.client").setLevel(logging.WARN)
+logging.getLogger("engineio.server").setLevel(logging.WARN)
+logging.getLogger("socketio.client").setLevel(logging.WARN)
 
-# connect to the baseAdmin network with an endpoint with a Master role
-from baseadmin.client.endpoint import Master
+logging.getLogger().handlers[0].setFormatter(formatter)
 
 from threading import Thread
 
+from baseadmin          import config
+from baseadmin.storage  import db
+from baseadmin.endpoint import register, run
+
+master = db.config.find_one({"_id": "master"})
+if master: master = master["value"]
+
 try:
-  endpoint = Master()
-  t = Thread(target=endpoint.connect)
+  if not master:
+    if not register({"location": "https://{0}:8001".format(config.client.ip)}):
+      logger.fatal("registration was rejected, can't continue.")
+      sys.exit(1)
+  t = Thread(target=run)
   t.daemon = True
   t.start()
 except KeyboardInterrupt:

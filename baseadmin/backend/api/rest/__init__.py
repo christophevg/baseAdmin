@@ -15,8 +15,6 @@ def output_json(data, code, headers=None):
 api = flask_restful.Api(server)
 api.representations = { 'application/json': output_json }
 
-import baseadmin.backend.api.provisioning
-import baseadmin.backend.api.pki
-import baseadmin.backend.api.mq
-import baseadmin.backend.api.masters
-import baseadmin.backend.api.nodes
+import baseadmin.backend.api.rest.provisioning
+import baseadmin.backend.api.rest.registration
+import baseadmin.backend.api.rest.session

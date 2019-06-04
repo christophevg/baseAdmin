@@ -13,5 +13,5 @@ build
 docs/_build
 htmlcov
 archive*
-demo/master/server.key
-demo/master/server.crt
+*.key
+*.crt

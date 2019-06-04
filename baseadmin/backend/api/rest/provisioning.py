@@ -3,8 +3,8 @@ import logging
 from flask         import request, Response
 from flask_restful import Resource
 
-from baseadmin.backend.api           import api
-from baseadmin.backend.repositories  import users
+from baseadmin.backend.api.rest     import api
+from baseadmin.backend.repositories import users
 
 class Provisioning(Resource):
   def post(self):

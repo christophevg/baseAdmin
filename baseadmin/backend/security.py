@@ -1,4 +1,6 @@
 import logging
+logger = logging.getLogger(__name__)
+
 from functools import wraps
 
 import bcrypt
@@ -10,14 +12,14 @@ from baseadmin.storage import db
 
 def valid_credentials(group, auth):
   if not auth or not auth.username or not auth.password:
-    logging.debug("no authentication information")
+    logger.debug("no authentication information")
     return False
   user = db[group].find_one({ "_id" : auth.username })
   if not user:
-    logging.debug("unknown {0} member: {1}".format(group, auth.username))
+    logger.debug("unknown {0} member: {1}".format(group, auth.username))
     return False
   if not bcrypt.checkpw(auth.password, user["pass"]):
-    logging.debug("incorrect password")
+    logger.debug("incorrect password")
     return False
   return True
 

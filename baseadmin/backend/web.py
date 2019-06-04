@@ -30,8 +30,9 @@ try:
   ])
   server.jinja_loader = my_loader
 
-  import baseadmin.backend.api
   import baseadmin.backend.interface
+  import baseadmin.backend.api.rest
+  import baseadmin.backend.api.io
 
   logger.info("baseadmin backend web server is ready. awaiting clients...")
 except Exception as e:
