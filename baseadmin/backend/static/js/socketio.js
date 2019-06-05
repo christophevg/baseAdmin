@@ -17,8 +17,14 @@ $.get( "/api/session", function socketio_connect(token) {
         }
   });
 
-  socket.on("connect",    function() { log("CONNECTED");    });
-  socket.on("disconnect", function() { log("DISCONNECTED"); });
+  socket.on("connect", function() {
+    log("CONNECTED");
+    app.connected = true;
+  });
+  socket.on("disconnect", function() {
+    log("DISCONNECTED");
+    app.connected = false;
+  });
 
   socket.on("ack", function(state) {
     update_state(state);

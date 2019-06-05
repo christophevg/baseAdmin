@@ -39,6 +39,9 @@
           {% endif %}
           <span class="hidden-xs-only">{{ app.name }}</span>
         </v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-icon large color="green" v-if="connected">cloud_done</v-icon>
+        <v-icon large color="red"   v-else>cloud_off</v-icon>
       </v-toolbar>
 
       {% if user %}

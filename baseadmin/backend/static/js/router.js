@@ -22,6 +22,7 @@ var app = new Vue({
     multiselect: VueMultiselect.Multiselect
   },
   data: {
+    connected:   false,
     drawer: null,
     sections: [
       { icon: "dashboard", text: "Dashboard", path: "/dashboard" },
