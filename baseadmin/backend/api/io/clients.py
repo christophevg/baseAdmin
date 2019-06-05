@@ -36,13 +36,7 @@ def on_release(name):
 @socketio.on("ping2")
 @secured
 def on_ping(data):
-  name = data["client"]
-  logger.info("ping {0}".format(name))
-  if name in groups:
-    for member in groups[name]:
-      emit("ping2", data, room=member)
-  else:
-    emit("ping2", data, room=name)
+  emit("ping2", data, room=data["client"])
 
 @socketio.on("join")
 @secured

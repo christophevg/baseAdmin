@@ -61,13 +61,17 @@ function release(name) {
 
 // ping a client
 function ping(name) {
-  socket.emit("ping2", { "client" : name, "start" : Date.now() }, function() {
-    if(name in groups) {
-      log("PING", name, groups[name]);
-    } else {
+  if(name in groups) {
+    groups[name].forEach(function(member) {
+      socket.emit("ping2", { "client" : member, "start" : Date.now() }, function() {
+        log("PING", member);
+      });      
+    });
+  } else  {
+    socket.emit("ping2", { "client" : name, "start" : Date.now() }, function() {
       log("PING", name);
-    }
-  });
+    });
+  }
 }
 
 // join a client to a group
