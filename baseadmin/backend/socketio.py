@@ -124,6 +124,12 @@ def on_release(name):
   logging.info("releasing {0}".format(name))
   emit("release", {}, room=name)
 
+@socketio.on("ping2")
+@secured
+def on_ping(data):
+  logger.info("ping {0}".format(data["client"]))
+  emit("ping2", data, room=data["client"])
+
 # client
 
 @socketio.on("performed")
@@ -136,3 +142,10 @@ def on_performed(feedback):
     status = dict(client)
     status.update({ "performed" : feedback["performed"]})
     socketio.emit("performed", status, room="browser" )
+
+@socketio.on("pong2")
+@secured
+def on_pong(data):
+  name = sid2name[request.sid]
+  logger.info("pong {0}".format(name))
+  socketio.emit("pong2", data, room="browser")

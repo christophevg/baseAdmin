@@ -44,3 +44,10 @@ function release(name) {
     log("RELEASED", name);
   });
 }
+
+// ping a client
+function ping(name) {
+  socket.emit("ping2", { "client" : name, "start" : Date.now() }, function() {
+    log("PING", name);
+  });
+}

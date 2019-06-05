@@ -136,6 +136,11 @@ def on_release(_):
   logger.info("release")
   socketio.disconnect()
 
+@socketio.on("ping2")
+def on_ping(request):
+  logger.info("ping")
+  socketio.emit("pong2", request)
+
 commands = {}
 
 def feedback(*args, **kwargs):

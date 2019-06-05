@@ -53,5 +53,9 @@ $.get( "/api/session", function socketio_connect(token) {
   socket.on("report", function(data) {
     log("REPORT", data);
   });
+  
+  socket.on("pong2", function(data) {
+    rtt = Date.now() - data["start"];
+    log("PONG", data["client"], rtt);
+  });
 });
-
