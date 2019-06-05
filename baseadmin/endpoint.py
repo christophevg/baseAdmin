@@ -72,8 +72,8 @@ def register(registration={}, master=config.master.root):
       logger.warn("could not connect to {0}".format(url))
     except Exception as e:
       logger.exception("failed to connect")
-    logger.debug("retrying in {0}".format(str(config.master.interval)))
-    config.master.interval.sleep()
+    logger.debug("retrying in {0}".format(str(config.master.registration_interval)))
+    config.master.registration_interval.sleep()
 
 class MyEngineIoClient(eio.Client):
   def _send_request(self, method, url, headers=None, body=None):
@@ -121,10 +121,20 @@ def on_connect():
   me.sid = socketio.eio.sid
   if not me.queue.empty: emit_next()
 
+@socketio.on("error")
+def on_error(msg):
+  logger.info(msg)
+
 @socketio.on("disconnect")
 def on_disconnect():
   logger.info("disconnected")
   me.sid = None
+  socketio.disconnect()
+
+@socketio.on("release")
+def on_release(_):
+  logger.info("release")
+  socketio.disconnect()
 
 commands = {}
 
@@ -171,14 +181,12 @@ def perform_scheduled_tasks():
 
 socketio.start_background_task(perform_scheduled_tasks)
 
-keep_going = True
-
 def connect():
   if socketio.eio.state == "connected": return
   master = db.config.find_one({"_id": "master"})["value"]
-  token   = db.config.find_one({"_id": "token"})["value"]
+  token  = db.config.find_one({"_id": "token"})["value"]
   logger.info("connecting to {0} using {1}".format(master, token))
-  while keep_going:
+  while True:
     try:
       socketio.connect(
         master,
@@ -188,18 +196,25 @@ def connect():
         })
       return True
     except sio.exceptions.ConnectionError as e:
-      logger.warn("couldn't connect")
-      logger.info("retrying in 3 seconds...")
-      time.sleep(3)
+      if str(e) == "Connection refused by the server":
+        logger.warn("connection refused by server")
+        logger.debug("retrying in {0}".format(str(config.master.connection_interval)))
+        config.master.connection_interval.sleep()
+      else:
+        #  we aren't allowed to connect, so our credentials are bogus
+        # clear them and stop trying, fall through run and re-register
+        logger.info("server doesn't allow us anymore, clearing credentials")
+        db.config.delete_one({"_id": "master"})
+        db.config.delete_one({"_id": "token"})
+        break
   return False
 
 def run():
-  logging.info("starting...")
-  while keep_going and  connect():
+  logger.info("starting...")
+  while connect():
     try:
       while socketio.eio.state == "connected":
         socketio.wait()
-        logger.info("stopped waiting")
       socketio.disconnect()
       return
     except Exception as e:
@@ -208,8 +223,6 @@ def run():
 
 # temp solution for easier termination of endpoint
 def my_teardown_handler(signal, frame):
-  global keep_going
-  keep_going = False
   socketio.disconnect()
   sys.exit(1)
 signal.signal(signal.SIGINT, my_teardown_handler)

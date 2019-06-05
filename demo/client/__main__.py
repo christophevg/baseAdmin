@@ -7,7 +7,6 @@ from baseadmin.storage  import db
 from baseadmin.endpoint import register, run, command, me, socketio
 
 # example "bulky" state update command
-
 @command("update")
 def on_update(state):
   logger.info("updating state")
@@ -22,16 +21,16 @@ def report():
 
 socketio.start_background_task(report)
 
+while True:
+  master = db.config.find_one({"_id": "master"})
+  if master: master = master["value"]
 
+  try:
+    if not master:
+      if not register():
+        logger.fatal("registration was rejected, can't continue.")
+        sys.exit(1)
+    run()
+  except KeyboardInterrupt:
+    break
 
-master = db.config.find_one({"_id": "master"})
-if master: master = master["value"]
-
-try:
-  if not master:
-    if not register():
-      logger.fatal("registration was rejected, can't continue.")
-      sys.exit(1)
-  run()
-except KeyboardInterrupt:
-  pass

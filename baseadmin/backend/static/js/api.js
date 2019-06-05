@@ -26,13 +26,21 @@ function execute(name, cmd, args, schedule) {
   return "ok";
 }
 
+// accept a client (registration), optionally dispatching it to another master
 function accept(name, master) {
   var message = {
     "client" : name,
     "master" : master
   };
   socket.emit("accept", message, function() {
-    log("ACCEPTED",  name)
+    log("ACCEPTED", name)
   });
 }
 
+// release a client
+function release(name) {
+  socket.emit("release", name, function() {
+    release_client(name);
+    log("RELEASED", name);
+  });
+}

@@ -29,6 +29,7 @@ def get(name=None):
   return [ request for request in db.registrations.find({"state": "pending"}) ]
 
 def delete(name):
+  logger.info("deleting registration for {0}".format(name))
   db.registrations.delete_one({"_id": name})
 
 def accept(name, master=None):

@@ -26,6 +26,11 @@ class Clients(object):
   def __iter__(self):
     return iter(self.clients.values())
 
+  def delete(self, name):
+    logger.info("deleting client info for {0}".format(name))
+    self.clients[name].delete()
+    del self.clients[name]
+
 class Client(object):
   def __init__(self, name, collection, **kwargs):
     self.collection = collection
@@ -73,6 +78,9 @@ class Client(object):
       if "location" in kwargs: self._location = kwargs["location"]
       if "master"   in kwargs: self._master   = kwargs["master"]
 
+  def delete(self):
+    self.collection.delete_one({"_id": self.name})
+
   @property
   def state(self):
     with self.lock:
@@ -89,7 +97,6 @@ class Client(object):
 
   @property
   def token(self):
-    logger.info("*******  property: {0}".format(self._token))
     return self._token
 
   @token.setter

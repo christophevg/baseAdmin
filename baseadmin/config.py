@@ -45,8 +45,9 @@ class store(object):
   timeout     = 1000
 
 class master(object):
-  root        = os.environ.get("MASTER_ROOT") or None
-  interval    = VariableSleep(60, 60)
+  root                  = os.environ.get("MASTER_ROOT") or None
+  registration_interval = VariableSleep(60, 60)
+  connection_interval   = VariableSleep(10, 10)
 
 logger.debug("baseAdmin config = " + str({
   "app" : {
@@ -65,6 +66,9 @@ logger.debug("baseAdmin config = " + str({
   },
   "master" : {
     "root"        : master.root,
-    "interval"    : str(master.interval)
+    "intervals"    : {
+      "registration" : str(master.registration_interval),
+      "connection"   : str(master.connection_interval)
+    }
   }
 }))

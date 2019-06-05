@@ -1,5 +1,5 @@
 import logging
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 from functools import wraps
 
@@ -27,17 +27,17 @@ def emit_next(client):
         "args" : message["args"],
       }
     logger.info("sending {0} to {1} with {2}".format(cmd, client.name, payload))
-    socketio.emit(cmd, payload, room=client.name, callback=ack(client))
+    socketio.emit(cmd, payload, room=client.name, callback=ack(client, cmd))
   except Exception as e:
     logger.exception(e)
     logger.error("couldn't emit next message, removing it from queue...")
     logger.error("message was: {0}".format(message))
     client.queue.pop()
 
-def ack(client):
+def ack(client, cmd):
   def handler(feedback):
     with client.lock:
-      logger.info("ack: {0} : {1} => {2}".format(client.name, client.state, feedback["state"]))
+      logger.info("ack: {0} : {1}  {2} => {3}".format(client.name, cmd, client.state, feedback["state"]))
       client.state = feedback["state"]
       client.queue.pop()
       socketio.emit("ack", dict(client), room="browser" )
@@ -52,7 +52,7 @@ def secured(f):
   @wraps(f)
   def wrapper(*args, **kwargs):
     try:
-      name      = request.headers["client"]
+      name     = request.headers["client"]
       token    = request.headers["token"]
       expected = tokens.get(name)
       assert token == expected
@@ -67,7 +67,7 @@ def secured(f):
 # common
 
 @socketio.on('connect')
-def connect():
+def on_connect():
   logger.info("connect: {0} ({1})".format(request.headers["client"], request.sid))
   name = request.headers["client"]
   token = request.headers["token"]
@@ -92,7 +92,7 @@ def connect():
       if not client.queue.empty: emit_next(client)
 
 @socketio.on('disconnect')
-def disconnect():
+def on_disconnect():
   logger.info("disconnect: {0} ({1})".format(request.headers["client"], request.sid))
   leave_room(request.headers["client"])
   name = request.headers["client"]
@@ -107,7 +107,7 @@ def disconnect():
 
 @socketio.on("queue")
 @secured
-def queue(message):
+def on_queue(message):
   client = clients[message["client"]]
   with client.lock:
     logger.info("queue: {0} : {1}".format(client.name, message["payload"]))
@@ -115,11 +115,20 @@ def queue(message):
     if len(client.queue) == 1: emit_next(client)
     return True
 
+@socketio.on("release")
+@secured
+def on_release(name):
+  logging.info("cleaning up {0}".format(name))
+  registration.delete(name)
+  clients.delete(name)
+  logging.info("releasing {0}".format(name))
+  emit("release", {}, room=name)
+
 # client
 
 @socketio.on("performed")
 @secured
-def performed(feedback):
+def on_performed(feedback):
   client = clients[sid2name[request.sid]]
   with client.lock:
     client.state = feedback["state"]

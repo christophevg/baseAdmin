@@ -24,3 +24,7 @@ function update_state(client) {
   get_client(client.name).state     = client.state;
   get_client(client.name).queue     = client.queue;    
 }
+
+function release_client(name) {
+  delete clients[name];
+}
