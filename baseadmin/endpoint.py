@@ -26,17 +26,19 @@ from baseadmin                             import config
 from baseadmin.storage                     import db
 from baseadmin.backend.repositories.client import Client
 
+publish_location = False
 
-def register(registration={}, master=config.master.root):
+def generate_location():
+  return "https://{0}:8001".format(config.client.ip)
+
+def register(master=config.master.root):
   url = master + "/api/register"
   logger.info("registering at {0}".format(url))
   while True:
     try:
-      logger.debug("submitting registration: {0}".format(str(registration)))
+      logger.debug("submitting registration")
       response = requests.post(
         url,
-        data=json.dumps(registration),
-        headers={"content-type": "application/json"},
         auth=(config.client.name, config.client.secret),
         verify=False
       )
@@ -50,6 +52,7 @@ def register(registration={}, master=config.master.root):
             logger.info("registration was accepted: {0}/{1}".format(
               request["master"], request["token"]
             ))
+            # no master info received => stick with this one
             if request["master"] is None:
               db.config.update_one(
                 {"_id": "master"},
@@ -63,7 +66,8 @@ def register(registration={}, master=config.master.root):
               )
               return True
             else:
-              return register(registration, request["master"])
+              # we got a new master, let's try to register overthere
+              return register(request["master"])
           elif request["state"] == "rejected":
             logger.warn("registration was rejected")
             return False
@@ -119,6 +123,10 @@ def ack():
 def on_connect():
   logger.info("connected")
   me.sid = socketio.eio.sid
+  if publish_location:
+    location = generate_location()
+    logger.info("sending location: {0}".format(location))
+    socketio.emit("location", location)
   if not me.queue.empty: emit_next()
 
 @socketio.on("error")

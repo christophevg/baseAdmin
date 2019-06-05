@@ -22,20 +22,22 @@ class app(object):
   author      = os.environ.get("APP_AUTHOR")      or "Unknown Author"
   description = os.environ.get("APP_DESCRIPTION") or "A baseAdmin app"
 
-class client(object):
+class client_meta(type):
+  @property
+  def ip(cls):
+      s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+      try:
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+      except Exception as e:
+        pass
+      finally:
+        s.close()
+
+class client(metaclass=client_meta):
   name        = os.environ.get("CLIENT_NAME")     or socket.gethostname()
-  ip          = None
   secret      = os.environ.get("CLIENT_SECRET")   or "secret"
 
-if client.ip is None:
-  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-  try:
-    s.connect(("8.8.8.8", 80))
-    client.ip = s.getsockname()[0]
-  except Exception as e:
-    pass
-  finally:
-    s.close()
 
 if client.secret == "secret": logger.warn("using default client secret")
 

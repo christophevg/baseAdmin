@@ -9,17 +9,23 @@ from baseadmin.storage              import db
 from baseadmin.backend.socketio     import socketio
 from baseadmin.backend.repositories import clients
 
-def request(name, request):
+def request(name):
   try:
     # if the request exists return it
-    requested = get(name)
-    if requested: return requested
+    registration = get(name)
+    if registration:
+      if registration["state"] == "accepted":
+        client = clients[name]
+        registration["master"] = clients[client.master].location if client.master else None
+        registration["token"]  = client.token
+      return registration
     # else accept a the new request
-    request["_id"] = name
-    request["state"] = "pending"
-    db.registrations.insert_one(request)
-    logger.info("received and recorded registration request".format(request))
-    socketio.emit("register", request, room="browser")
+    db.registrations.insert_one({
+      "_id" : name,
+      "state": "pending"
+    })
+    logger.info("received and recorded registration request")
+    socketio.emit("register", name, room="browser")
   except Exception as e:
     raise ValueError("invalid request: {0}".format(str(e)))
   return None
@@ -35,23 +41,16 @@ def delete(name):
 def accept(name, master=None):
   try:
     request = get(name)
-    if master: master = clients[master].location
     # create/update client record
     clients[name].update(
       token=str(uuid.uuid4()) if master is None else None,
       master=master,
       location=request["location"] if "location" in request else None
     )
-    # update registration with same newly assigned information (token+master)
+    # update registration status
     db.registrations.update_one(
-      {"_id" : name},
-      {
-         "$set" : {
-           "state" : "accepted",
-           "token" : clients[name].token,
-           "master": master
-         }
-      }
+      { "_id" : name },
+      { "$set" : { "state" : "accepted" } }
     )
     if master:
       logger.info("assigned {0} to {1}".format(name, master))

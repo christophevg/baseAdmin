@@ -8,7 +8,8 @@ function get_client(name) {
       name     : name,
       connected: false,
       state    : {},
-      queue    : []
+      queue    : [],
+      location : null
     };
   }
   return clients[name];
@@ -19,10 +20,12 @@ function init_state(state) {
   console.log("TODO: pending registrations", state.registrations);
 }
 
-function update_state(client) {
-  get_client(client.name).connected = client.connected;
-  get_client(client.name).state     = client.state;
-  get_client(client.name).queue     = client.queue;    
+function update_state(state) {
+  var client = get_client(state.name)
+  client.connected = state.connected;
+  client.state     = state.state;
+  client.queue     = state.queue;
+  client.location  = state.location;
 }
 
 function release_client(name) {

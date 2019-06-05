@@ -58,4 +58,9 @@ $.get( "/api/session", function socketio_connect(token) {
     rtt = Date.now() - data["start"];
     log("PONG", data["client"], rtt);
   });
+  
+  socket.on("location", function(state) {
+    update_state(state)
+    log("LOCATION", state);
+  });
 });

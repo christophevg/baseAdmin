@@ -37,20 +37,25 @@ logging.getLogger().handlers[0].setFormatter(formatter)
 
 from threading import Thread
 
-from baseadmin          import config
+from baseadmin          import config, endpoint
 from baseadmin.storage  import db
-from baseadmin.endpoint import register, run
 
-master = db.config.find_one({"_id": "master"})
-if master: master = master["value"]
+endpoint.publish_location = True
 
-try:
-  if not master:
-    if not register({"location": "https://{0}:8001".format(config.client.ip)}):
-      logger.fatal("registration was rejected, can't continue.")
-      sys.exit(1)
-  t = Thread(target=run)
-  t.daemon = True
-  t.start()
-except KeyboardInterrupt:
-  pass
+def event_loop():
+  while True:
+    master = db.config.find_one({"_id": "master"})
+    if master: master = master["value"]
+
+    try:
+      if not master:
+        if not endpoint.register():
+          logger.fatal("registration was rejected, can't continue.")
+          sys.exit(1)
+      endpoint.run()
+    except KeyboardInterrupt:
+      pass
+
+t = Thread(target=event_loop)
+t.daemon = True
+t.start()

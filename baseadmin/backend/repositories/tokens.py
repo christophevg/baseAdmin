@@ -31,4 +31,5 @@ def get(name):
   if name == "browser":
     return browser.token
   else:
-    return clients[name].token
+    if name in clients: return clients[name].token
+    return None

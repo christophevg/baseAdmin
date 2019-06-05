@@ -28,11 +28,18 @@ class Clients(object):
 
   def delete(self, name):
     logger.info("deleting client info for {0}".format(name))
-    self.clients[name].delete()
-    del self.clients[name]
+    try:
+      self.clients[name].delete()
+      del self.clients[name]
+    except KeyError:
+      logger.warn("deleting unknown client: {0}".format(name))
+
+  def __contains__(self, name):
+    return name in self.clients
 
 class Client(object):
   def __init__(self, name, collection, **kwargs):
+    if not name: raise ValueError("name shouldn't be null")
     self.collection = collection
     self.name       = name
     self.queue      = MongoQueue(self.collection, self.name)
@@ -101,6 +108,7 @@ class Client(object):
 
   @token.setter
   def token(self, new_token):
+    if new_token == self._token: return
     with self.lock:
       self.collection.update_one(
         { "_id": self.name },
@@ -114,6 +122,7 @@ class Client(object):
 
   @location.setter
   def location(self, new_location):
+    if new_location == self._location: return
     with self.lock:
       self.collection.update_one(
         { "_id": self.name },
@@ -127,6 +136,7 @@ class Client(object):
 
   @master.setter
   def master(self, new_master):
+    if new_master == self._master: return
     with self.lock:
       self.collection.update_one(
         { "_id": self.name },

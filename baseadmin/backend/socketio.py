@@ -132,6 +132,17 @@ def on_ping(data):
 
 # client
 
+@socketio.on("location")
+@secured
+def on_location(location):
+  client = clients[sid2name[request.sid]]
+  if client.location != location:
+    logger.info("updating location for {0}: {1} -> {2}".format(
+      client.name, client.location, location)
+    )
+    client.location = location
+    socketio.emit("location", dict(client), room="browser" )
+
 @socketio.on("performed")
 @secured
 def on_performed(feedback):
