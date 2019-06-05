@@ -50,4 +50,7 @@ demo-master: demo/master/server.key demo/master/server.crt
 demo-client:
 	. venv/bin/activate; python -m demo.client
 
+demo-client2:
+	. venv/bin/activate; python -m demo.client2
+
 .PHONY: dist docs

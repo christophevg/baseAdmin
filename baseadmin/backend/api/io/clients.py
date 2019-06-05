@@ -1,6 +1,8 @@
 import logging
 logger = logging.getLogger(__name__)
 
+from flask import request
+
 from flask_socketio import emit
 
 from baseadmin.backend.socketio     import socketio, secured, sid2name
@@ -34,8 +36,13 @@ def on_release(name):
 @socketio.on("ping2")
 @secured
 def on_ping(data):
-  logger.info("ping {0}".format(data["client"]))
-  emit("ping2", data, room=data["client"])
+  name = data["client"]
+  logger.info("ping {0}".format(name))
+  if name in groups:
+    for member in groups[name]:
+      emit("ping2", data, room=member)
+  else:
+    emit("ping2", data, room=name)
 
 @socketio.on("join")
 @secured

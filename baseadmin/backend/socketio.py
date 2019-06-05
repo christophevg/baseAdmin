@@ -109,9 +109,16 @@ def on_disconnect():
 @socketio.on("queue")
 @secured
 def on_queue(message):
-  client = clients[message["client"]]
+  name = message["client"]
+  if name in groups:
+    for member in groups[name]:
+      client = clients[member]
+      queue(client, message["payload"])
+  else:
+      queue(clients[name], message["payload"])
+
+def queue(client, payload):
   with client.lock:
-    logger.info("queue: {0} : {1}".format(client.name, message["payload"]))
-    client.queue.append(message["payload"])
+    logger.info("queue: {0} : {1}".format(client.name, payload))
+    client.queue.append(payload)
     if len(client.queue) == 1: emit_next(client)
-    return True

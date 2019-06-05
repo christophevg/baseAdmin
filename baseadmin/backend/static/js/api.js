@@ -1,7 +1,6 @@
 // API
 
 function execute(name, cmd, args, schedule) {
-  var client = clients[name];
   if(typeof schedule === "undefined") { schedule = ""; }
   var message = {
     "client"   : name,
@@ -19,8 +18,15 @@ function execute(name, cmd, args, schedule) {
 
   log("CMD", message);
   socket.emit("queue", message, function() {
-    client.queue.push(message.payload);
-    log("QUEUED", client)
+    if( name in groups ) {
+      groups[name].forEach(function(member) {
+        clients[member].queue.push(message.payload);
+        log("QUEUED", clients[member]);
+      });
+    } else {
+      clients[name].queue.push(message.payload);
+      log("QUEUED", clients[name]);
+    }
   });
   
   return "ok";
@@ -56,7 +62,11 @@ function release(name) {
 // ping a client
 function ping(name) {
   socket.emit("ping2", { "client" : name, "start" : Date.now() }, function() {
-    log("PING", name);
+    if(name in groups) {
+      log("PING", name, groups[name]);
+    } else {
+      log("PING", name);
+    }
   });
 }
 
