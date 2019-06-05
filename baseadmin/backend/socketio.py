@@ -9,7 +9,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
 
 from baseadmin.backend.web import server
 
-from baseadmin.backend.repositories import registration, clients
+from baseadmin.backend.repositories import registration, clients, groups
 
 sid2name = {}
 
@@ -80,7 +80,8 @@ def on_connect():
       "state",
       {
         "clients"       : [ dict(client) for client in clients ],
-        "registrations" : registration.get()
+        "registrations" : registration.get(),
+        "groups"        : dict(groups)
       },
       room="browser")
   else:

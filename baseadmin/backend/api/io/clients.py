@@ -4,7 +4,7 @@ logger = logging.getLogger(__name__)
 from flask_socketio import emit
 
 from baseadmin.backend.socketio     import socketio, secured, sid2name
-from baseadmin.backend.repositories import registration, clients
+from baseadmin.backend.repositories import registration, clients, groups
 
 # commands
 
@@ -14,7 +14,7 @@ def accept(message):
   logger.info("accept: {0}".format(message))
   try:
     registration.accept(message["client"], message["master"] if "master" in message else None)
-  except ValueError as e:
+  except Exception as e:
     return { "success" : False, "message" : str(e) }
   return { "success" : True }
 
@@ -27,7 +27,7 @@ def on_release(name):
     clients.delete(name)
     logger.info("releasing {0}".format(name))
     emit("release", {}, room=name)
-  except ValueError as e:
+  except Exception as e:
     return { "success" : False, "message" : str(e) }
   return { "success" : True }
 
@@ -36,6 +36,26 @@ def on_release(name):
 def on_ping(data):
   logger.info("ping {0}".format(data["client"]))
   emit("ping2", data, room=data["client"])
+
+@socketio.on("join")
+@secured
+def join(message):
+  logger.info("join: {0}".format(message))
+  try:
+    groups[message["group"]].add(message["client"])
+  except Exception as e:
+    return { "success" : False, "message" : str(e) }
+  return { "success" : True }
+
+@socketio.on("leave")
+@secured
+def join(message):
+  logger.info("leave: {0}".format(message))
+  try:
+    groups[message["group"]].remove(message["client"])
+  except Exception as e:
+    return { "success" : False, "message" : str(e) }
+  return { "success" : True }
 
 # events
 

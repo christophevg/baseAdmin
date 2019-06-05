@@ -59,3 +59,27 @@ function ping(name) {
     log("PING", name);
   });
 }
+
+// join a client to a group
+function join(client, group) {
+  socket.emit("join", { "client": client, "group": group }, function(result) {
+    if( result.success ) {
+      join_group(client, group);
+      log("JOINED", client);
+    } else {
+      log("FAILED", "join", name, result.message);
+    }    
+  });
+}
+
+// leave a client from a group
+function leave(client, group) {
+  socket.emit("leave", { "client": client, "group": group }, function(result) {
+    if( result.success ) {
+      leave_group(client, group);
+      log("LEFT", client);
+    } else {
+      log("FAILED", "leave", name, result.message);
+    }    
+  });
+}
