@@ -64,7 +64,7 @@ def secured(f):
       disconnect()
   return wrapper
 
-# common
+# events
 
 @socketio.on('connect')
 def on_connect():
@@ -103,7 +103,7 @@ def on_disconnect():
       client.sid = None
       emit("disconnected", client.name, room="browser")
 
-# browser
+# commands
 
 @socketio.on("queue")
 @secured
@@ -114,49 +114,3 @@ def on_queue(message):
     client.queue.append(message["payload"])
     if len(client.queue) == 1: emit_next(client)
     return True
-
-@socketio.on("release")
-@secured
-def on_release(name):
-  logging.info("cleaning up {0}".format(name))
-  registration.delete(name)
-  clients.delete(name)
-  logging.info("releasing {0}".format(name))
-  emit("release", {}, room=name)
-
-@socketio.on("ping2")
-@secured
-def on_ping(data):
-  logger.info("ping {0}".format(data["client"]))
-  emit("ping2", data, room=data["client"])
-
-# client
-
-@socketio.on("location")
-@secured
-def on_location(location):
-  client = clients[sid2name[request.sid]]
-  if client.location != location:
-    logger.info("updating location for {0}: {1} -> {2}".format(
-      client.name, client.location, location)
-    )
-    client.location = location
-    socketio.emit("location", dict(client), room="browser" )
-
-@socketio.on("performed")
-@secured
-def on_performed(feedback):
-  client = clients[sid2name[request.sid]]
-  with client.lock:
-    client.state = feedback["state"]
-    logger.info("performed: {0} : ")
-    status = dict(client)
-    status.update({ "performed" : feedback["performed"]})
-    socketio.emit("performed", status, room="browser" )
-
-@socketio.on("pong2")
-@secured
-def on_pong(data):
-  name = sid2name[request.sid]
-  logger.info("pong {0}".format(name))
-  socketio.emit("pong2", data, room="browser")

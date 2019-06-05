@@ -32,16 +32,24 @@ function accept(name, master) {
     "client" : name,
     "master" : master
   };
-  socket.emit("accept", message, function() {
-    log("ACCEPTED", name)
+  socket.emit("accept", message, function(result) {
+    if( result.success ) {
+      log("ACCEPTED", name);
+    } else {
+      log("FAILED", "accept", name, result.message);
+    }
   });
 }
 
 // release a client
 function release(name) {
-  socket.emit("release", name, function() {
-    release_client(name);
-    log("RELEASED", name);
+  socket.emit("release", name, function(result) {
+    if( result.success ) {
+      release_client(name);
+      log("RELEASED", name);
+    } else {
+      log("FAILED", "release", name, result.message);
+    }
   });
 }
 

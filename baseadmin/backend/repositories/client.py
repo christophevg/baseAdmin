@@ -3,8 +3,6 @@ logger = logging.getLogger(__name__)
 
 from threading import RLock
 
-from baseadmin.storage import db
-
 from baseadmin.queue import MongoQueue
 
 class Clients(object):
@@ -19,9 +17,6 @@ class Clients(object):
     if not name in self.clients:
       self.clients[name] = Client(name, self.collection)
     return self.clients[name]
-
-  def next(self):
-    return self.__next__() # pragma: no cover
 
   def __iter__(self):
     return iter(self.clients.values())
@@ -143,5 +138,3 @@ class Client(object):
         { "$set": { "master" : new_master } }
       )
       self._master = new_master
-
-clients = Clients(db.clients)

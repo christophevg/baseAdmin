@@ -35,12 +35,18 @@ def get(name=None):
   return [ request for request in db.registrations.find({"state": "pending"}) ]
 
 def delete(name):
+  if not get(name):
+    logger.warn("accepting unknown registration: {0}".format(name))
+    raise ValueError("unknown registration for {0}".format(name))    
   logger.info("deleting registration for {0}".format(name))
   db.registrations.delete_one({"_id": name})
 
 def accept(name, master=None):
   try:
     request = get(name)
+    if not request:
+      logger.warn("accepting unknown registration: {0}".format(name))
+      raise ValueError("unknown registration for {0}".format(name))
     # create/update client record
     clients[name].update(
       token=str(uuid.uuid4()) if master is None else None,
