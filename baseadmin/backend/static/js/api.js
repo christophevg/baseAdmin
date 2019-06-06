@@ -40,7 +40,9 @@ function accept(name, master) {
   };
   socket.emit("accept", message, function(result) {
     if( result.success ) {
-      log("ACCEPTED", name);
+      store.commit("client", result.client);
+      store.commit("clearRegistration", name);
+      log("ACCEPTED", name, result);
     } else {
       log("FAILED", "accept", name, result.message);
     }
@@ -51,7 +53,8 @@ function accept(name, master) {
 function release(name) {
   socket.emit("release", name, function(result) {
     if( result.success ) {
-      release_client(name);
+      store.commit("releaseClient", name);
+      // release_client(name);
       log("RELEASED", name);
     } else {
       log("FAILED", "release", name, result.message);

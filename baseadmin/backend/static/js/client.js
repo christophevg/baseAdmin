@@ -123,19 +123,3 @@ var Client = {
     }
   }
 };
-
-// subscribe to store events and handle online/offline events
-
-$( document ).ready(function() {
-  store.subscribe( function(mutation, state) {
-    if( mutation.type == "newMessage"
-     && mutation.payload.topic.length == 2
-     && mutation.payload.topic[0] == "client"
-     && "status" in mutation.payload.payload )
-    {
-      client = mutation.payload.payload;
-      client["_id"] = mutation.payload.topic[1];
-      app.upsertClient(client);
-    }
-  });
-});

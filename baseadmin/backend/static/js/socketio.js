@@ -18,41 +18,48 @@ $.get( "/api/session", function socketio_connect(token) {
   });
 
   socket.on("connect", function() {
-    log("CONNECTED");
     app.connected = true;
+    log("CONNECTED");
   });
   socket.on("disconnect", function() {
-    log("DISCONNECTED");
     app.connected = false;
+    log("DISCONNECTED");
   });
 
-  socket.on("ack", function(state) {
-    update_state(state);
-    log("ACK", state);
+  socket.on("ack", function(client) {
+    // update_state(client);
+    store.commit("client", client);
+    log("ACK", client);
   });
 
   socket.on("state", function(state) {
-    init_state(state)
+    // init_state(state);
+    store.commit("clients",       state.clients);
+    store.commit("groups",        state.groups);
+    store.commit("registrations", state.registrations);
     log("STATE", state);
   });
 
-  socket.on("performed", function(feedback) {
-    update_state(feedback)
-    log("PERFORMED", feedback);
+  socket.on("performed", function(client) {
+    // update_state(client)
+    store.commit("client", client);
+    log("PERFORMED", client);
   });
 
   socket.on("connected", function(name){
-    get_client(name).connected = true;
+    // get_client(name).connected = true;
+    store.commit("connected", name);
     log("CONNECT", name);
   });
 
   socket.on("disconnected", function(name){
-    get_client(name).connected = false;
+    // get_client(name).connected = false;
+    store.commit("disconnected", name);
     log("DISCONNECT", name);
   });
 
-
   socket.on("register", function(request){
+    store.commit("registration", request);
     log("REGISTER", request);
   });
 
@@ -60,13 +67,15 @@ $.get( "/api/session", function socketio_connect(token) {
     log("REPORT", data);
   });
   
+  socket.on("location", function(client) {
+    // update_state(client);
+    store.commit("client", client);
+    log("LOCATION", client);
+  });
+
   socket.on("pong2", function(data) {
     rtt = Date.now() - data["start"];
     log("PONG", data["client"], rtt);
   });
-  
-  socket.on("location", function(state) {
-    update_state(state)
-    log("LOCATION", state);
-  });
+
 });

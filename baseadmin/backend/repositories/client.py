@@ -1,6 +1,8 @@
 import logging
 logger = logging.getLogger(__name__)
 
+import datetime
+
 from threading import RLock
 
 from baseadmin.queue import MongoQueue
@@ -37,24 +39,37 @@ class Client(object):
     if not name: raise ValueError("name shouldn't be null")
     self.collection = collection
     self.name       = name
+    self._state     = {}
     self.queue      = MongoQueue(self.collection, self.name)
     self.schedule   = MongoQueue(self.collection, self.name, "schedule", "schedule")
-    self._state     = {}
+
     self._token     = kwargs["token"]    if "token"    in kwargs else None
     self._location  = kwargs["location"] if "location" in kwargs else None
     self._master    = kwargs["master"]   if "master"   in kwargs else None
+    self._modified  = datetime.datetime.now().isoformat()
 
     client = self.collection.find_one({"_id": self.name})
     if client is None:
+      # create new entry in collection
       self.collection.insert_one({
         "_id"     : self.name,
         "state"   : {},
         "queue"   : [],
-        "schedule": []
+        "schedule": [],
+        "token"   : self._token,
+        "location": self._location,
+        "master"  : self._master,
+        "modified": self._modified
       })
     else:
+      # load data from collection
       self._state    = client["state"]    if "state"    in client else {}
-      self._schedule = client["schedule"] if "schedule" in client else []
+      self._token    = client["token"]    if "token"    in client else None
+      self._location = client["location"] if "location" in client else None
+      self._master   = client["master"]   if "master"   in client else None
+      self._modified = client["modified"] if "modified" in client else None
+      # self._schedule = client["schedule"] if "schedule" in client else []
+
     self.sid = None
     self.lock = RLock()
 
@@ -65,6 +80,7 @@ class Client(object):
     yield "queue",     self.queue.items
     yield "location",  self._location
     yield "master",    self._master
+    yield "modified",  self._modified
 
   @property
   def connected(self):
@@ -72,6 +88,8 @@ class Client(object):
 
   def update(self, **kwargs):
     with self.lock:
+      self._modified = datetime.datetime.now().isoformat()
+      kwargs["modified"] = self._modified
       self.collection.update_one(
         { "_id": self.name },
         { "$set": kwargs }
@@ -91,9 +109,13 @@ class Client(object):
   @state.setter
   def state(self, new_state):
     with self.lock:
+      self._modified = datetime.datetime.now().isoformat()
       self.collection.update_one(
         { "_id": self.name },
-        { "$set": { "state" : new_state } }
+        { "$set": {
+          "state"    : new_state,
+          "modified" : self._modified
+        }}
       )
       self._state = new_state
 
@@ -105,9 +127,13 @@ class Client(object):
   def token(self, new_token):
     if new_token == self._token: return
     with self.lock:
+      self._modified = datetime.datetime.now().isoformat()
       self.collection.update_one(
         { "_id": self.name },
-        { "$set": { "token" : new_token } }
+        { "$set": {
+          "token"    : new_token,
+          "modified" : self._modified
+        }}
       )
       self._token = new_token
 
@@ -119,9 +145,13 @@ class Client(object):
   def location(self, new_location):
     if new_location == self._location: return
     with self.lock:
+      self._modified = datetime.datetime.now().isoformat()
       self.collection.update_one(
         { "_id": self.name },
-        { "$set": { "location" : new_location } }
+        { "$set": {
+          "location" : new_location,
+          "modified" : self._modified
+        }}
       )
       self._location = new_location
 
@@ -133,8 +163,12 @@ class Client(object):
   def master(self, new_master):
     if new_master == self._master: return
     with self.lock:
+      self._modified = datetime.datetime.now().isoformat()
       self.collection.update_one(
         { "_id": self.name },
-        { "$set": { "master" : new_master } }
+        { "$set": {
+          "master"   : new_master,
+          "modified" : self._modified
+        }}
       )
       self._master = new_master

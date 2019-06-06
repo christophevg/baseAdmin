@@ -18,7 +18,7 @@ def accept(message):
     registration.accept(message["client"], message["master"] if "master" in message else None)
   except Exception as e:
     return { "success" : False, "message" : str(e) }
-  return { "success" : True }
+  return { "success" : True, "client" : dict(clients[message["client"]]) }
 
 @socketio.on("release")
 @secured

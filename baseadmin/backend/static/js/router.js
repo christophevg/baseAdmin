@@ -23,6 +23,7 @@ var app = new Vue({
   },
   data: {
     connected:   false,
+    initialized: false,
     drawer: null,
     sections: [
       { icon: "dashboard", text: "Dashboard", path: "/dashboard" },
@@ -35,34 +36,6 @@ var app = new Vue({
     fixVuetifyCSS : function() {
       this.$vuetify.theme.info  = '#ffffff';
       this.$vuetify.theme.error = '#ffffff';
-    },
-    removeClient: function(client) {
-      this.$notify({
-        group: "notifications",
-        title: "<b>" + client + "</b> Offline",
-        text:  "Client <b>" + client + "</b> just went offline.",
-        type:  "error",
-        duration: 10000
-      });
-      store.commit("removeClient", client);
-    },
-    upsertClient: function(client) {
-      store.commit("upsertClient", client);
-    },
-    registerService: function(service) {
-      store.commit("service", service);
-    },
-    registerClientComponent: function(component) {
-      store.commit("clientComponent", component);
-    },
-    registerGroupComponent: function(component) {
-      store.commit("groupComponent", component);
-    },
-    updateStatus: function(status) {
-      store.commit("updateStatus", status);
-    },
-    allUsers: function(users) {
-      store.commit("allUsers", users);
     }
   }
 }).$mount('#app');

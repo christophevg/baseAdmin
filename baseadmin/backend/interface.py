@@ -35,9 +35,9 @@ def render_landing():
   if request.authorization: return redirect("/dashboard", 302)
   return render()
 
-@server.route("/static/js/main.js")
+@server.route("/static/js/store.js")
 def send_main_js():
-  return render("main.js")
+  return render("store.js")
 
 # catch-all to always render the main page, which will handle the URL
 @server.route("/<path:section>")
