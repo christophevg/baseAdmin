@@ -1,7 +1,11 @@
 var Client = {
   template: `
 <div id="dynamic-component-demo" class="demo">
-  <h1><v-icon large color="blue darken-2" v-if="$route.params.scope == 'group'">group_work</v-icon> {{ $route.params.id }}</h1>
+  <h1>
+    <v-icon large color="blue darken-2" v-if="$route.params.scope == 'group'">group_work</v-icon> 
+    {{ $route.params.id }}
+    <v-icon v-if="$route.params.scope == 'client'" :color="clientColor" x-large>{{ clientIcon }}</v-icon>
+  </h1>
   <hr><br>
   <button
     v-for="tab in tabs"
@@ -50,7 +54,8 @@ var Client = {
     </div>
   </div>
 
-  <div>
+  <!--
+    <div>
     <h1>Related Activity</h1>
     <v-layout justify-center column>
       <v-card v-for="(message, i) in messages" :key="i">
@@ -63,6 +68,7 @@ var Client = {
       </v-card>
     </v-layout>
   </div>
+  -->
 
 </div>`,
   data: function() {
@@ -71,6 +77,15 @@ var Client = {
     }
   },
   computed: {
+    client: function() {
+      return store.getters.client(this.$route.params.id);
+    },
+    clientColor: function() {
+      return this.client && this.client.connected ? "green" : "red";
+    },
+    clientIcon: function() {
+      return this.client && this.client.connected ? "check_circle" : "remove_circle";      
+    },
     group: function() {
       if( this.$route.params.scope != "group" ) { return null; }
       return store.getters.group(this.$route.params.id);
@@ -89,37 +104,18 @@ var Client = {
       return 'Client' + this.currentTab;
     },
     messages : function() {
-      var messages = store.getters.messages();
-      var related = [];
-      for(var i in messages) {
-        messages[i]["client"] =
-          messages[i].topic[0] == "client" ? messages[i].topic[1] : false;
-        if( messages[i].topic[1] == this.$route.params.id ) {
-          related.push(messages[i]);
-        }
-      }
-      return related;
+      // var messages = store.getters.messages();
+      // var related = [];
+      // for(var i in messages) {
+      //   messages[i]["client"] =
+      //     messages[i].topic[0] == "client" ? messages[i].topic[1] : false;
+      //   if( messages[i].topic[1] == this.$route.params.id ) {
+      //     related.push(messages[i]);
+      //   }
+      // }
+      // return related;
+      return [];
     }
   },
-  methods: {
-    joinGroup: function(data) {
-      var client = data[data.length-1];
-      var group  = this.$route.params.id;
-      MQ.publish("client/" + client + "/groups", {
-        "uuid" : uuid(),
-        "group" : group,
-        "member" : true
-      });
-      store.dispatch("joinGroup", { group: group, client: client });
-    },
-    leaveGroup: function(client) {
-      var group  = this.$route.params.id;
-      MQ.publish("client/" + client + "/groups", {
-        "uuid" : uuid(),
-        "group" : group,
-        "member" : false
-      });
-      store.dispatch("leaveGroup", { group: group, client: client });
-    }
-  }
+  methods: {}
 };

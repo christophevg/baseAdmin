@@ -74,8 +74,8 @@ $.get( "/api/session", function socketio_connect(token) {
   });
 
   socket.on("pong2", function(data) {
-    rtt = Date.now() - data["start"];
-    log("PONG", data["client"], rtt);
+    var now = Date.now();
+    store.commit("client", { name: data["client"], ping_end: now } );
+    log("PONG", data["client"], now - data["start"]);
   });
-
 });

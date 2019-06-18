@@ -37,9 +37,14 @@ logging.getLogger().handlers[0].setFormatter(formatter)
 
 from baseadmin import config
 
+# import custom components
+from baseadmin.components.system     import actions
+from baseadmin.components.monitoring import ping
+
 if config.master.root:
   from baseadmin.backend import EndPoint
   from threading import Thread
+  
   try:
     endpoint = EndPoint()
     t = Thread(target=endpoint.connect)

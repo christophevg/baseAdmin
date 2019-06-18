@@ -122,3 +122,18 @@ def queue(client, payload):
     logger.info("queue: {0} : {1}".format(client.name, payload))
     client.queue.append(payload)
     if len(client.queue) == 1: emit_next(client)
+
+def command(cmd):
+  def decorator(f):
+    @wraps(f)
+    @socketio.on(cmd)
+    @secured
+    def wrapper(data):
+      try:
+        f(data);
+      except Exception as e:
+        logger.exception("failed to perform {0}".format(cmd))
+        return { "success" : False, "message" : str(e) }
+      return { "success" : True }
+    return wrapper
+  return decorator

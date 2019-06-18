@@ -5,7 +5,6 @@ var routes = [
   { path: '/:scope(client|group)/:id', component: Client    },
   { path: "/user",                     component: User      },
   { path: "/user/:id",                 component: User      },
-  { path: "/setup",                    component: Setup     },
   { path: "/log",                      component: Log       }
 ];
 
@@ -28,7 +27,6 @@ var app = new Vue({
     sections: [
       { icon: "dashboard", text: "Dashboard", path: "/dashboard" },
       { icon: "person",    text: "Users",     path: "/user"      },
-      { icon: "build",     text: "Setup",     path: "/setup"     },
       { icon: "comment",   text: "Log",       path: "/log"       }
     ]
   },
@@ -36,6 +34,12 @@ var app = new Vue({
     fixVuetifyCSS : function() {
       this.$vuetify.theme.info  = '#ffffff';
       this.$vuetify.theme.error = '#ffffff';
+    },
+    registerClientComponent: function(component) {
+      store.commit("clientComponent", component);
+    },
+    registerGroupComponent: function(component) {
+      store.commit("groupComponent", component);
     }
   }
 }).$mount('#app');

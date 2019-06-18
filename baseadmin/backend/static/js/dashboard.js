@@ -66,6 +66,12 @@ var Dashboard = {
           </v-flex>
         </v-layout>
 
+        <div style="float:left;margin-left:15px;">
+          <v-btn color="primary" fab small dark @click="editGroup('all')">
+            <v-icon>edit</v-icon>
+          </v-btn>
+        </div>
+
         <div style="margin-left: 25px;margin-bottom:10px;margin-right: 25px;">
           <v-layout wrap justify-space-around align-center>
             <v-btn v-for="client in groupClients('all')" :key="client.name" @click="showClient(client.name); return false;"
@@ -99,7 +105,7 @@ var Dashboard = {
             
         <div style="margin-left: 25px;margin-bottom:10px;margin-right: 25px;">
           <v-layout wrap justify-space-around align-center>
-            <v-btn v-for="client in groupClients("all")" :key="client.name" @click="showClient(client.name); return false;"
+            <v-btn v-for="client in groupClients(name)" :key="client.name" @click="showClient(client.name); return false;"
                    :color="clientColor(client)" class="white--text" round>
               {{ client.name }}
             </v-btn>

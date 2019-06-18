@@ -17,6 +17,10 @@ var store = new Vuex.Store({
       initialized: false,
       data: []
     },
+    clientComponents: {
+      client : [],
+      group  : []
+    },
     messages: [],
     users: [],
     version: "{{ app.version }}",
@@ -31,7 +35,11 @@ var store = new Vuex.Store({
       if(current) {
         current["loaded"] = true;
         for(var k in client) {
-          current[k] = client[k];
+          if( ! (k in current) ) {
+            Vue.set(current, k, client[k]);
+          } else {
+            current[k] = client[k];
+          }
         }
       } else {
         state.clients.data.push(client);
@@ -101,6 +109,12 @@ var store = new Vuex.Store({
       state.registrations.data = state.registrations.data.filter(function(registration){
         return registration._id != name;
       });
+    },
+    clientComponent: function(state, service) {
+      state.clientComponents.client.push(service);
+    },
+    groupComponent: function(state, service) {
+      state.clientComponents.group.push(service);
     }
   },
   actions: {

@@ -1,6 +1,14 @@
 // API
 
-function execute(name, cmd, args, schedule) {
+// execute_on is a general purpose function to execute a cmd with arguments and
+// optional schedule on a given client or group.
+// it returns "ok" when the execution is emitted to the master.
+// when the master confirms the message, it is queued and added to the client's
+// queue. later an ack from the client will confirm the execution by the client.
+// if a schedule was given, the scheduling is acknowledged, else the execution
+// itself is acknowledged.
+
+function execute_on(name, cmd, args, schedule) {
   if(typeof schedule === "undefined") { schedule = ""; }
   var message = {
     "client"   : name,
@@ -30,6 +38,24 @@ function execute(name, cmd, args, schedule) {
   });
   
   return "ok";
+}
+
+// perform is a general purpose function to perform a cmd with arguments on the
+// master itself. a callback can be provided to handle the response of the
+// master.
+
+function perform(cmd, args, callback) {
+  socket.emit(cmd, args, function(result){
+    if( typeof result !== 'object' ) {
+      result = { "success" : false,  "message" : "unknown reason" };
+    }
+    if( result.success ) {
+      log("MASTER CMD", cmd, args, "OK");
+    } else {
+      log("MASTER CMD", cmd, args, "FAILED",result.message);      
+    }
+    if(typeof callback !== "undefined") { callback(result); }
+  });
 }
 
 // accept a client (registration), optionally dispatching it to another master
@@ -66,15 +92,19 @@ function release(name) {
 function ping(name) {
   if(name in groups) {
     groups[name].forEach(function(member) {
-      socket.emit("ping2", { "client" : member, "start" : Date.now() }, function() {
-        log("PING", member);
-      });      
+      ping_client(member);
     });
   } else  {
-    socket.emit("ping2", { "client" : name, "start" : Date.now() }, function() {
-      log("PING", name);
-    });
+    ping_client(name);
   }
+}
+
+function ping_client(name) {
+  var now = Date.now();
+  store.commit("client", { name: name, ping_start: now, ping_end: "" } );
+  socket.emit("ping2", { "client" : name, "start" : now }, function() {
+    log("PING", name);
+  });  
 }
 
 // join a client to a group

@@ -140,12 +140,11 @@
     <script src="/static/js/user.js"></script>
     <script src="/static/js/log.js"></script>
     <script src="/static/js/master.js"></script>
-    <script src="/static/js/setup.js"></script>
 
     <script src="/static/js/router.js"></script>
 
-    {% for service in services %}
-    <script src="/app/{{ service }}.js"></script>
+    {% for file in components %}
+    <script src="/app/{{ file }}"></script>
     {% endfor %}
 
   </body>
