@@ -120,11 +120,25 @@ var store = new Vuex.Store({
   actions: {
   },
   getters: {
-    client: function(state) {
+    groups_loaded: function(state) {
+      return function() {
+        return state.groups.loaded;
+      }
+    },
+    groups: function(state) {
+      return function() {
+        return state.groups.data;
+      }
+    },
+    group: function(state) {
       return function(name) {
-        return state.clients.data.find(function(client) {
-          return client.name == name;
-        });
+        if(name == "all") {
+          return state.clients.data.filter(function(client){
+            return !("location" in client) || ! client.location;
+          }).map(function(client){ return client.name; });
+        } else {
+          return state.groups.data[name];
+        }
       }
     },
     clients: function(state) {
@@ -132,19 +146,18 @@ var store = new Vuex.Store({
         return state.clients.data;
       }
     },
-    groups_loaded: function(state) {
-      return function() {
-        return state.groups.loaded;
-      }
-    },
-    group: function(state) {
+    client: function(state) {
       return function(name) {
-        return state.groups.data[name];
+        return state.clients.data.find(function(client) {
+          return client.name == name;
+        });
       }
     },
-    groups: function(state) {
-      return function() {
-        return state.groups.data;
+    groupClients: function(state) {
+      return function(name) {
+        return this.group(name).map(function(name){
+          return store.getters.client(name);
+        });
       }
     },
     masters: function(state) {

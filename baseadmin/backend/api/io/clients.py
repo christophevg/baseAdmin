@@ -43,6 +43,8 @@ def on_ping(data):
 def join(message):
   logger.info("join: {0}".format(message))
   try:
+    if not message["client"] in clients:
+      raise KeyError("unknown client {0}".format(message["client"]))
     groups[message["group"]].add(message["client"])
   except Exception as e:
     return { "success" : False, "message" : str(e) }
@@ -50,10 +52,12 @@ def join(message):
 
 @socketio.on("leave")
 @secured
-def join(message):
+def leave(message):
   logger.info("leave: {0}".format(message))
   try:
     groups[message["group"]].remove(message["client"])
+    if len(groups[message["group"]]) == 0:
+      groups.delete(message["group"]) # prune empty groups
   except Exception as e:
     return { "success" : False, "message" : str(e) }
   return { "success" : True }

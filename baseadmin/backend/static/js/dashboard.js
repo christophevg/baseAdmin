@@ -207,19 +207,11 @@ var Dashboard = {
       return client.connected ? "green" : "red";
     },
     groupClients: function(name) {
-      if(name == "all") {
-        return store.getters.clients().filter(function(client){
-          return !("location" in client) || ! client.location;
-        });
-      } else {
-        return store.getters.group(name).map(function(name){
-          return store.getters.client(name);
-        });
-      }
+      return store.getters.groupClients(name);
     },
     allClientsConnected: function(name) {
       var result = this.groupClients(name).find(function(client){
-        return ! client.connected;          
+        return client && (! client.connected);
       });
       return typeof result === "undefined";
     },

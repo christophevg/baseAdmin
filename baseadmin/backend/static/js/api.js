@@ -111,10 +111,18 @@ function ping_client(name) {
 function join(client, group) {
   socket.emit("join", { "client": client, "group": group }, function(result) {
     if( result.success ) {
-      join_group(client, group);
+      // join_group(client, group);
+      store.commit("join",  { "client": client, "group": group })
       log("JOINED", client);
     } else {
       log("FAILED", "join", name, result.message);
+      app.$notify({
+        group: "notifications",
+        title: "Failed to join...",
+        text:  "message" in result ? result.message : "unknown reason",
+        type:  "warn",
+        duration: 10000
+      });
     }    
   });
 }
@@ -123,7 +131,8 @@ function join(client, group) {
 function leave(client, group) {
   socket.emit("leave", { "client": client, "group": group }, function(result) {
     if( result.success ) {
-      leave_group(client, group);
+      // leave_group(client, group);
+      store.commit("leave",  { "client": client, "group": group })
       log("LEFT", client);
     } else {
       log("FAILED", "leave", name, result.message);

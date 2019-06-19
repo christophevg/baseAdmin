@@ -44,6 +44,9 @@ class Group(object):
         "members" : self._members
       })
 
+  def __len__(self):
+    return len(self._members)
+
   def __iter__(self):
     return iter(self._members)
 

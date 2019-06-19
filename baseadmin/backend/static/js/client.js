@@ -2,9 +2,8 @@ var Client = {
   template: `
 <div id="dynamic-component-demo" class="demo">
   <h1>
-    <v-icon large color="blue darken-2" v-if="$route.params.scope == 'group'">group_work</v-icon> 
     {{ $route.params.id }}
-    <v-icon v-if="$route.params.scope == 'client'" :color="clientColor" x-large>{{ clientIcon }}</v-icon>
+    <v-icon :color="clientColor" x-large>{{ clientIcon }}</v-icon>
   </h1>
   <hr><br>
   <button
@@ -91,7 +90,7 @@ var Client = {
       return store.getters.group(this.$route.params.id);
     },
     tabs: function() {
-      return store.state.clientComponents[this.$route.params.scope];
+      return store.state.clientComponents["client"];
     },
     currentTabComponent: function () {
       if(! this.currentTab) {
