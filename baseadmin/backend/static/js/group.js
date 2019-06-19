@@ -98,7 +98,7 @@ var Group = {
           return null;
         }
       }
-      return 'Group' + this.currentTab;
+      return this.currentTab + "Component";
     }
   },
   methods: {
@@ -107,6 +107,7 @@ var Group = {
     },
     joinGroup: function(data) {
       var client = data[data.length-1];
+      if( typeof client !== "string") { return; }
       var group  = this.$route.params.id;
       join(client, group);
     },

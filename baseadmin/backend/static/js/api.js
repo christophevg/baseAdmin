@@ -26,8 +26,9 @@ function execute_on(name, cmd, args, schedule) {
 
   log("CMD", message);
   socket.emit("queue", message, function() {
-    if( name in groups ) {
-      groups[name].forEach(function(member) {
+    var group = store.getters.group(name);
+    if( group ) {
+      group.forEach(function(member) {
         clients[member].queue.push(message.payload);
         log("QUEUED", clients[member]);
       });
@@ -90,11 +91,12 @@ function release(name) {
 
 // ping a client
 function ping(name) {
-  if(name in groups) {
-    groups[name].forEach(function(member) {
+  var group = store.getters.group(name);
+  if(group) {
+    group.forEach(function(member) {
       ping_client(member);
     });
-  } else  {
+  } else {
     ping_client(name);
   }
 }
@@ -109,6 +111,7 @@ function ping_client(name) {
 
 // join a client to a group
 function join(client, group) {
+  console.log("API CALL TO JOIN", client, group);
   socket.emit("join", { "client": client, "group": group }, function(result) {
     if( result.success ) {
       // join_group(client, group);

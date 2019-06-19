@@ -27,32 +27,6 @@ var Client = {
     </p>
   </div>
 
-  <div v-if="group && this.$route.params.id != 'all'">
-    <h2>Group Members</h2>
-    <div v-if="group.loaded">
-      <p style="margin:10px;">
-
-        The following clients are connected to this group. You can add more by
-        typing their name at the end of the list, confirming the name with
-        'enter'. To have a client leave the group, use the X button next to the
-        name of the client.
-
-      </p>
-      <div style="margin-top:15px;">
-        <v-select v-model="group.clients" chips tags solo append-icon="" @input="joinGroup">
-          <template slot="selection" slot-scope="data">
-           <v-chip :selected="data.selected" close @input="leaveGroup(data.item._id)">
-             <strong>{{ data.item._id }}</strong>&nbsp;
-           </v-chip>
-          </template>
-        </v-select>
-      </div>
-    </div>
-    <div v-else> 
-      Hold on, I'm fetching this group for you...
-    </div>
-  </div>
-
   <!--
     <div>
     <h1>Related Activity</h1>
@@ -100,7 +74,7 @@ var Client = {
           return null;
         }
       }
-      return 'Client' + this.currentTab;
+      return this.currentTab + "Component";
     },
     messages : function() {
       // var messages = store.getters.messages();
