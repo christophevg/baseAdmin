@@ -40,6 +40,7 @@ from baseadmin import config
 # import custom components
 from baseadmin.components.system     import actions
 from baseadmin.components.monitoring import ping
+from baseadmin.components.content    import upload
 
 if config.master.root:
   from baseadmin.backend import EndPoint
