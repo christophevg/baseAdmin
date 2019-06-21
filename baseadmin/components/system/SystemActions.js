@@ -1,7 +1,7 @@
 var MasterActions = Vue.component( "MasterActions", {
   template : `
 <div>
-  <h1>Perform actions on Master</h1>
+  <h1>System Actions</h1>
   <center>
     <v-btn :loading="submitting['reboot']"   @click="submit('reboot')"   class="primary">Reboot</v-btn>
     <v-btn :loading="submitting['shutdown']" @click="submit('shutdown')" class="primary">Shutdown</v-btn>
