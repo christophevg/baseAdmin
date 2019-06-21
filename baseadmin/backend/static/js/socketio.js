@@ -2,6 +2,8 @@
 
 var socket;
 
+var state_handlers = [];
+
 console.log("requesting session token...");
 $.get( "/api/session", function socketio_connect(token) {
   console.log("aquired session token", token);
@@ -37,6 +39,7 @@ $.get( "/api/session", function socketio_connect(token) {
     store.commit("clients",       state.clients);
     store.commit("groups",        state.groups);
     store.commit("registrations", state.registrations);
+    state_handlers.forEach(function(handler){ handler(state); });
     log("STATE", state);
   });
 

@@ -66,6 +66,12 @@ def secured(f):
 
 # events
 
+state_providers = {}
+
+def register_state_provider(name, provider):
+  global state_providers
+  state_providers[name] = provider
+
 @socketio.on('connect')
 def on_connect():
   logger.info("connect: {0} ({1})".format(request.headers["client"], request.sid))
@@ -76,14 +82,13 @@ def on_connect():
     return False
   join_room(name)
   if name == "browser":
-    emit(
-      "state",
-      {
-        "clients"       : [ dict(client) for client in clients ],
-        "registrations" : registration.get(),
-        "groups"        : dict(groups)
-      },
-      room="browser")
+    state = {
+      "clients"       : [ dict(client) for client in clients ],
+      "registrations" : registration.get(),
+      "groups"        : dict(groups)
+    }
+    for name, provider in state_providers.items(): state[name] = provider()
+    emit( "state", state, room="browser" )
   else:
     client = clients[name]
     with client.lock:
