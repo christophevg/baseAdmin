@@ -17,11 +17,11 @@ var Dashboard = {
               <v-icon>add_circle_outline</v-icon>
             </v-btn>
           </div>
-          <div style="float:right;margin-right:15px;">
+          <!--<div style="float:right;margin-right:15px;">
             <v-btn color="red" fab small dark @click="rejectRegistration(registration._id)">
               <v-icon>delete</v-icon>
             </v-btn>
-          </div>
+          </div>-->
           <span><b>Registration request:</b><br>{{ registration._id }}</span><br>
         </div>
       </v-card-title>      
@@ -249,10 +249,9 @@ var Dashboard = {
     showAcceptRegistrationDialog: function(client) {
       this.model.client = client;
       this.acceptRegistrationDialog = true;
-      console.log("before", this.model.client, this.model.name);
     },
     acceptRegistration: function() {
-      if( this.model.client && this.model.name != "") {
+      if( this.model.master && this.model.master != "") {
         accept(this.model.client, this.model.master);
       } else if( this.model.client ) {
         accept(this.model.client);        

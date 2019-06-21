@@ -130,20 +130,11 @@ var store = new Vuex.Store({
         return state.groups.data;
       }
     },
-    group: function(state) {
-      return function(name) {
-        if(name == "all") {
-          return state.clients.data.filter(function(client){
-            return !("location" in client) || ! client.location;
-          }).map(function(client){ return client.name; });
-        } else {
-          return state.groups.data[name];
-        }
-      }
-    },
     clients: function(state) {
       return function() {
-        return state.clients.data;
+        return state.clients.data.filter(function(client){
+          return !("master" in client) || client.master == null;
+        });
       }
     },
     client: function(state) {
@@ -153,6 +144,17 @@ var store = new Vuex.Store({
         });
       }
     },
+    group: function(state, getters) {
+      return function(name) {
+        if(name == "all") {
+          return getters.clients().filter(function(client){
+            return !("location" in client) || ! client.location;
+          }).map(function(client){ return client.name; });
+        } else {
+          return state.groups.data[name];
+        }
+      }
+    },
     groupClients: function(state) {
       return function(name) {
         return this.group(name).map(function(name){
@@ -160,10 +162,17 @@ var store = new Vuex.Store({
         });
       }
     },
-    masters: function(state) {
+    masters: function(state, getters) {
       return function() {
-        return state.clients.data.filter(function(client){
+        return getters.clients().filter(function(client){
           return ("location" in client) && client.location;
+        });
+      }
+    },
+    masterClients: function(state) {
+      return function(master) {
+        return state.clients.data.filter(function(client){
+          return ("master" in client) && client.master == master;
         });
       }
     },
