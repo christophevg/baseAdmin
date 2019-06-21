@@ -10,9 +10,9 @@ Vue.component( "PingComponent", {
   <center v-if="this.$route.params.scope == 'client'">
     <span v-if="client.ping_start">
       <span><b>last</b>: {{ client.ping_start | formatEpoch }}</span><br>
-    </span>
-    <span v-if="client.ping_end">
-      <span><b>round-trip-time</b>: {{ client.ping_end - client.ping_start }}ms</span><br>
+      <span v-if="client.ping_end">
+        <span><b>round-trip-time</b>: {{ client.ping_end - client.ping_start }}ms</span><br>
+      </span>
     </span>
     <v-btn :loading="pinging" :disabled="! client.connected" @click="ping()" class="primary">Ping</v-btn>
   </center>
