@@ -30,6 +30,20 @@ var Client = {
     </p>
   </div>
 
+  <div v-if="client && client.queue && client.queue.length > 0">
+    <h2>Queued</h2>
+    <ul>
+      <li v-for="item in client.queue">{{ item }}</li>
+    </ul>
+  </div>
+
+  <div v-if="client && client.state && client.state.futures && client.state.futures.length > 0">
+    <h2>Scheduled</h2>
+    <ul>
+      <li v-for="item in client.state.futures">{{ item }}</li>
+    </ul>
+  </div>
+
 </div>`,
   data: function() {
     return {
