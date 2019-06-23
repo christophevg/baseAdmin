@@ -7,7 +7,7 @@ Vue.filter('formatEpoch', function(value) {
 Vue.component( "PingComponent", {
   template : `
 <div>
-  <center v-if="this.$route.params.scope == 'client'">
+  <center v-if="this.$route.params.scope == 'client' && client">
     <span v-if="client.ping_start">
       <span><b>last</b>: {{ client.ping_start | formatEpoch }}</span><br>
       <span v-if="client.ping_end">

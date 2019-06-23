@@ -3,10 +3,7 @@ logger = logging.getLogger(__name__)
 
 import os
 
-from baseadmin.backend.interface import register_component
-from baseadmin.backend.socketio  import command
-
-register_component("SystemActions.js", os.path.dirname(__file__))
+from baseadmin.endpoint import command
 
 @command("reboot")
 def on_reboot(args):

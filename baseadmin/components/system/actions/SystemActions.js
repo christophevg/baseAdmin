@@ -1,4 +1,4 @@
-var MasterActions = Vue.component( "MasterActions", {
+var MasterActions = Vue.component( "ActionsComponent", {
   template : `
 <div>
   <h1>System Actions</h1>
@@ -17,26 +17,31 @@ var MasterActions = Vue.component( "MasterActions", {
     submit: function(cmd) {
       this.submitting[cmd] = true;
       var state = this;
-      perform(cmd, {}, function(result) {
-        if("success" in result && result.success) {
-          app.$notify({
-            group: "notifications",
-            title: "Master will " + cmd + "...",
-            text:  "The Master is going to " + cmd + ". Please wait a bit and refresh.",
-            type:  "success",
-            duration: 10000
-          });
-        } else  {
-          app.$notify({
-            group: "notifications",
-            title: "Failed to " + cmd + "...",
-            text:  "message" in result ? result.message : "unknown reason",
-            type:  "warn",
-            duration: 10000
-          });
-        }
-        state.submitting[cmd] = false;
-      });
+      if( "id" in this.$route.params ) {
+        execute_on(this.$route.params.id, cmd, {} );
+        this.submitting[cmd] = false;
+      } else {
+        perform(cmd, {}, function(result) {
+          if("success" in result && result.success) {
+            app.$notify({
+              group: "notifications",
+              title: "Master will " + cmd + "...",
+              text:  "The Master is going to " + cmd + ". Please wait a bit and refresh.",
+              type:  "success",
+              duration: 10000
+            });
+          } else  {
+            app.$notify({
+              group: "notifications",
+              title: "Failed to " + cmd + "...",
+              text:  "message" in result ? result.message : "unknown reason",
+              type:  "warn",
+              duration: 10000
+            });
+          }
+          state.submitting[cmd] = false;
+        });
+      }
     }
   },
   data: function() {
@@ -49,6 +54,10 @@ var MasterActions = Vue.component( "MasterActions", {
     }
   }
 });
+
+app.registerClientComponent("Actions");
+app.registerGroupComponent("Actions");
+
 
 var masterSection = app.sections.find(function(item) {
   return "group" in item && item.group && item.text == "Master";

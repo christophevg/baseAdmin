@@ -45,6 +45,19 @@ var store = new Vuex.Store({
         state.clients.data.push(client);
       }
     },
+    queued: function(state, client) {
+      var current = state.clients.data.find(function(element) {
+        return element.name == client.name;
+      });
+      if(current) {
+        if( ! ("queue" in current)) {
+          Vue.set(current, "queue", []);
+        }
+        current.queue.push(client.payload);
+      } else {
+        console.log("QUEUED SOMETHING ON UNKNOWN CLIENT ???????");
+      }
+    },
     releaseClient: function(state, name) {
       state.clients.data = state.clients.data.filter(function(client) {
         return client.name != name;

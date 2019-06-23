@@ -18,13 +18,13 @@ socketio = SocketIO(server)
 def emit_next(client):
   try:
     message = client.queue.get()
-    if message["schedule"]:
+    if "schedule" in message and message["schedule"]:
       cmd = "schedule"
       payload = message
     else:
       cmd = message["cmd"]
       payload = {
-        "args" : message["args"],
+        "args" : message["args"] if "args" in message else {},
       }
     logger.info("sending {0} to {1} with {2}".format(cmd, client.name, payload))
     socketio.emit(cmd, payload, room=client.name, callback=ack(client, cmd))
@@ -114,19 +114,25 @@ def on_disconnect():
 @socketio.on("queue")
 @secured
 def on_queue(message):
-  name = message["client"]
-  if name in groups:
+  queue(message["client"], message["payload"])
+
+def queue(name, payload):
+  def q(client, payload):
+    with client.lock:
+      logger.info("queue: {0} : {1}".format(client.name, payload))
+      client.queue.append(payload)
+      logger.info("queue length = {0}".format(str(len(client.queue))))
+      if len(client.queue) == 1: emit_next(client)
+  if name == "all":
+    for client in clients:
+      q(client, payload)
+  elif name in groups:
     for member in groups[name]:
       client = clients[member]
-      queue(client, message["payload"])
+      q(client, payload)
   else:
-      queue(clients[name], message["payload"])
+      q(clients[name], payload)
 
-def queue(client, payload):
-  with client.lock:
-    logger.info("queue: {0} : {1}".format(client.name, payload))
-    client.queue.append(payload)
-    if len(client.queue) == 1: emit_next(client)
 
 def command(cmd):
   def decorator(f):

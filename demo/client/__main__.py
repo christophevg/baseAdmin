@@ -6,6 +6,15 @@ import sys
 from baseadmin.storage  import db
 from baseadmin.endpoint import register, run, command, me, socketio
 
+# import custom components
+from baseadmin.components.system.actions import client
+
+@command("reboot")
+def on_reboot(args):
+  logger.warn("rebooting...")
+  os.system("sudo reboot")
+
+
 # example "bulky" state update command
 @command("update")
 def on_update(state):

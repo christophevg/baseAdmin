@@ -29,12 +29,12 @@ function execute_on(name, cmd, args, schedule) {
     var group = store.getters.group(name);
     if( group ) {
       group.forEach(function(member) {
-        clients[member].queue.push(message.payload);
-        log("QUEUED", clients[member]);
+        store.commit("queued", {"name": member, "payload": message.payload});
+        log("QUEUED", {"name": member, "payload": message.payload});
       });
     } else {
-      clients[name].queue.push(message.payload);
-      log("QUEUED", clients[name]);
+      store.commit("queued", {"name": name, "payload": message.payload});
+      log("QUEUED", {"name": name, "payload": message.payload});
     }
   });
   
@@ -81,7 +81,6 @@ function release(name) {
   socket.emit("release", name, function(result) {
     if( result.success ) {
       store.commit("releaseClient", name);
-      // release_client(name);
       log("RELEASED", name);
     } else {
       log("FAILED", "release", name, result.message);
@@ -114,7 +113,6 @@ function join(client, group) {
   console.log("API CALL TO JOIN", client, group);
   socket.emit("join", { "client": client, "group": group }, function(result) {
     if( result.success ) {
-      // join_group(client, group);
       store.commit("join",  { "client": client, "group": group })
       log("JOINED", client);
     } else {
@@ -134,7 +132,6 @@ function join(client, group) {
 function leave(client, group) {
   socket.emit("leave", { "client": client, "group": group }, function(result) {
     if( result.success ) {
-      // leave_group(client, group);
       store.commit("leave",  { "client": client, "group": group })
       log("LEFT", client);
     } else {
