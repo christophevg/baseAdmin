@@ -8,6 +8,7 @@ from baseadmin.endpoint import register, run, command, me, socketio
 
 # import custom components
 from baseadmin.components.system.actions import client
+from baseadmin.components.system.screen  import client
 
 # example "bulky" state update command
 @command("update")
