@@ -9,6 +9,7 @@ from baseadmin.endpoint import register, run, command, me, socketio
 # import custom components
 from baseadmin.components.system.actions import client
 from baseadmin.components.system.screen  import client
+from baseadmin.components.system.wifi    import client
 
 @command("reboot")
 def on_reboot(args):

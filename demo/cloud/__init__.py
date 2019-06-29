@@ -41,6 +41,7 @@ from baseadmin import config
 from baseadmin.components.monitoring     import ping
 from baseadmin.components.system.actions import master
 from baseadmin.components.system.screen  import master
+from baseadmin.components.system.wifi    import master
 from baseadmin.components.content        import upload
 
 if config.master.root:
