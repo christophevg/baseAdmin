@@ -160,6 +160,7 @@ def feedback(*args, **kwargs):
     }
   }
   feedback.update(kwargs)
+  feedback.update({ "feedback" : args })
   return feedback
   
 def command(cmd):

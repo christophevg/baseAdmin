@@ -81,4 +81,15 @@ $.get( "/api/session", function socketio_connect(token) {
     store.commit("client", { name: data["client"], ping_end: now } );
     log("PONG", data["client"], now - data["start"]);
   });
+  
+  socket.on("error", function(data) {
+    log("ERROR", data);
+    app.$notify({
+      group: "notifications",
+      title: "Error occurred...",
+      text:  data,
+      type:  "warn",
+      duration: 10000
+    });
+  });
 });

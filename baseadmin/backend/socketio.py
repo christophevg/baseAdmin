@@ -35,12 +35,17 @@ def emit_next(client):
     client.queue.pop()
 
 def ack(client, cmd):
-  def handler(feedback):
+  def handler(feedback=None):
     with client.lock:
-      logger.info("ack: {0} : {1}  {2} => {3}".format(client.name, cmd, client.state, feedback["state"]))
-      client.state = feedback["state"]
-      client.queue.pop()
-      socketio.emit("ack", dict(client), room="browser" )
+      if feedback:
+        logger.info("ack: {0} : {1}  {2} => {3}".format(client.name, cmd, client.state, feedback["state"]))
+        client.state = feedback["state"]
+        client.queue.pop()
+        socketio.emit("ack", dict(client), room="browser" )
+      else:
+        logger.error("got no feedback from client, command no handled? {0}".format(cmd) )
+        socketio.emit("error", "got no feedback from client, command no handled? {0}".format(cmd), room="browser")
+        client.queue.pop()
       if not client.queue.empty: emit_next(client)
   return handler
 
