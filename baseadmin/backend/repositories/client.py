@@ -104,6 +104,8 @@ class Client(object):
   @property
   def state(self):
     with self.lock:
+      if not type(self._state) is dict:
+        self._state = { "value" : self._state }
       return self._state
 
   @state.setter
