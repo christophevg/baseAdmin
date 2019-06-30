@@ -7,15 +7,10 @@ from baseadmin.storage  import db
 from baseadmin.endpoint import register, run, command, me, socketio
 
 # import custom components
-from baseadmin.components.system.actions import client
-from baseadmin.components.system.screen  import client
-from baseadmin.components.system.wifi    import client
-
-@command("reboot")
-def on_reboot(args):
-  logger.warn("rebooting...")
-  os.system("sudo reboot")
-
+from baseadmin.components.system.actions   import client
+from baseadmin.components.system.screen    import client
+from baseadmin.components.system.wifi      import client
+from baseadmin.components.content.download import client
 
 # example "bulky" state update command
 @command("update")

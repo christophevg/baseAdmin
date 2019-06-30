@@ -13,6 +13,9 @@ from baseadmin.backend.repositories import registration, clients, groups
 
 sid2name = {}
 
+def current_client():
+  return clients[sid2name[request.sid]]
+
 socketio = SocketIO(server)
 
 def emit_next(client):
@@ -113,6 +116,14 @@ def on_disconnect():
       del sid2name[client.sid]
       client.sid = None
       emit("disconnected", client.name, room="browser")
+
+@socketio.on("failure")
+def on_failure(feedback):
+  client = current_client()
+  with client.lock:
+    logger.warn("failure: {0} : {1} => {2}".format(client.name, client.state, feedback["state"]))
+    client.state = feedback["state"]
+    socketio.emit("failure", dict(client), room="browser" )
 
 # commands
 

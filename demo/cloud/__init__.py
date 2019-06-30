@@ -38,11 +38,12 @@ logging.getLogger().handlers[0].setFormatter(formatter)
 from baseadmin import config
 
 # import custom components
-from baseadmin.components.monitoring     import ping
-from baseadmin.components.system.actions import master
-from baseadmin.components.system.screen  import master
-from baseadmin.components.system.wifi    import master
-from baseadmin.components.content        import upload
+from baseadmin.components.monitoring       import ping
+from baseadmin.components.system.actions   import master
+from baseadmin.components.system.screen    import master
+from baseadmin.components.system.wifi      import master
+from baseadmin.components.content          import upload
+from baseadmin.components.content.download import master
 
 if config.master.root:
   from baseadmin.backend import EndPoint

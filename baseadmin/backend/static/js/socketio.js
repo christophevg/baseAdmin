@@ -92,4 +92,9 @@ $.get( "/api/session", function socketio_connect(token) {
       duration: 10000
     });
   });
+
+  socket.on("failure", function(data){
+    log("FAILED", data);
+  });
+
 });

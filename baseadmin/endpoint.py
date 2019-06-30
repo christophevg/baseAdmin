@@ -47,7 +47,6 @@ def register(master=config.master.root):
       else:
         request = response.json()
         if request:
-          logger.info(request)
           if request["state"] == "accepted":
             logger.info("registration was accepted: {0}/{1}".format(
               request["master"], request["token"]
@@ -112,10 +111,10 @@ def emit_next():
     logger.error("message was: {0}".format(message))
     me.queue.pop()
 
-def ack():
+def ack(feedback=None):
   with me.lock:
     message = me.queue.get()
-    logger.info("ack {0}".format(message) )
+    logger.info("ack {0} / {1}".format(message, feedback) )
     me.queue.pop()
     if not me.queue.empty: emit_next()
 
@@ -152,7 +151,7 @@ def on_ping(request):
 commands = {}
 
 def feedback(*args, **kwargs):
-  logger.info("state: {0} + {1}".format(me.state, me.schedule.items))
+  # logger.info("state: {0} + {1}".format(me.state, me.schedule.items))
   feedback = {
     "state" : {
       "current" : me.state,

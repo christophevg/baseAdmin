@@ -5,11 +5,6 @@ logger = logging.getLogger(__name__)
 
 import socket
 
-try:
-  from urllib.parse import urlparse
-except ImportError:
-  from urlparse import urlparse
-
 from baseadmin       import __version__
 from baseadmin.tools import VariableSleep
 

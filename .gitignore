@@ -16,3 +16,4 @@ archive*
 *.key
 *.crt
 files
+client*_files
