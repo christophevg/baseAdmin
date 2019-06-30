@@ -1,3 +1,14 @@
+function byName(a, b) {
+  if( a < b ) {
+    return -1;
+  }
+  if( a > b ){
+    return 1;
+  }
+  return 0;
+}
+
+
 var Client = {
   template: `
 <div id="dynamic-component-demo" class="demo">
@@ -65,7 +76,7 @@ var Client = {
       return store.getters.group(this.$route.params.id);
     },
     tabs: function() {
-      return store.state.clientComponents["client"];
+      return store.state.clientComponents["client"].sort(byName);
     },
     currentTabComponent: function () {
       if(! this.currentTab) {
