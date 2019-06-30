@@ -4,6 +4,16 @@ Vue.filter('formatDate', function(value) {
   }
 });
 
+function byName(a, b) {
+  if( a.name < b.lname ) {
+    return -1;
+  }
+  if( a.name > b.name ){
+    return 1;
+  }
+  return 0;
+}
+
 var Dashboard = {
   template : `
 <div>
@@ -207,7 +217,7 @@ var Dashboard = {
       return client.connected ? "green" : "red";
     },
     groupClients: function(name) {
-      return store.getters.groupClients(name);
+      return store.getters.groupClients(name).sort(byName);
     },
     allClientsConnected: function(name) {
       var result = this.groupClients(name).find(function(client){
