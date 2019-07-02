@@ -2,5 +2,6 @@ include Makefile LICENSE.txt .github/README.md
 recursive-include baseadmin *.js
 recursive-include baseadmin *.map
 recursive-include baseadmin *.sh
+recursive-include baseadmin *.conf
 global-exclude __pycache__
 global-exclude *.py[co]
