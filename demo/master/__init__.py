@@ -42,6 +42,16 @@ from baseadmin.storage  import db
 
 endpoint.publish_location = True
 
+from baseadmin import config
+
+# import custom components
+from baseadmin.components.monitoring       import ping
+from baseadmin.components.system.actions   import master
+from baseadmin.components.system.screen    import master
+from baseadmin.components.system.wifi      import master
+from baseadmin.components.content          import upload
+from baseadmin.components.content.download import master
+
 # run endpoint event_loop in thread
 t = Thread(target=endpoint.run)
 t.daemon = True
