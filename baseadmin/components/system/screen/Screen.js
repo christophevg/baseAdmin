@@ -29,10 +29,10 @@ Vue.component( 'ScreenComponent', {
     refresh: function() {
       if(this.$route.params.scope == "group") { return true; }
       var client = store.getters.client(this.$route.params.id);
-      if(client) {
+      try {
         this.model.hdmi        = client.state.current.hdmi;
         this.model.orientation = client.state.current.orientation;
-      }
+      } catch(err) {}
       return client;
     }
   },

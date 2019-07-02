@@ -1,13 +1,3 @@
-function byName(a, b) {
-  if( a < b ) {
-    return -1;
-  }
-  if( a > b ){
-    return 1;
-  }
-  return 0;
-}
-
 var Group = {
   template: `
 <div class="demo" v-if="groups_are_loaded">
@@ -96,9 +86,8 @@ var Group = {
     groupSize: function() {
       return this.groupClients.length;
     },
-    
     tabs: function() {
-      return store.state.clientComponents["group"].sort(byName);
+      return store.state.clientComponents["group"].sort();
     },
     currentTabComponent: function () {
       if(! this.currentTab) {

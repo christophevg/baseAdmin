@@ -22,3 +22,15 @@ DIV.input-group.date {
 fieldset {
   border: 0px;
 }
+
+table.overview {
+  padding: 5px;
+}
+table.overview TH {
+  text-align: left;
+  padding: 5px;
+  background: #efefef;
+}
+table.overview TD {
+  padding: 5px;
+}

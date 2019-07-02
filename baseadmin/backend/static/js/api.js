@@ -24,17 +24,17 @@ function execute_on(name, cmd, args, schedule) {
       moment(schedule, "DD/MM/YY hh:mm:ss").utc().format("HH:mm:ss YYYY-MM-DD");
   }
 
-  log("CMD", message);
+  log("CMD", name, message);
   socket.emit("queue", message, function() {
     var group = store.getters.group(name);
     if( group ) {
       group.forEach(function(member) {
         store.commit("queued", {"name": member, "payload": message.payload});
-        log("QUEUED", {"name": member, "payload": message.payload});
+        log("QUEUED", member, message.payload);
       });
     } else {
       store.commit("queued", {"name": name, "payload": message.payload});
-      log("QUEUED", {"name": name, "payload": message.payload});
+      log("QUEUED", name, message.payload);
     }
   });
   
@@ -51,9 +51,9 @@ function perform(cmd, args, callback) {
       result = { "success" : false,  "message" : "unknown reason" };
     }
     if( result.success ) {
-      log("MASTER CMD", cmd, args, "OK");
+      log("MASTER CMD", "master", [cmd, args, "OK"]);
     } else {
-      log("MASTER CMD", cmd, args, "FAILED",result.message);      
+      log("MASTER CMD", "master", [cmd, args, "FAILED",result.message]);
     }
     if(typeof callback !== "undefined") { callback(result); }
   });
@@ -71,7 +71,7 @@ function accept(name, master) {
       store.commit("clearRegistration", name);
       log("ACCEPTED", name, result);
     } else {
-      log("FAILED", "accept", name, result.message);
+      log("ACCEPT-FAILED", name, result.message);
     }
   });
 }
@@ -83,7 +83,7 @@ function release(name) {
       store.commit("releaseClient", name);
       log("RELEASED", name);
     } else {
-      log("FAILED", "release", name, result.message);
+      log("RELEASE-FAILED", name, result.message);
     }
   });
 }
@@ -104,19 +104,18 @@ function ping_client(name) {
   var now = Date.now();
   store.commit("client", { name: name, ping_start: now, ping_end: "" } );
   socket.emit("ping2", { "client" : name, "start" : now }, function() {
-    log("PING", name);
+    log("PING", name, now);
   });  
 }
 
 // join a client to a group
 function join(client, group) {
-  console.log("API CALL TO JOIN", client, group);
   socket.emit("join", { "client": client, "group": group }, function(result) {
     if( result.success ) {
       store.commit("join",  { "client": client, "group": group })
-      log("JOINED", client);
+      log("JOINED", client, group);
     } else {
-      log("FAILED", "join", name, result.message);
+      log("JOIN-FAILED", name, result.message);
       app.$notify({
         group: "notifications",
         title: "Failed to join...",
@@ -133,9 +132,9 @@ function leave(client, group) {
   socket.emit("leave", { "client": client, "group": group }, function(result) {
     if( result.success ) {
       store.commit("leave",  { "client": client, "group": group })
-      log("LEFT", client);
+      log("LEFT", client, group);
     } else {
-      log("FAILED", "leave", name, result.message);
+      log("FAILED-LEAVE", name, result.message);
     }    
   });
 }

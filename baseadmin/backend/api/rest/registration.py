@@ -18,7 +18,9 @@ class Registration(Resource):
         "", 401, { "WWW-Authenticate": 'Basic realm="registration"' }
       )
     try:
-      return registration.request(request.authorization.username)
+      requestor = request.authorization.username
+      token = request.get_json()["token"]
+      return registration.request(requestor, token)
     except:
       logger.exception(
         "failed to store request for {0}: {1}".format(

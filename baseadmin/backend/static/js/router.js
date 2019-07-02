@@ -4,10 +4,14 @@ var routes = [
   { path: '/master/:id',         component: Master    },
   { path: '/:scope(client)/:id', component: Client    },
   { path: '/:scope(group)/:id',  component: Group     },
-  { path: "/user",               component: User      },
-  { path: "/user/:id",           component: User      },
   { path: "/log",                component: Log       }
 ];
+
+// TODO: disabled for now
+// { path: "/user",               component: User      },
+// { path: "/user/:id",           component: User      },
+// sections:
+// { icon: "person",    text: "Users",     path: "/user"      },
 
 var router = new VueRouter({
   routes: routes,
@@ -27,7 +31,6 @@ var app = new Vue({
     drawer: null,
     sections: [
       { icon: "dashboard", text: "Dashboard", path: "/dashboard" },
-      { icon: "person",    text: "Users",     path: "/user"      },
       { icon: "comment",   text: "Log",       path: "/log"       }
     ]
   },

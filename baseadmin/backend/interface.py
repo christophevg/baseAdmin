@@ -25,7 +25,7 @@ def render(template="main.html"):
       app=config.app,
       user=user,
       provision="true" if users.count() < 1 else "false",
-      components=components
+      components=components if users.count() > 0 else []
     )
   except TemplateNotFound:
     abort(404)
@@ -46,7 +46,7 @@ def send_app_static(filename):
   return send_from_directory(os.path.join(components[filename]), filename)
 
 @server.route("/static/js/store.js")
-@authenticated("users")
+# @authenticated("users")
 def send_main_js():
   return render("store.js")
 

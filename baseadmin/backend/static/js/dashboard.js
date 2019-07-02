@@ -1,11 +1,5 @@
-Vue.filter('formatDate', function(value) {
-  if (value) {
-    return moment(String(value)).format('DD/MM/YYYY HH:mm:ss')
-  }
-});
-
 function byName(a, b) {
-  if( a.name < b.lname ) {
+  if( a.name < b.name ) {
     return -1;
   }
   if( a.name > b.name ){
@@ -217,7 +211,7 @@ var Dashboard = {
       return client.connected ? "green" : "red";
     },
     groupClients: function(name) {
-      return store.getters.groupClients(name).sort(byName);
+      return store.getters.groupClients(name).concat().sort(byName);
     },
     allClientsConnected: function(name) {
       var result = this.groupClients(name).find(function(client){

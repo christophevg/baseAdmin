@@ -44,7 +44,8 @@ class store(object):
 class master(object):
   root                  = os.environ.get("MASTER_ROOT") or None
   registration_interval = VariableSleep(60, 60)
-  connection_interval   = VariableSleep(10, 10)
+  connection_interval   = VariableSleep(60, 60)
+  connection_retries    = 5
 
 logger.debug("baseAdmin config = " + str({
   "app" : {

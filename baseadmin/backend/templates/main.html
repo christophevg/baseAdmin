@@ -128,8 +128,14 @@
 
     <script src="/static/js/common.js"></script>
     
+    <script>
+      var provision = {{ provision }};
+    </script>
+    
+    {% if provision != "true" %}
     <script src="/static/js/socketio.js"></script>
     <script src="/static/js/api.js"></script>
+    {% endif %}
 
     <script src="/static/js/store.js"></script>
 

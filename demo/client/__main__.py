@@ -27,16 +27,8 @@ def report():
 
 socketio.start_background_task(report)
 
-while True:
-  master = db.config.find_one({"_id": "master"})
-  if master: master = master["value"]
-
-  try:
-    if not master:
-      if not register():
-        logger.fatal("registration was rejected, can't continue.")
-        sys.exit(1)
-    run()
-  except KeyboardInterrupt:
-    break
-
+try:
+  run()
+  logger.fatal("run ended...")
+except KeyboardInterrupt:
+  pass

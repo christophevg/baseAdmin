@@ -1,9 +1,3 @@
-Vue.filter('formatEpoch', function(value) {
-  if (value) {
-    return moment(String(new Date(value).toISOString())).format('DD/MM/YYYY HH:mm:ss')
-  }
-});
-
 Vue.component( "PingComponent", {
   template : `
 <div>

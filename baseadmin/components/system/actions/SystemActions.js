@@ -1,7 +1,7 @@
 var MasterActions = Vue.component( "ActionsComponent", {
   template : `
 <div>
-  <h1>System Actions</h1>
+  <h1 v-if="scopeIsMaster">System Actions</h1>
   <center>
     <v-btn :loading="submitting['reboot']"   @click="submit('reboot')"   class="primary">Reboot</v-btn>
     <v-btn :loading="submitting['shutdown']" @click="submit('shutdown')" class="primary">Shutdown</v-btn>
@@ -9,6 +9,9 @@ var MasterActions = Vue.component( "ActionsComponent", {
   </center>
 </div>`,
   computed: {
+    scopeIsMaster: function() {
+      return !(  "id" in this.$route.params );
+    },
     version: function() {
       return store.state.version;
     }

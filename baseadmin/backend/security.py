@@ -19,7 +19,7 @@ def valid_credentials(group):
   if not user:
     logger.debug("unknown {0} member: {1}".format(group, auth.username))
     return False
-  if not bcrypt.checkpw(auth.password, user["pass"]):
+  if not bcrypt.hashpw(auth.password, user["pass"]) == user["pass"]:
     logger.debug("incorrect password")
     return False
   return True

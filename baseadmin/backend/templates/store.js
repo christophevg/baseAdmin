@@ -128,6 +128,10 @@ var store = new Vuex.Store({
     },
     groupComponent: function(state, service) {
       state.clientComponents.group.push(service);
+    },
+    log: function(state, message) {
+      state.messages.unshift(message);
+      state.messages = state.messages.slice(0, 250);
     }
   },
   actions: {
@@ -172,7 +176,7 @@ var store = new Vuex.Store({
       return function(name) {
         return this.group(name).map(function(name){
           return store.getters.client(name);
-        });
+        }).filter(function(item) { return item; });
       }
     },
     masters: function(state, getters) {
@@ -192,6 +196,11 @@ var store = new Vuex.Store({
     registrations: function(state) {
       return function() {
         return state.registrations.data;
+      }
+    },
+    logs: function(state) {
+      return function() {
+        return state.messages;
       }
     }
   }

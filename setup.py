@@ -23,18 +23,18 @@ CLASSIFIERS      = [
 ]
 INSTALL_REQUIRES = [
   "flask",
+  "gunicorn",
+  "eventlet",
   "flask_restful",
+  "Flask-SocketIO",
   "pymongo",
   "py-bcrypt",
-  "paho-mqtt",
-  "gunicorn",
-  "pycryptodome",
   "python-dateutil",
-  "python-dotenv",
-  "simple-rsa",
-  "mqfactory"
+  "python-dotenv==0.8.2",
+  "python-bcrypt",
+  "requests"
 ]
-ENTRY_POINTS     = {}
+ENTRY_POINTS = {}
 SCRIPTS = []
 
 HERE = os.path.dirname(__file__)

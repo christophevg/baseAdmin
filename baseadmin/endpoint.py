@@ -31,52 +31,7 @@ publish_location = False
 def generate_location():
   return "https://{0}:8001".format(config.client.ip)
 
-def register(master=config.master.root):
-  url = master + "/api/register"
-  logger.info("registering at {0}".format(url))
-  while True:
-    try:
-      logger.debug("submitting registration")
-      response = requests.post(
-        url,
-        auth=(config.client.name, config.client.secret),
-        verify=False
-      )
-      if response.status_code != requests.codes.ok:
-        logger.warn("failed to register: {0}".format(str(response)))
-      else:
-        request = response.json()
-        if request:
-          if request["state"] == "accepted":
-            logger.info("registration was accepted: {0}/{1}".format(
-              request["master"], request["token"]
-            ))
-            # no master info received => stick with this one
-            if request["master"] is None:
-              db.config.update_one(
-                {"_id": "master"},
-                { "$set" : { "value": master } },
-                upsert=True
-              )
-              db.config.update_one(
-                {"_id": "token"},
-                { "$set" : { "value": request["token"] } },
-                upsert=True
-              )
-              return True
-            else:
-              # we got a new master, let's try to register overthere
-              return register(request["master"])
-          elif request["state"] == "rejected":
-            logger.warn("registration was rejected")
-            return False
-        logger.info("registration is pending")
-    except requests.ConnectionError:
-      logger.warn("could not connect to {0}".format(url))
-    except Exception as e:
-      logger.exception("failed to connect")
-    logger.debug("retrying in {0}".format(str(config.master.registration_interval)))
-    config.master.registration_interval.sleep()
+# override EngineIoClient to allow for unverified SSL connections
 
 class MyEngineIoClient(eio.Client):
   def _send_request(self, method, url, headers=None, body=None):
@@ -94,6 +49,8 @@ class MySocketIoClient(sio.Client):
 socketio = MySocketIoClient()
 
 me = Client(config.client.name, db.state)
+
+# queue-base sending
 
 def send(event, info):
   me.queue.append({ "event": event, "info": info})
@@ -117,6 +74,8 @@ def ack(feedback=None):
     logger.info("ack {0} / {1}".format(message, feedback) )
     me.queue.pop()
     if not me.queue.empty: emit_next()
+
+# event handlers
 
 @socketio.on("connect")
 def on_connect():
@@ -148,11 +107,43 @@ def on_ping(request):
   logger.info("ping")
   socketio.emit("pong2", request)
 
+@socketio.on("schedule")
+def on_schedule(cmd):
+  logger.info("received scheduled cmd: {0}".format(cmd))
+  try:
+    cmd["schedule"] = dateutil.parser.parse(cmd["schedule"]).timestamp()
+    now = datetime.datetime.utcnow().timestamp()
+    logger.info("now={0} / schedule={1} / eta={2}".format(now, cmd["schedule"], cmd["schedule"]-now))
+    me.schedule.add(cmd)
+  except Exception as e:
+    feedback(failure=str(e))
+  return feedback()
+
 commands = {}
+
+def perform_scheduled_tasks():
+  while True:
+    try:
+      scheduled = me.schedule.get()
+      while scheduled and scheduled["schedule"] <= datetime.datetime.utcnow().timestamp():
+        logger.info("performing scheduled cmd: {0}".format(scheduled) )
+        commands[scheduled["cmd"]](scheduled["args"])
+        me.schedule.pop()
+        send("performed", feedback(performed=scheduled))
+        scheduled = me.schedule.get()
+        socketio.sleep(0.05)
+    except Exception as e:
+      pass
+    socketio.sleep(0.05)
+
+socketio.start_background_task(perform_scheduled_tasks)
+
+# command decorator
 
 def feedback(*args, **kwargs):
   # logger.info("state: {0} + {1}".format(me.state, me.schedule.items))
   feedback = {
+    "name": me.name,
     "state" : {
       "current" : me.state,
       "futures" : me.schedule.items
@@ -161,7 +152,7 @@ def feedback(*args, **kwargs):
   feedback.update(kwargs)
   feedback.update({ "feedback" : args })
   return feedback
-  
+
 def command(cmd):
   def decorator(f):
     commands[cmd] = f
@@ -172,34 +163,69 @@ def command(cmd):
     return wrapper
   return decorator
 
-@socketio.on("schedule")
-def on_schedule(cmd):
-  logger.info("received scheduled cmd: {0}".format(cmd))
-  cmd["schedule"] = dateutil.parser.parse(cmd["schedule"]).timestamp()
-  now = datetime.datetime.utcnow().timestamp()
-  logger.info("now={0} / schedule={1} / eta={2}".format(now, cmd["schedule"], cmd["schedule"]-now))
-  me.schedule.add(cmd)
-  return feedback()
+# register/connection management
 
-def perform_scheduled_tasks():
+def send_registration_request(url, token):
+  try:
+    response = requests.post(
+      url,
+      auth=(config.client.name, config.client.secret),
+      json={ "token" : token },
+      verify=False
+    )
+  except requests.ConnectionError:
+    logger.warn("could not connect to {0}".format(url))
+    return ( None, None )
+  except Exception as e:
+    logger.exception("failed to connect")
+    return ( None, None )
+
+  # failure
+  if response.status_code != requests.codes.ok:
+    logger.warn("failed to register: {0}".format(str(response)))
+    return ( None, None )
+
+  feedback = response.json()
+  logging.debug("feedback: {0}".format(feedback))
+
+  # pending
+  if not feedback:
+    logger.info("registration is pending")
+    return ( None, None )
+
+  # rejected
+  if feedback["state"] == "rejected":
+    logger.warn("registration was rejected")
+    return ( "rejected", None )
+
+  # accepted
+  logger.info("registration was accepted: {0}".format(feedback["master"]))
+
+  return ("accepted", feedback["master"] )
+
+def register(master, token):
+  url = master + "/api/register"
+  logger.info("registering at {0} with token {1}".format(url, token))
   while True:
-    scheduled = me.schedule.get()
-    while scheduled and scheduled["schedule"] <= datetime.datetime.utcnow().timestamp():
-      logger.info("performing scheduled cmd: {0}".format(scheduled) )
-      commands[scheduled["cmd"]](scheduled["args"])
-      me.schedule.pop()
-      send("performed", feedback(performed=scheduled))
-      scheduled = me.schedule.get()
-    socketio.sleep(0.05)
+    (outcome, other_master) = send_registration_request(url, token)
+    if outcome == "rejected": return None
+    if outcome == "accepted":
+      # go to redirected master
+      if other_master: return register(other_master, token)
+      # store this master and provided token as our current master/token pair
+      db.config.update_one( {"_id": "master"},{ "$set" : { "value": master } }, upsert=True )
+      db.config.update_one( {"_id": "token"}, { "$set" : { "value": token } },  upsert=True )
+      return master
+    logger.debug("retrying in {0}".format(str(config.master.registration_interval)))
+    config.master.registration_interval.sleep()
 
-socketio.start_background_task(perform_scheduled_tasks)
+def connect(master, token):
+  if socketio.eio.state == "connected":
+    logger.warn("trying to connect while socketio already connected ?")
+    return True
 
-def connect():
-  if socketio.eio.state == "connected": return
-  master = db.config.find_one({"_id": "master"})["value"]
-  token  = db.config.find_one({"_id": "token"})["value"]
   logger.info("connecting to {0} using {1}".format(master, token))
-  while True:
+  for retry in range(config.master.connection_retries):
     try:
       socketio.connect(
         master,
@@ -209,30 +235,40 @@ def connect():
         })
       return True
     except sio.exceptions.ConnectionError as e:
-      if str(e) == "Connection refused by the server":
-        logger.warn("connection refused by server")
-        logger.debug("retrying in {0}".format(str(config.master.connection_interval)))
+      logger.warn("can't connect to master ({0})".format(master))
+      if retry+1 < config.master.connection_retries:
+        logger.debug("retrying connection in {0}".format(str(config.master.connection_interval)))
         config.master.connection_interval.sleep()
-      else:
-        #  we aren't allowed to connect, so our credentials are bogus
-        # clear them and stop trying, fall through run and re-register
-        logger.info("server doesn't allow us anymore, clearing credentials")
-        db.config.delete_one({"_id": "master"})
-        db.config.delete_one({"_id": "token"})
-        break
+  logger.error("failed to connect after retries")
   return False
 
 def run():
-  logger.info("starting...")
-  while connect():
-    try:
-      while socketio.eio.state == "connected":
-        socketio.wait()
-      socketio.disconnect()
-      return
-    except Exception as e:
-      socketio.disconnect()
-      logger.exception(e)
+  logger.info("starting event loop...")
+  
+  master = None
+  token  = str(uuid.uuid4())
+
+  # load the current connection parameters
+  try:
+    master = db.config.find_one({"_id": "master"})["value"]
+    token  = db.config.find_one({"_id": "token" })["value"]  
+  except:
+    # no connection info could be loaded, start at root with fresh token
+    logging.info("no connecting info, starting registration")
+    master = register(config.master.root, token)
+
+  while master:
+    while connect(master, token):
+      socketio.wait()
+      logger.debug("============= stopped waiting ==============")
+    # can't connect, re-register
+    logger.debug("clearing registration")
+    db.config.delete_one({"_id": "master"})
+    db.config.delete_one({"_id": "token"})
+    master = register(config.master.root, token)
+
+  logger.fatal("registration was rejected, can't continue.")
+  return False
 
 # temp solution for easier termination of endpoint
 def my_teardown_handler(signal, frame):

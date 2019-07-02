@@ -48,9 +48,10 @@ Vue.component( "ContentComponent", {
         <td class="text-xs-right">{{ props.item.size }}</td>
 
         <td v-if="props.item.time > 0" class="text-xs-right">{{ props.item.time }}</td>
+        <td v-else-if="props.item.success" class="text-xs-right"></td>
         <td v-else class="text-xs-right"><v-icon color="blue">cloud_download</v-icon></td>
         <td width="1%">
-          <v-btn color="red" fab small dark @click="deleteFile(props.item.name)">
+          <v-btn v-if="! (props.item.success && props.item.time == 0)" color="red" fab small dark @click="deleteFile(props.item.name)">
             <v-icon>delete</v-icon>
           </v-btn>
         </td>
@@ -86,11 +87,11 @@ Vue.component( "ContentComponent", {
       return "scope" in this.$route.params && this.$route.params.scope == "group";
     },
     files: function() {
-      if(this.$route.params.scope == "client") { //   group
+      if(this.$route.params.scope == "client") {
         var client = store.getters.client(this.$route.params.id);
-        if(client) {
+        try {
           return client.state.current.files;
-        }
+        } catch(err) {}
       }
       return [];
     },
@@ -186,113 +187,3 @@ Vue.component( "ContentComponent", {
 
 app.registerClientComponent("Content");
 app.registerGroupComponent("Content");
-
-// app.registerService({
-//   name            : "Content",
-//   location        : "http://localhost:38383",
-// });
-
-// store.registerModule("content", {
-//   state: {
-//     clients: []
-//   },
-//   mutations: {
-//     content: function(state, content) {
-//       state.clients.push(content);
-//     },
-//     file: function(state, update){
-//       var id     = update["client"],
-//           file   = update["file"],
-//           client = store.getters.content(id);
-//       client.files = client.files.filter(function(item) {
-//         return item.name != file.name;
-//       });
-//       client.files.push(file);
-//     }
-//   },
-//   actions: {
-//     initClient: function(context, id) {
-//       var client = context.state.clients.find(function(client) {
-//         return client.id == id;
-//       });
-//       if(! client ) {
-//         client = {
-//           id    : id,
-//           files : [],
-//           loaded: false
-//         }
-//         store.commit("content", client );
-//       }
-//       if(! client.loaded) {
-//         $.ajax({
-//           url: "/api/content/" +id,
-//           type: "GET",
-//           success: function(files) {
-//             for(var i in files) {
-//               context.commit("file", {
-//                 client: id,
-//                 file  : files[i]
-//               });
-//             }
-//             client.loaded = true;
-//           },
-//           error: function(response) {
-//             // probably no content recorded yet
-//             client.loaded = true;
-//           }
-//         });
-//       }
-//     }
-//   },
-//   getters: {
-//     content: function(state) {
-//       return function(id) {
-//         var client = state.clients.find(function(client) {
-//           return client.id == id;
-//         });
-//         if(! client ) {
-//           client = {
-//             id    : id,
-//             files : [
-//               {
-//                 "time" : "default",
-//                 "name" : "index.html",
-//                 "size" : 3058
-//               },
-//               {
-//                 "time" : "default",
-//                 "name" : "black.html",
-//                 "size" : 44
-//               },
-//               {
-//                 "time" : "default",
-//                 "name" : "splash.png",
-//                 "size" : 145125
-//               }
-//             ],
-//             loaded: false
-//           }
-//           store.commit("content", client );
-//           store.dispatch("initClient", id);
-//         }
-//         return client;
-//       }
-//     },
-//     groupContent: function(state) {
-//       return function(id) {
-//         var group = store.getters.group(id);
-//         var files = [];
-//         if(group.loaded) {
-//           var loaded = true;
-//           for(var c in group.clients) {
-//             var client = store.getters.content(group.clients[c]._id);
-//             files.push(client);
-//             loaded = loaded && client.loaded;
-//           }
-//         }
-//         return { id: id, files: files, loaded: loaded }
-//       }
-//     }
-//   }
-// });
-//

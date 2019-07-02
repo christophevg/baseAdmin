@@ -69,7 +69,7 @@ def import_existing_files():
         "success" : True,
         "url"     : "",
         "size"    : size,
-        "expexted": size,
+        "expected": size,
         "time"    : 0
       })
 

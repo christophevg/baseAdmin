@@ -42,20 +42,7 @@ from baseadmin.storage  import db
 
 endpoint.publish_location = True
 
-def event_loop():
-  while True:
-    master = db.config.find_one({"_id": "master"})
-    if master: master = master["value"]
-
-    try:
-      if not master:
-        if not endpoint.register():
-          logger.fatal("registration was rejected, can't continue.")
-          sys.exit(1)
-      endpoint.run()
-    except KeyboardInterrupt:
-      pass
-
-t = Thread(target=event_loop)
+# run endpoint event_loop in thread
+t = Thread(target=endpoint.run)
 t.daemon = True
 t.start()

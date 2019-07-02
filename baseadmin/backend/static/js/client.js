@@ -1,23 +1,13 @@
-function byName(a, b) {
-  if( a < b ) {
-    return -1;
-  }
-  if( a > b ){
-    return 1;
-  }
-  return 0;
-}
-
-
 var Client = {
   template: `
-<div id="dynamic-component-demo" class="demo">
+<div v-if="client">
   <h1>
     <v-btn color="red" fab style="float:right;" small dark @click="release()">
       <v-icon>delete</v-icon>
     </v-btn>
     {{ $route.params.id }}
     <v-icon :color="clientColor" x-large>{{ clientIcon }}</v-icon>
+    <span style="font-size:11pt; font-weight: normal; color:#9e9e9e">(last update: {{ client.modified | formatDate }})</span>
   </h1>
   <hr><br>
   <button
@@ -43,22 +33,58 @@ var Client = {
 
   <div v-if="client && client.queue && client.queue.length > 0">
     <h2>Queued</h2>
-    <ul>
-      <li v-for="item in client.queue">{{ item }}</li>
-    </ul>
+    <v-data-table
+      :headers="headers"
+      :items="client.queue"
+      hide-actions
+      class="elevation-1"
+    >
+      <template slot="items" slot-scope="props">
+        <td width="20%">{{ props.item.cmd }}</td>
+        <td v-html="$options.filters.syntaxHighlight(props.item.args, 50)"></td>
+        <td width="20%">{{ props.item.schedule | formatEpoch }}</td>
+      </template>
+    </v-data-table>
   </div>
-
+  <br>
   <div v-if="client && client.state && client.state.futures && client.state.futures.length > 0">
     <h2>Scheduled</h2>
-    <ul>
-      <li v-for="item in client.state.futures">{{ item }}</li>
-    </ul>
+    <v-data-table
+      :headers="headers"
+      :items="client.state.futures"
+      hide-actions
+      class="elevation-1"
+    >
+      <template slot="items" slot-scope="props">
+        <td width="20%">{{ props.item.cmd }}</td>
+        <td v-html="$options.filters.syntaxHighlight(props.item.args, 50)"></td>
+        <td width="20%">{{ props.item.schedule | formatEpoch }}</td>
+      </template>
+    </v-data-table>
   </div>
 
 </div>`,
   data: function() {
     return {
       currentTab: null,
+      headers: [
+        {
+          text: 'Command',
+          align: 'left',
+          sortable: true,
+          value: 'cmd'
+        },
+        {
+          text: 'Arguments',
+          align: 'left',
+          value: 'args'
+        },
+        {
+          text: 'Schedule',
+          align: 'left',
+          value: 'schedule'
+        }
+      ]
     }
   },
   computed: {
@@ -76,7 +102,7 @@ var Client = {
       return store.getters.group(this.$route.params.id);
     },
     tabs: function() {
-      return store.state.clientComponents["client"].sort(byName);
+      return store.state.clientComponents["client"].sort();
     },
     currentTabComponent: function () {
       if(! this.currentTab) {

@@ -2,35 +2,52 @@ var Log = {
   template : `
 <div>
   <h1>Logged Activity</h1>
-  <v-layout justify-center column>
-    <v-card v-for="(message, i) in messages" :key="i">
-      <v-card-title>
-        <div>
-          <div style="display:inline-block;width:155px;text-align:center;margin-right:5px;">{{ message.when }}</div> 
   
-          <v-btn v-if="message.client" depressed small color="primary" @click="gotoClient(message.client)">
+  <v-expansion-panel popout>
+    <v-expansion-panel-content v-for="(message, i) in messages" :key="i" hide-actions>
+      <v-layout slot="header" align-left row spacer>
+        <div style="float:left;width:125px; margin-right: 10px;">
+          <v-btn depressed small block :color="buttonColor(message.client)" @click="gotoClient(message.client)">
             {{ message.client }}
           </v-btn>
-          <div v-else class="grey--text">{{ message.topic }}</div>
-          <span>{{ message.payload }}</span>
         </div>
-      </v-card-title>
-    </v-card>
-  </v-layout>
+        <div>
+          <span class="grey--text">{{ message.when | formatDate }}</span>
+          <br>
+          <span class="">{{ message.event }}</span>
+        </div>
+      </v-layout>
+
+      <div style="margin-left: 25px;margin-bottom:10px;margin-right: 25px;"
+           v-html="$options.filters.syntaxHighlight(message.info, 250)">
+      </div>
+    </v-expansion-panel-content> 
+  </v-expansion-panel>
 </div>`,
   computed: {
     messages : function() {
-      var messages = store.getters.messages();
-      for(var i in messages) {
-        messages[i]["client"] =
-          messages[i].topic[0] == "client" ? messages[i].topic[1] : false;
+      return store.getters.logs();
+    },
+    buttonColor: function() {
+      return function(client) {
+        if( store.getters.group(client) ) {
+          return "secondary";
+        }
+        if( store.getters.client(client) ) {
+          return "primary";
+        }
+        return "white";
       }
-      return messages;
     }
   },
   methods: {
     gotoClient: function(client) {
-      this.$router.push("/client/" + client);
+      if( store.getters.group(client) ) {
+        return this.$router.push("/group/" + client);
+      }
+      if( store.getters.client(client) ) {
+        return this.$router.push("/client/" + client);
+      }
     }
   }
 };
