@@ -166,7 +166,8 @@ var store = new Vuex.Store({
         if(name == "all") {
           return getters.clients().filter(function(client){
             return !("location" in client) || ! client.location;
-          }).map(function(client){ return client.name; });
+          }).map(function(client){ return client.name; })
+            .filter(function(item) { return item; });
         } else {
           return state.groups.data[name];
         }
