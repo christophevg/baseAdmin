@@ -85,6 +85,7 @@ def on_connect():
     location = generate_location()
     logger.info("sending location: {0}".format(location))
     socketio.emit("location", location)
+  socketio.emit("refresh", feedback()) # send refresh of state on connect
   if not me.queue.empty: emit_next()
 
 @socketio.on("error")

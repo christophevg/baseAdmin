@@ -89,5 +89,10 @@ $.get( "/api/session", function socketio_connect(token) {
   socket.on("failure", function(data){
     log("FAILED", data.name, data);
   });
+  
+  socket.on("refresh", function(client) {
+    store.commit("client", client);
+    log("REFRESH", client.name, client);
+  });
 
 });

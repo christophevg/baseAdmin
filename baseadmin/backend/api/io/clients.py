@@ -81,7 +81,7 @@ def on_performed(feedback):
   client = clients[sid2name[request.sid]]
   with client.lock:
     client.state = feedback["state"]
-    logger.info("performed: {0} : ")
+    logger.info("performed: {0}".format(feedback))
     status = dict(client)
     status.update({ "performed" : feedback["performed"]})
     socketio.emit("performed", status, room="browser" )
@@ -92,3 +92,13 @@ def on_pong(data):
   name = sid2name[request.sid]
   logger.info("pong {0}".format(name))
   socketio.emit("pong2", data, room="browser")
+
+@socketio.on("refresh")
+@secured
+def on_refresh(feedback):
+  client = clients[sid2name[request.sid]]
+  with client.lock:
+    client.state = feedback["state"]
+    state = dict(client)
+    logger.info("refresh: {0}".format(state))
+    socketio.emit("refresh", state, room="browser" )
