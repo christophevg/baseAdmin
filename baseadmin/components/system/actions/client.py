@@ -18,7 +18,6 @@ def on_shutdown(args):
 @command("update")
 def on_update(args):
   logger.warn("TODO updating...")
-  raise NotImplementedError("updating is not yet implemented...")
   fname = os.path.expanduser("~/update_baseadmin_app")
   with open(fname, "a"):
     os.utime(fname, None)
