@@ -5,7 +5,7 @@ var MasterWifi = Vue.component( "WifiComponent", {
       <b>Note: For groups, no existing networks can be shown. Only adding is possible.</b>
     </div>
   
-    <v-card v-for="(psk, network) in networks" :key="network">
+    <v-card v-for="(network, i) in networks" :key="i">
       <v-card-title>
         <div style="width:100%;">
           <div style="float:right;margin-right:15px;">
@@ -77,7 +77,7 @@ var MasterWifi = Vue.component( "WifiComponent", {
         var state = this;
         perform("addNetwork", msg, function(result) {
           if("success" in result && result.success) {
-            store.commit("newNetwork", this.model.ssid);
+            store.commit("newNetwork", msg.ssid);
           } else  {
             app.$notify({
               group: "notifications",

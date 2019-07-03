@@ -14,7 +14,7 @@ register_component("Wifi.js", os.path.dirname(__file__))
 
 # provide our own master wifi networks
 
-register_state_provider("networks", repository.get)
+register_state_provider("networks", repository.getNames)
 
 # respond to system actions
 
@@ -24,8 +24,8 @@ def on_add_network(args):
   if not "ssid" in args or not "psk" in args or args["ssid"] == "" or args["psk"] == "":
     raise KeyError("invalid network arguments")
   
-  generate_wpa_supplicant(repository.get())
   repository.add(args["ssid"], args["psk"])
+  generate_wpa_supplicant(repository.getMap())
 
 @command("removeNetwork")
 def on_remove_network(args):
@@ -33,5 +33,5 @@ def on_remove_network(args):
   if not "ssid" in args or args["ssid"] == "":
     raise KeyError("invalid network arguments")
 
-  generate_wpa_supplicant(repository.get())
   repository.remove(args["ssid"])
+  generate_wpa_supplicant(repository.getMap())
