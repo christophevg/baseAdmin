@@ -29,7 +29,7 @@ var MasterActions = Vue.component( "ActionsComponent", {
             app.$notify({
               group: "notifications",
               title: "Master will " + cmd + "...",
-              text:  "The Master is going to " + cmd + ". Please wait a bit and refresh.",
+              text:  "The Master is going to " + cmd + ".",
               type:  "success",
               duration: 10000
             });
