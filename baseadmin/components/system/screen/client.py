@@ -31,5 +31,5 @@ def on_screen(args):
 
   if reboot:
     logger.warn("rebooting due to screen update")
-    os.system("sudo reboot")
+    os.system("( sleep 10; sudo reboot) &")
     return "rebooting due to screen update..."
