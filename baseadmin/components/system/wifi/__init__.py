@@ -6,7 +6,7 @@ import shutil
 
 def run(script, *args):
   script = os.path.join(os.path.dirname(__file__), script)
-  os.system("{0} {1}".format(script, " ".join(args)))
+  os.system("sudo {0} {1}".format(script, " ".join(args)))
 
 def generate_wpa_supplicant(wifi):
   try:
@@ -24,6 +24,6 @@ def generate_wpa_supplicant(wifi):
       "/etc/wpa_supplicant/wpa_supplicant.conf"
     ))
     for ssid, psk in wifi.items():
-      run("sudo add-wifi.sh", ssid, psk, ssid)
+      run("add-wifi.sh", ssid, psk, ssid)
   except FileNotFoundError:
     logger.error("file not found...")
