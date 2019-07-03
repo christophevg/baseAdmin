@@ -24,6 +24,6 @@ def generate_wpa_supplicant(wifi):
       "/etc/wpa_supplicant/wpa_supplicant.conf"
     ))
     for ssid, psk in wifi.items():
-      run("add-wifi.sh", ssid, psk, ssid)
+      run("sudo add-wifi.sh", ssid, psk, ssid)
   except FileNotFoundError:
     logger.error("file not found...")
