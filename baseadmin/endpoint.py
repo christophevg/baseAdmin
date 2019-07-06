@@ -160,7 +160,11 @@ def command(cmd):
     @wraps(f)
     @socketio.on(cmd)
     def wrapper(data):
-      return feedback(f(data["args"]))
+      try:
+        return feedback(f(data["args"]))
+      except Exception as e:
+        logger.exception("execution of command failed: {0}".format(str(e)))
+      return feedback()
     return wrapper
   return decorator
 
