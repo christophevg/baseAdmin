@@ -48,8 +48,8 @@ def ack(client, cmd):
         d["cmd"] = cmd
         socketio.emit("ack", d, room="browser" )
       else:
-        logger.error("got no feedback from client, command no handled? {0}".format(cmd) )
-        socketio.emit("error", "got no feedback from client, command no handled? {0}".format(cmd), room="browser")
+        logger.error("got no feedback from client, command not handled? {0}".format(cmd) )
+        socketio.emit("error", "got no feedback from client, command not handled? {0}".format(cmd), room="browser")
         client.queue.pop()
       if not client.queue.empty: emit_next(client)
   return handler
