@@ -241,32 +241,33 @@ def connect(master, token):
       logger.info("socketio: {0}".format(socketio.eio.state))
       return socketio.eio.state == "connected"
     except sio.exceptions.ConnectionError as e:
-      logger.warn("can't connect to master ({0})".format(master))
+      logger.warn("can't connect to master ({0}): {1}".format(master, str(e)))
       if retry+1 < config.master.connection_retries:
         logger.debug("retrying connection in {0}".format(str(config.master.connection_interval)))
         config.master.connection_interval.sleep()
   logger.error("failed to connect after retries")
   return False
 
+def get(key, default=None):
+  try:
+    return db.config.find_one({"_id": key})["value"]
+  except Exception:
+    if default:
+      db.config.update_one( {"_id": key},{ "$set" : { "value": default } }, upsert=True )
+    return default
+
 def run():
   logger.info("starting event loop...")
   
-  master = None
-  token  = str(uuid.uuid4())
+  token  = get("token", str(uuid.uuid4())) # get or init our unique token
+  master = get("master")
 
-  # load the current connection parameters
-  try:
-    master = db.config.find_one({"_id": "master"})["value"]
-    token  = db.config.find_one({"_id": "token" })["value"]  
-  except:
-    # no connection info could be loaded, start at root with fresh token
+  if master is None:
     logging.info("no connecting info, starting registration")
     master = register(config.master.root, token)
 
   while master:
-    while connect(master, token):
-      socketio.wait()
-      logger.debug("============= stopped waiting ==============")
+    while connect(master, token): socketio.wait()
     # can't connect, re-register
     logger.debug("clearing registration")
     db.config.delete_one({"_id": "master"})
