@@ -269,7 +269,6 @@ def run():
     # can't connect, re-register
     logger.debug("clearing registration")
     db.config.delete_one({"_id": "master"})
-    db.config.delete_one({"_id": "token"})
     master = register(config.master.root, token)
 
   logger.fatal("registration was rejected, can't continue.")
