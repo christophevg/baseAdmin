@@ -238,7 +238,8 @@ def connect(master, token):
           "client": config.client.name,
           "token" : token
         })
-      return True
+      logger.info("socketio: {0}".format(socketio.eio.state))
+      return socketio.eio.state == "connected"
     except sio.exceptions.ConnectionError as e:
       logger.warn("can't connect to master ({0})".format(master))
       if retry+1 < config.master.connection_retries:
