@@ -53,7 +53,7 @@ var MasterWifi = Vue.component( "WifiComponent", {
         } else {                                  //   client
           var client = store.getters.client(this.$route.params.id);
           try {
-            return client.state.current.networks;
+            return Object.keys(client.state.current.networks);
           } catch(err) {}
           return [];
         }
