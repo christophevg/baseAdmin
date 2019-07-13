@@ -60,7 +60,7 @@ def emit_next():
   if not me.connected: return
   try:
     message = me.queue.get()
-    logging.info("sending {0}".format(message))
+    logger.info("sending {0}".format(message))
     socketio.emit(message["event"], message["info"], callback=ack)
   except Exception as e:
     logger.exception(e)
@@ -180,10 +180,10 @@ def send_registration_request(url, token):
       verify=False
     )
   except requests.ConnectionError:
-    logger.warn("could not connect to {0}".format(url))
+    logger.warn("registration: could not connect to {0}".format(url))
     return ( None, None )
   except Exception as e:
-    logger.exception("failed to connect")
+    logger.exception("registration: failed to connect to {0}".format(url))
     return ( None, None )
 
   # failure
@@ -192,7 +192,7 @@ def send_registration_request(url, token):
     return ( None, None )
 
   feedback = response.json()
-  logging.debug("feedback: {0}".format(feedback))
+  logger.debug("feedback: {0}".format(feedback))
 
   # pending
   if not feedback:
@@ -230,8 +230,8 @@ def connect(master, token):
     logger.warn("trying to connect while socketio already connected ?")
     return True
 
-  logger.info("connecting to {0} using {1}".format(master, token))
   for retry in range(config.master.connection_retries):
+    logger.info("connecting to {0} using {1} [try:{2}]".format(master, token, retry+1))
     try:
       socketio.connect(
         master,
@@ -258,13 +258,13 @@ def get(key, default=None):
     return default
 
 def run():
-  logger.info("starting event loop...")
+  logger.info("starting endpoint event loop...")
   
   token  = get("token", str(uuid.uuid4())) # get or init our unique token
   master = get("master")
 
   if master is None:
-    logging.info("no connecting info, starting registration")
+    logger.info("no connecting info, starting registration")
     master = register(config.master.root, token)
 
   while master:
@@ -274,7 +274,7 @@ def run():
     db.config.delete_one({"_id": "master"})
     master = register(config.master.root, token)
 
-  logger.fatal("registration was rejected, can't continue.")
+  logger.fatal("eventloop ended, this shouldn't have happend :-(")
   return False
 
 # temp solution for easier termination of endpoint
