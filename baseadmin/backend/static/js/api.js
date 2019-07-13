@@ -72,6 +72,13 @@ function accept(name, master) {
       log("ACCEPTED", name, result);
     } else {
       log("ACCEPT-FAILED", name, result.message);
+      app.$notify({
+        group: "notifications",
+        title: "Failed to accept...",
+        text:  "message" in result ? result.message : "unknown reason",
+        type:  "warn",
+        duration: 10000
+      });
     }
   });
 }
