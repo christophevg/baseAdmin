@@ -197,7 +197,7 @@ def send_registration_request(url, token):
   # pending
   if not feedback:
     logger.info("registration is pending")
-    return ( None, None )
+    return ( "pending", None )
 
   # rejected
   if feedback["state"] == "rejected":
@@ -214,14 +214,20 @@ def register(master, token):
   logger.info("registering at {0} with token {1}".format(url, token))
   while True:
     (outcome, other_master) = send_registration_request(url, token)
-    if outcome == "rejected": return None
+    # unsuccessful? bubble back up, unless we're at root, keep trying then
+    if outcome == None and master != config.master.root: return None
+    if outcome == "rejected": return None # isn't possible right now
     if outcome == "accepted":
-      # go to redirected master
-      if other_master: return register(other_master, token)
-      # store this master and provided token as our current master/token pair
-      db.config.update_one( {"_id": "master"},{ "$set" : { "value": master } }, upsert=True )
-      db.config.update_one( {"_id": "token"}, { "$set" : { "value": token } },  upsert=True )
-      return master
+      if other_master: # go to redirected master
+        result = register(other_master, token)
+        if not result is None: return result # bubble up the master
+        # failed to register/connect at other master, keep trying with current
+      else: # we're at our master
+        # store this master and provided token as our current master/token pair
+        db.config.update_one( {"_id": "master"},{ "$set" : { "value": master } }, upsert=True )
+        db.config.update_one( {"_id": "token"}, { "$set" : { "value": token } },  upsert=True )
+        return master # report master
+    # if outcome == "pending": pass
     logger.debug("retrying in {0}".format(str(config.master.registration_interval)))
     config.master.registration_interval.sleep()
 
@@ -242,13 +248,20 @@ def connect(master, token):
       logger.info("socketio: {0}".format(socketio.eio.state))
       return socketio.eio.state == "connected"
     except sio.exceptions.ConnectionError as e:
-      logger.warn("can't connect to master ({0}): {1}".format(master, str(e)))
-      if retry+1 < config.master.connection_retries:
-        logger.debug("retrying connection in {0}".format(str(config.master.connection_interval)))
-        config.master.connection_interval.sleep()
-  logger.error("failed to connect after retries")
+      if str(e) == "Connection refused by the server":
+        logger.warn("can't connect to master ({0}): {1}".format(master, str(e)))
+        if retry+1 < config.master.connection_retries:
+          logger.debug("retrying connection in {0}".format(str(config.master.connection_interval)))
+          config.master.connection_interval.sleep()
+        else:
+          logger.error("failed to connect after retries")
+      else:  # shouldn't really happen anymore ;-) e.g. bad token
+        logger.warn("master ({0}) denied connection: {1}".format(master, str(e)))
+        socketio.sleep(5) # temp: for case where master still has bad token
+        break
   return False
 
+# future implementation of cached configuration interface
 def get(key, default=None):
   try:
     return db.config.find_one({"_id": key})["value"]
@@ -268,7 +281,10 @@ def run():
     master = register(config.master.root, token)
 
   while master:
-    while connect(master, token): socketio.wait()
+    while connect(master, token):
+      socketio.wait()
+      master = get("master")
+      if master is None: break
     # can't connect, re-register
     logger.debug("clearing registration")
     db.config.delete_one({"_id": "master"})
