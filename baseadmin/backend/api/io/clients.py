@@ -25,8 +25,8 @@ def accept(message):
 def on_release(name):
   try:
     logger.info("cleaning up {0}".format(name))
-    registration.delete(name)
     clients.delete(name)
+    registration.delete(name)
     logger.info("releasing {0}".format(name))
     emit("release", {}, room=name)
   except Exception as e:

@@ -38,7 +38,7 @@ def get(name=None):
 def delete(name):
   if not get(name):
     logger.warn("deleting unknown registration: {0}".format(name))
-    raise ValueError("unknown registration for {0}".format(name))    
+    # raise ValueError("unknown registration for {0}".format(name))
   logger.info("deleting registration for {0}".format(name))
   db.registrations.delete_one({"_id": name})
 
