@@ -33,7 +33,7 @@ Vue.filter('formatDate', function(value) {
 
 Vue.filter('formatEpoch', function(value) {
   if (value) {
-    return moment(String(new Date(value * 1000).toISOString())).format('DD/MM/YYYY HH:mm:ss')
+    return moment(String(new Date(value).toISOString())).format('DD/MM/YYYY HH:mm:ss')
   }
 });
 

@@ -42,7 +42,7 @@ var Client = {
       <template slot="items" slot-scope="props">
         <td width="20%">{{ props.item.cmd }}</td>
         <td v-html="$options.filters.syntaxHighlight(props.item.args, 50)"></td>
-        <td width="20%">{{ props.item.schedule | formatEpoch }}</td>
+        <td width="20%">{{ props.item.schedule * 1000 | formatEpoch }}</td>
       </template>
     </v-data-table>
   </div>
@@ -58,7 +58,7 @@ var Client = {
       <template slot="items" slot-scope="props">
         <td width="20%">{{ props.item.cmd }}</td>
         <td v-html="$options.filters.syntaxHighlight(props.item.args, 50)"></td>
-        <td width="20%">{{ props.item.schedule | formatEpoch }}</td>
+        <td width="20%">{{ props.item.schedule * 1000 | formatEpoch }}</td>
       </template>
     </v-data-table>
   </div>
