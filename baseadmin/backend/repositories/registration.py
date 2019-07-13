@@ -48,6 +48,15 @@ def accept(name, master=None):
     if not request:
       logger.warn("accepting unknown registration: {0}".format(name))
       raise ValueError("unknown registration for {0}".format(name))
+    # check is master is known/master
+    if master:
+      if (master in clients):
+        if clients[master].location is None:
+          logger.error("can't register with non-master {0}".format(master))
+          raise ValueError("{0} is not a master".format(master))
+      else:
+        logger.error("can't register with unknown master {0}".format(master))
+        raise ValueError("unknown master {0}".format(master))
     # create/update client record
     clients[name].update(
       token=request["token"] if master is None else None,
