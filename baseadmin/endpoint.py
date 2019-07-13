@@ -100,7 +100,8 @@ def on_disconnect():
 
 @socketio.on("release")
 def on_release(_):
-  logger.info("release")
+  logger.info("release: clearing master registration")
+  db.config.delete_one({"_id": "master"})
   socketio.disconnect()
 
 @socketio.on("ping2")
