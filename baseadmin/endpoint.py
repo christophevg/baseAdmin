@@ -32,15 +32,121 @@ def generate_location():
   return "https://{0}:8001".format(config.client.ip)
 
 # override EngineIoClient to allow for unverified SSL connections
+# see: https://github.com/miguelgrinberg/python-engineio/issues/99
+
+import ssl
+import websocket
+import engineio
 
 class MyEngineIoClient(eio.Client):
   def _send_request(self, method, url, headers=None, body=None):
     if self.http is None:
       self.http = requests.Session()
     try:
-      return self.http.request(method, url, headers=headers, data=body, verify=False)
+      # added timeout to ensure that this doesn't endlessly block
+      # https://github.com/miguelgrinberg/python-engineio/issues/127
+      wait_for = 10 if method == "POST" else 45
+      return self.http.request(method, url, timeout=wait_for, headers=headers, data=body, verify=False)
+    except requests.exceptions.Timeout:
+      self.logger.warn("{0} request to {1} timed out after {2}".format(
+        method, url, wait_for
+      ))
     except requests.exceptions.ConnectionError:
       pass
+
+  def _connect_websocket(self, url, headers, engineio_path):
+      """Establish or upgrade to a WebSocket connection with the server."""
+      if websocket is None:  # pragma: no cover
+          # not installed
+          self.logger.warning('websocket-client package not installed, only '
+                              'polling transport is available')
+          return False
+      websocket_url = self._get_engineio_url(url, engineio_path, 'websocket')
+      if self.sid:
+          self.logger.info(
+              'Attempting WebSocket upgrade to ' + websocket_url)
+          upgrade = True
+          websocket_url += '&sid=' + self.sid
+      else:
+          upgrade = False
+          self.base_url = websocket_url
+          self.logger.info(
+              'Attempting WebSocket connection to ' + websocket_url)
+      try:
+          ws = websocket.create_connection(
+              websocket_url + self._get_url_timestamp(),
+              header=headers,
+              sslopt={"cert_reqs": ssl.CERT_NONE},
+              timeout=60
+          )
+      except ConnectionError:
+          if upgrade:
+              self.logger.warning(
+                  'WebSocket upgrade failed: connection error')
+              return False
+          else:
+              raise engineio.exceptions.ConnectionError('Connection error')
+      if upgrade:
+          p = engineio.packet.Packet(engineio.packet.PING, data='probe').encode()
+          try:
+              ws.send(p)
+          except Exception as e:  # pragma: no cover
+              self.logger.warning(
+                  'WebSocket upgrade failed: unexpected send exception: %s',
+                  str(e))
+              return False
+          try:
+              p = ws.recv()
+          except Exception as e:  # pragma: no cover
+              self.logger.warning(
+                  'WebSocket upgrade failed: unexpected recv exception: %s',
+                  str(e))
+              return False
+          pkt = engineio.packet.Packet(encoded_packet=p)
+          if pkt.packet_type != engineio.packet.PONG or pkt.data != 'probe':
+              self.logger.warning(
+                  'WebSocket upgrade failed: no PONG packet')
+              return False
+          p = engineio.packet.Packet(engineio.packet.UPGRADE).encode()
+          try:
+              ws.send(p)
+          except Exception as e:  # pragma: no cover
+              self.logger.warning(
+                  'WebSocket upgrade failed: unexpected send exception: %s',
+                  str(e))
+              return False
+          self.current_transport = 'websocket'
+          self.logger.info('WebSocket upgrade was successful')
+      else:
+          try:
+              p = ws.recv()
+          except Exception as e:  # pragma: no cover
+              raise engineio.exceptions.ConnectionError(
+                  'Unexpected recv exception: ' + str(e))
+          open_packet = engineio.packet.Packet(encoded_packet=p)
+          if open_packet.packet_type != engineio.packet.OPEN:
+              raise engineio.exceptions.ConnectionError('no OPEN packet')
+          self.logger.info(
+              'WebSocket connection accepted with ' + str(open_packet.data))
+          self.sid = open_packet.data['sid']
+          self.upgrades = open_packet.data['upgrades']
+          self.ping_interval = open_packet.data['pingInterval'] / 1000.0
+          self.ping_timeout = open_packet.data['pingTimeout'] / 1000.0
+          self.current_transport = 'websocket'
+
+          self.state = 'connected'
+          engineio.client.connected_clients.append(self)
+          self._trigger_event('connect', run_async=False)
+      self.ws = ws
+
+      # start background tasks associated with this client
+      self.ping_loop_task = self.start_background_task(self._ping_loop)
+      self.write_loop_task = self.start_background_task(self._write_loop)
+      self.read_loop_task = self.start_background_task(
+          self._read_loop_websocket)
+      return True
+
+
 
 class MySocketIoClient(sio.Client):
   def _engineio_client_class(self):
@@ -249,8 +355,7 @@ def connect(master, token):
           "client": config.client.name,
           "token" : token
         })
-      logger.info("socketio: {0}".format(socketio.eio.state))
-      return socketio.eio.state == "connected"
+      return True
     except sio.exceptions.ConnectionError as e:
       if str(e) == "Connection refused by the server":
         logger.warn("can't connect to master ({0}): {1}".format(master, str(e)))
