@@ -33,7 +33,8 @@ INSTALL_REQUIRES = [
   "python-dateutil",
   "python-dotenv==0.8.2",
   "python-bcrypt",
-  "requests"
+  "requests",
+  "websocket-client"
 ]
 ENTRY_POINTS = {}
 SCRIPTS = []
