@@ -177,8 +177,12 @@ def send_registration_request(url, token):
       url,
       auth=(config.client.name, config.client.secret),
       json={ "token" : token },
-      verify=False
+      verify=False,
+      timeout=60
     )
+  except requests.exceptions.ReadTimeout:
+    logger.warn("registration: request timed out to {0}".format(url))
+    return ( None, None )
   except requests.ConnectionError:
     logger.warn("registration: could not connect to {0}".format(url))
     return ( None, None )
