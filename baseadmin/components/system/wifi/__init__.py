@@ -6,7 +6,7 @@ import shutil
 
 def run(script, *args):
   script = os.path.join(os.path.dirname(__file__), script)
-  os.system('sudo "{0}" "{1}"'.format(script, '" "'.join(args)))
+  os.system("sudo {0} {1}".format(script, " ".join(args)))
 
 def generate_wpa_supplicant(wifi):
   try:
