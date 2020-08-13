@@ -17,6 +17,7 @@ class Database(object):
         serverSelectionTimeoutMS=config.store.timeout
       )
     database = config.store.uri.split("/")[-1]
+    if "?" in database: database = database.split("?")[0]
     self.instance = self.mongo[database]
   
   def __getattr__(self, collection):
